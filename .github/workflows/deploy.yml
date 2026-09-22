@@ -1,0 +1,49 @@
+name: Deploy Laravel Sales Assistant to Hostinger
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.3'
+          extensions: mbstring, bcmath, ctype, curl, dom, fileinfo, openssl, pdo, pdo_mysql, tokenizer, xml
+          tools: composer:v2
+          coverage: none
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Install Composer dependencies
+        run: composer install --no-dev --prefer-dist --optimize-autoloader --no-interaction
+
+      - name: Install Node dependencies
+        run: npm ci
+
+      - name: Build frontend
+        run: npm run build
+
+      - name: Deploy to Hostinger
+        uses: SamKirkland/FTP-Deploy-Action@v4.3.6
+        with:
+          server: ${{ secrets.FTP_SERVER }}
+          username: ${{ secrets.FTP_USERNAME }}
+          password: ${{ secrets.FTP_PASSWORD }}
+          server-dir: ./
+          local-dir: ./
+          protocol: ftps
+          port: 21
+          dangerous-clean-slate: false
