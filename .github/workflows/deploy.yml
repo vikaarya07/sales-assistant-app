@@ -1,55 +1,123 @@
-name: Deploy Laravel Sales Assistant to Hostinger
+name: Deploy Laravel Sales Assistant
 
 on:
-  push:
-    branches:
-      - main
-  workflow_dispatch:
+    push:
+        branches:
+            - main
+
+    workflow_dispatch:
 
 jobs:
-  build-and-deploy:
-    runs-on: ubuntu-latest
+    build-and-deploy:
+        runs-on: ubuntu-latest
 
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
+        steps:
+            # ----------------------------------------
+            # Checkout
+            # ----------------------------------------
+            - name: Checkout repository
+              uses: actions/checkout@v4
 
-      - name: Setup PHP
-        uses: shivammathur/setup-php@v2
-        with:
-          php-version: '8.4'
-          extensions: mbstring, bcmath, ctype, curl, dom, fileinfo, openssl, pdo, pdo_mysql, tokenizer, xml
-          tools: composer:v2
-          coverage: none
+            # ----------------------------------------
+            # Setup PHP
+            # ----------------------------------------
+            - name: Setup PHP
+              uses: shivammathur/setup-php@v2
+              with:
+                  php-version: "8.4"
+                  extensions: mbstring, bcmath, ctype, curl, dom, fileinfo, openssl, pdo, pdo_mysql, tokenizer, xml
+                  tools: composer:v2
+                  coverage: none
 
-      - name: Check PHP and Composer
-        run: |
-          php -v
-          composer --version
+            # ----------------------------------------
+            # Setup Node.js
+            # ----------------------------------------
+            - name: Setup Node.js
+              uses: actions/setup-node@v4
+              with:
+                  node-version: 22
+                  cache: npm
 
-      - name: Install Composer dependencies
-        run: composer install --no-dev --prefer-dist --optimize-autoloader --no-interaction
+            # ----------------------------------------
+            # Install Node dependencies
+            # ----------------------------------------
+            - name: Install Node dependencies
+              run: npm ci
 
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: 22
+            # ----------------------------------------
+            # Build Vite
+            # ----------------------------------------
+            - name: Build frontend
+              run: npm run build
 
-      - name: Install Node dependencies
-        run: npm ci
+            # ----------------------------------------
+            # Deploy source to Hostinger via FTP
+            # ----------------------------------------
+            - name: Deploy files to Hostinger
+              uses: SamKirkland/FTP-Deploy-Action@v4.3.6
+              with:
+                  server: ${{ secrets.FTP_SERVER }}
+                  username: ${{ secrets.FTP_USERNAME }}
+                  password: ${{ secrets.FTP_PASSWORD }}
 
-      - name: Build frontend
-        run: npm run build
+                  protocol: ftp
+                  port: 21
 
-      - name: Deploy to Hostinger
-        uses: SamKirkland/FTP-Deploy-Action@v4.3.6
-        with:
-          server: ${{ secrets.FTP_SERVER }}
-          username: ${{ secrets.FTP_USERNAME }}
-          password: ${{ secrets.FTP_PASSWORD }}
-          server-dir: ./
-          local-dir: ./
-          protocol: ftp
-          port: 21
-          dangerous-clean-slate: false
+                  server-dir: ./
+                  local-dir: ./
 
+                  dangerous-clean-slate: false
+
+                  exclude: |
+                      **/.git*
+                      **/.git*/**
+                      **/.github/**
+                      **/node_modules/**
+                      **/vendor/**
+                      **/tests/**
+                      **/storage/logs/**
+                      **/.env
+                      **/.env.*
+                      .editorconfig
+                      .gitattributes
+                      .gitignore
+                      phpunit.xml
+                      README.md
+
+            # ----------------------------------------
+            # Deploy Laravel via SSH
+            # ----------------------------------------
+            - name: Run Laravel deployment
+              uses: appleboy/ssh-action@v1.2.2
+              with:
+                  host: ${{ secrets.SSH_HOST }}
+                  port: ${{ secrets.SSH_PORT }}
+                  username: ${{ secrets.SSH_USERNAME }}
+                  key: ${{ secrets.SSH_PRIVATE_KEY }}
+
+                  script: |
+                      set -e
+
+                      PROJECT_PATH="/home/u426348873/domains/vikaarya07.my.id/public_html/sales-assistant"
+                      PHP="/opt/alt/php84/usr/bin/php"
+                      COMPOSER="/usr/local/bin/composer"
+
+                      cd "$PROJECT_PATH"
+
+                      echo "== PHP =="
+                      "$PHP" -v
+
+                      echo "== Composer =="
+                      "$PHP" "$COMPOSER" --version
+
+                      echo "== Installing dependencies =="
+                      "$PHP" "$COMPOSER" install \
+                        --no-dev \
+                        --prefer-dist \
+                        --optimize-autoloader \
+                        --no-interaction
+
+                      echo "== Laravel version =="
+                      "$PHP" artisan --version
+
+                      echo "== Deployment source + vendor completed =="
