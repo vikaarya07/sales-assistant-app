@@ -2,7 +2,6 @@
 
 use App\Enums\CustomerStatus;
 use App\Models\Customer;
-use App\Models\MessageTemplate;
 use Illuminate\Support\Facades\DB;
 use Livewire\Component;
 use Livewire\WithPagination;
@@ -11,22 +10,46 @@ new class extends Component {
     use WithPagination;
 
     public string $importText = '';
-
     public string $search = '';
-
     public string $status = '';
-
     public array $result = [];
 
     public string $greeting = 'Selamat pagi';
-
     public string $address = 'Bapak';
 
+    /*
+    |--------------------------------------------------------------------------
+    | WhatsApp Composer
+    |--------------------------------------------------------------------------
+    */
+
     public ?int $selectedCustomerId = null;
-
     public string $selectedTemplateId = '';
-
     public string $message = '';
+
+    /*
+    |--------------------------------------------------------------------------
+    | Bulk Delete
+    |--------------------------------------------------------------------------
+    */
+
+    public array $selectedCustomers = [];
+    public bool $selectAll = false;
+
+    /*
+    |--------------------------------------------------------------------------
+    | Edit Customer
+    |--------------------------------------------------------------------------
+    */
+
+    public ?int $editingCustomerId = null;
+
+    public string $editName = '';
+    public string $editPhone = '';
+    public string $editContractNumber = '';
+    public string $editAmount = '';
+    public string $editBranch = '';
+    public string $editStatus = '';
 
     /*
     |--------------------------------------------------------------------------
@@ -58,7 +81,6 @@ new class extends Component {
 
                 if ($customer === null) {
                     $invalid++;
-
                     continue;
                 }
 
@@ -66,7 +88,6 @@ new class extends Component {
 
                 if ($exists) {
                     $duplicate++;
-
                     continue;
                 }
 
@@ -192,12 +213,208 @@ new class extends Component {
     public function updatedSearch(): void
     {
         $this->resetPage();
+        $this->clearSelection();
     }
 
     public function updatedStatus(): void
     {
         $this->resetPage();
+        $this->clearSelection();
     }
+
+    /*
+    |--------------------------------------------------------------------------
+    | Select Customer
+    |--------------------------------------------------------------------------
+    */
+
+    public function updatedSelectedCustomers(): void
+    {
+        $this->selectAll = false;
+    }
+
+    public function toggleSelectAll(): void
+    {
+        if ($this->selectAll) {
+            $this->selectedCustomers = $this->getCurrentPageCustomerIds();
+        } else {
+            $this->selectedCustomers = [];
+        }
+    }
+
+    private function getCurrentPageCustomerIds(): array
+    {
+        return auth()
+            ->user()
+            ->customers()
+            ->when($this->search, function ($query) {
+                $query->where(function ($query) {
+                    $query
+                        ->where('name', 'like', '%' . $this->search . '%')
+                        ->orWhere('phone', 'like', '%' . $this->search . '%')
+                        ->orWhere('contract_number', 'like', '%' . $this->search . '%')
+                        ->orWhere('branch', 'like', '%' . $this->search . '%');
+                });
+            })
+            ->when($this->status, function ($query) {
+                $query->where('status', $this->status);
+            })
+            ->latest()
+            ->limit(20)
+            ->pluck('id')
+            ->map(fn($id) => (string) $id)
+            ->toArray();
+    }
+
+    public function clearSelection(): void
+    {
+        $this->selectedCustomers = [];
+        $this->selectAll = false;
+    }
+
+    /*
+    |--------------------------------------------------------------------------
+    | Bulk Delete
+    |--------------------------------------------------------------------------
+    */
+
+    public function deleteSelected(): void
+    {
+        if (empty($this->selectedCustomers)) {
+            return;
+        }
+
+        $customers = auth()->user()->customers()->whereIn('id', $this->selectedCustomers)->get();
+
+        foreach ($customers as $customer) {
+            $this->authorize('delete', $customer);
+        }
+
+        foreach ($customers as $customer) {
+            $customer->delete();
+        }
+
+        $this->clearSelection();
+
+        $this->resetPage();
+    }
+
+    /*
+    |--------------------------------------------------------------------------
+    | Edit Customer
+    |--------------------------------------------------------------------------
+    */
+
+    public function openEditCustomer(int $customerId): void
+    {
+        $customer = auth()->user()->customers()->findOrFail($customerId);
+
+        $this->authorize('update', $customer);
+
+        $this->editingCustomerId = $customer->id;
+
+        $this->editName = $customer->name;
+        $this->editPhone = $customer->phone;
+        $this->editContractNumber = $customer->contract_number;
+        $this->editAmount = (string) $customer->amount;
+        $this->editBranch = $customer->branch;
+        $this->editStatus = $customer->status->value;
+
+        $this->resetValidation();
+
+        $this->modal('customer-edit')->show();
+    }
+
+    public function saveCustomer(): void
+    {
+        $this->validate([
+            'editName' => ['required', 'string', 'max:255'],
+
+            'editPhone' => ['required', 'string'],
+
+            'editContractNumber' => ['required', 'string', 'max:255'],
+
+            'editAmount' => ['required', 'string'],
+
+            'editBranch' => ['required', 'string', 'max:255'],
+
+            'editStatus' => ['required', 'string'],
+        ]);
+
+        if (!$this->editingCustomerId) {
+            return;
+        }
+
+        $customer = auth()->user()->customers()->findOrFail($this->editingCustomerId);
+
+        $this->authorize('update', $customer);
+
+        $phoneNormalized = $this->normalizePhone($this->editPhone);
+
+        if ($phoneNormalized === null) {
+            $this->addError('editPhone', 'Nomor WhatsApp tidak valid.');
+
+            return;
+        }
+
+        $amount = $this->normalizeAmount($this->editAmount);
+
+        if ($amount === null) {
+            $this->addError('editAmount', 'Nominal tidak valid.');
+
+            return;
+        }
+
+        $newStatus = CustomerStatus::tryFrom($this->editStatus);
+
+        if (!$newStatus) {
+            $this->addError('editStatus', 'Status tidak valid.');
+
+            return;
+        }
+
+        $duplicatePhone = auth()->user()->customers()->where('phone_normalized', $phoneNormalized)->where('id', '!=', $customer->id)->exists();
+
+        if ($duplicatePhone) {
+            $this->addError('editPhone', 'Nomor WhatsApp sudah digunakan customer lain.');
+
+            return;
+        }
+
+        $customer->update([
+            'name' => $this->editName,
+            'phone' => $this->editPhone,
+            'phone_normalized' => $phoneNormalized,
+            'contract_number' => $this->editContractNumber,
+            'amount' => $amount,
+            'branch' => $this->editBranch,
+            'status' => $newStatus,
+        ]);
+
+        $this->closeEditCustomer();
+    }
+
+    public function closeEditCustomer(): void
+    {
+        $this->editingCustomerId = null;
+
+        $this->editName = '';
+        $this->editPhone = '';
+        $this->editContractNumber = '';
+        $this->editAmount = '';
+        $this->editBranch = '';
+        $this->editStatus = '';
+
+        $this->resetValidation();
+
+        $this->modal('customer-edit')->close();
+    }
+
+    /*
+    |--------------------------------------------------------------------------
+    | Quick Status
+    |--------------------------------------------------------------------------
+    */
 
     public function updateStatus(int $customerId, string $status): void
     {
@@ -221,6 +438,7 @@ new class extends Component {
     | WhatsApp Composer
     |--------------------------------------------------------------------------
     */
+
     public function openComposer(int $customerId): void
     {
         $customer = auth()->user()->customers()->findOrFail($customerId);
@@ -230,6 +448,7 @@ new class extends Component {
         $this->selectedCustomerId = $customer->id;
         $this->selectedTemplateId = '';
         $this->message = '';
+
         $this->greeting = 'Selamat pagi';
         $this->address = 'Bapak';
 
@@ -281,7 +500,9 @@ new class extends Component {
 
         $this->message = $customer->replaceTemplateVariables($template->content, [
             '{{sapaan_waktu}}' => $this->greeting,
+
             '{{panggilan}}' => $this->address,
+
             '{{panggilan_singkat}}' => $shortAddress,
         ]);
     }
@@ -302,7 +523,7 @@ new class extends Component {
             return;
         }
 
-        $customer = Customer::query()->findOrFail($this->selectedCustomerId);
+        $customer = auth()->user()->customers()->findOrFail($this->selectedCustomerId);
 
         $this->authorize('update', $customer);
 
@@ -328,7 +549,7 @@ new class extends Component {
             return null;
         }
 
-        $customer = Customer::query()->find($this->selectedCustomerId);
+        $customer = auth()->user()->customers()->find($this->selectedCustomerId);
 
         if (!$customer) {
             return null;
@@ -339,13 +560,13 @@ new class extends Component {
 
     /*
     |--------------------------------------------------------------------------
-    | Delete
+    | Delete Single
     |--------------------------------------------------------------------------
     */
 
     public function deleteCustomer(int $id): void
     {
-        $customer = Customer::query()->findOrFail($id);
+        $customer = auth()->user()->customers()->findOrFail($id);
 
         $this->authorize('delete', $customer);
 
@@ -365,6 +586,7 @@ new class extends Component {
         $customers = auth()
             ->user()
             ->customers()
+
             ->when($this->search, function ($query) {
                 $query->where(function ($query) {
                     $query
@@ -374,13 +596,15 @@ new class extends Component {
                         ->orWhere('branch', 'like', '%' . $this->search . '%');
                 });
             })
-            ->when($this->status, function ($query) {
-                $status = CustomerStatus::tryFrom($this->status);
 
-                if ($status) {
-                    $query->where('status', $status->value);
+            ->when($this->status, function ($query) {
+                $customerStatus = CustomerStatus::tryFrom($this->status);
+
+                if ($customerStatus) {
+                    $query->where('status', $customerStatus->value);
                 }
             })
+
             ->latest()
             ->paginate(20);
 
@@ -395,6 +619,7 @@ new class extends Component {
         ]);
     }
 };
+
 ?>
 
 <div class="space-y-6">
@@ -409,6 +634,7 @@ new class extends Component {
             Kelola data customer Sales WhatsApp.
         </flux:text>
     </div>
+
 
     {{-- IMPORT CUSTOMER --}}
     <flux:card>
@@ -450,8 +676,10 @@ new class extends Component {
                 </flux:button>
 
             </div>
+
         </form>
     </flux:card>
+
 
     {{-- RESULT --}}
     @if ($result)
@@ -459,7 +687,6 @@ new class extends Component {
 
             <flux:card>
                 <div class="flex items-start justify-between">
-
                     <div>
                         <flux:text>
                             Berhasil
@@ -473,13 +700,11 @@ new class extends Component {
                     <flux:badge color="green" icon="check">
                         Import
                     </flux:badge>
-
                 </div>
             </flux:card>
 
             <flux:card>
                 <div class="flex items-start justify-between">
-
                     <div>
                         <flux:text>
                             Duplicate
@@ -493,13 +718,11 @@ new class extends Component {
                     <flux:badge color="amber" icon="document-duplicate">
                         Skip
                     </flux:badge>
-
                 </div>
             </flux:card>
 
             <flux:card>
                 <div class="flex items-start justify-between">
-
                     <div>
                         <flux:text>
                             Invalid
@@ -513,12 +736,12 @@ new class extends Component {
                     <flux:badge color="red" icon="exclamation-triangle">
                         Error
                     </flux:badge>
-
                 </div>
             </flux:card>
 
         </div>
     @endif
+
 
     {{-- SEARCH & FILTER --}}
     <flux:card>
@@ -526,8 +749,10 @@ new class extends Component {
         <div class="flex flex-col gap-4 lg:flex-row lg:items-end">
 
             <div class="flex-1">
+
                 <flux:input wire:model.live.debounce.300ms="search" label="Cari Customer"
                     placeholder="Nama, nomor kontrak, cabang..." icon="magnifying-glass" />
+
             </div>
 
             <div class="w-full lg:w-56">
@@ -552,6 +777,44 @@ new class extends Component {
 
     </flux:card>
 
+
+    {{-- BULK ACTION --}}
+    @if (count($selectedCustomers) > 0)
+        <flux:card>
+
+            <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+
+                <div class="flex items-center gap-3">
+
+                    <flux:badge color="red" icon="check">
+                        {{ count($selectedCustomers) }} dipilih
+                    </flux:badge>
+
+                    <flux:text class="text-sm">
+                        Customer terpilih
+                    </flux:text>
+
+                </div>
+
+                <div class="flex gap-2">
+
+                    <flux:button size="sm" variant="ghost" wire:click="clearSelection">
+                        Batal
+                    </flux:button>
+
+                    <flux:button size="sm" variant="danger" icon="trash" wire:click="deleteSelected"
+                        wire:confirm="Hapus semua customer yang dipilih?">
+                        Hapus Terpilih
+                    </flux:button>
+
+                </div>
+
+            </div>
+
+        </flux:card>
+    @endif
+
+
     {{-- CUSTOMER TABLE --}}
     <flux:card class="overflow-hidden">
 
@@ -560,7 +823,16 @@ new class extends Component {
             <table class="w-full text-sm">
 
                 <thead>
+
                     <tr class="border-b border-zinc-200 dark:border-zinc-700">
+
+                        {{-- SELECT ALL --}}
+                        <th class="w-12 px-4 py-3">
+
+                            <input type="checkbox" wire:model.live="selectAll" wire:change="toggleSelectAll"
+                                class="size-4 rounded border-zinc-300">
+
+                        </th>
 
                         <th class="px-4 py-3 text-left font-medium">
                             Customer
@@ -587,13 +859,24 @@ new class extends Component {
                         </th>
 
                     </tr>
+
                 </thead>
+
 
                 <tbody>
 
                     @forelse ($customers as $customer)
                         <tr wire:key="customer-{{ $customer->id }}"
                             class="border-b border-zinc-100 last:border-0 dark:border-zinc-800">
+
+                            {{-- CHECKBOX --}}
+                            <td class="px-4 py-4">
+
+                                <input type="checkbox" value="{{ $customer->id }}" wire:model.live="selectedCustomers"
+                                    class="size-4 rounded border-zinc-300">
+
+                            </td>
+
 
                             {{-- CUSTOMER --}}
                             <td class="px-4 py-4">
@@ -618,6 +901,7 @@ new class extends Component {
 
                             </td>
 
+
                             {{-- CONTRACT --}}
                             <td class="px-4 py-4">
 
@@ -627,6 +911,7 @@ new class extends Component {
 
                             </td>
 
+
                             {{-- AMOUNT --}}
                             <td class="px-4 py-4 whitespace-nowrap">
 
@@ -635,6 +920,7 @@ new class extends Component {
                                 </flux:text>
 
                             </td>
+
 
                             {{-- BRANCH --}}
                             <td class="px-4 py-4">
@@ -647,11 +933,13 @@ new class extends Component {
 
                             {{-- STATUS --}}
                             <td class="px-4 py-4">
+                                <div class="flex items-center gap-2">
 
-                                <flux:badge :color="$customer->status->color()">
-                                    {{ $customer->status->label() }}
-                                </flux:badge>
+                                    <flux:badge :color="$customer->status->color()" class="shrink-0">
+                                        {{ $customer->status->label() }}
+                                    </flux:badge>
 
+                                </div>
                             </td>
 
                             {{-- ACTION --}}
@@ -662,6 +950,11 @@ new class extends Component {
                                     <flux:button size="sm" variant="primary" icon="chat-bubble-left-right"
                                         wire:click="openComposer({{ $customer->id }})">
                                         Chat
+                                    </flux:button>
+
+                                    <flux:button size="sm" variant="ghost" icon="pencil"
+                                        wire:click="openEditCustomer({{ $customer->id }})">
+                                        Edit
                                     </flux:button>
 
                                     <flux:button size="sm" variant="ghost" icon="trash"
@@ -680,7 +973,7 @@ new class extends Component {
 
                         <tr>
 
-                            <td colspan="6">
+                            <td colspan="7">
 
                                 <div class="flex flex-col items-center justify-center gap-2 py-16">
 
@@ -707,6 +1000,8 @@ new class extends Component {
 
         </div>
 
+
+        {{-- PAGINATION --}}
         @if ($customers->hasPages())
             <flux:separator />
 
@@ -716,6 +1011,97 @@ new class extends Component {
         @endif
 
     </flux:card>
+
+
+    {{-- EDIT CUSTOMER MODAL --}}
+    <flux:modal name="customer-edit" class="w-full max-w-2xl">
+
+        <form wire:submit="saveCustomer" class="space-y-6">
+
+            <div>
+
+                <flux:heading size="lg">
+                    Edit Customer
+                </flux:heading>
+
+                <flux:text class="mt-1">
+                    Ubah informasi customer dan statusnya.
+                </flux:text>
+
+            </div>
+
+
+            <div class="grid gap-5 sm:grid-cols-2">
+
+                {{-- NAME --}}
+                <flux:input wire:model="editName" label="Nama Customer" placeholder="Nama customer" />
+
+                {{-- PHONE --}}
+                <flux:input wire:model="editPhone" label="Nomor WhatsApp" placeholder="081234567890" />
+
+                {{-- CONTRACT --}}
+                <flux:input wire:model="editContractNumber" label="Nomor Kontrak" placeholder="Nomor kontrak" />
+
+                {{-- AMOUNT --}}
+                <flux:input wire:model="editAmount" label="Nominal" placeholder="30000000" />
+
+                {{-- BRANCH --}}
+                <flux:input wire:model="editBranch" label="Cabang" placeholder="KARAWACI" />
+
+                {{-- STATUS --}}
+                <flux:select wire:model="editStatus" label="Status">
+
+                    @foreach ($statuses as $customerStatus)
+                        <flux:select.option :value="$customerStatus->value">
+                            {{ $customerStatus->label() }}
+                        </flux:select.option>
+                    @endforeach
+
+                </flux:select>
+
+            </div>
+
+
+            {{-- ERRORS --}}
+
+            @error('editPhone')
+                <flux:text class="text-sm text-red-600">
+                    {{ $message }}
+                </flux:text>
+            @enderror
+
+            @error('editAmount')
+                <flux:text class="text-sm text-red-600">
+                    {{ $message }}
+                </flux:text>
+            @enderror
+
+            @error('editStatus')
+                <flux:text class="text-sm text-red-600">
+                    {{ $message }}
+                </flux:text>
+            @enderror
+
+
+            <flux:separator />
+
+
+            <div class="flex items-center justify-between gap-3">
+
+                <flux:button type="button" variant="ghost" wire:click="closeEditCustomer">
+                    Batal
+                </flux:button>
+
+                <flux:button type="submit" variant="primary" icon="check">
+                    Simpan Perubahan
+                </flux:button>
+
+            </div>
+
+        </form>
+
+    </flux:modal>
+
 
     {{-- WHATSAPP COMPOSER --}}
     <flux:modal name="whatsapp-composer" class="w-full max-w-2xl" :dismissible="false">
@@ -745,6 +1131,7 @@ new class extends Component {
 
             </div>
 
+
             {{-- CUSTOMER INFO --}}
             @if ($selectedCustomer)
                 <div class="flex items-center gap-3 rounded-xl border border-zinc-200 p-3 dark:border-zinc-700">
@@ -772,6 +1159,7 @@ new class extends Component {
                 </div>
             @endif
 
+
             {{-- TEMPLATE --}}
             <flux:select wire:model.live="selectedTemplateId" label="Template Pesan" placeholder="Pilih template...">
 
@@ -783,11 +1171,12 @@ new class extends Component {
 
             </flux:select>
 
+
             {{-- CUSTOMIZATION --}}
             @if ($selectedTemplateId)
                 <div class="grid gap-5 rounded-xl border border-zinc-200 p-4 dark:border-zinc-700 sm:grid-cols-2">
 
-                    {{-- SAPAAN --}}
+                    {{-- GREETING --}}
                     <div>
 
                         <flux:text class="mb-2 font-medium">
@@ -818,7 +1207,8 @@ new class extends Component {
 
                     </div>
 
-                    {{-- PANGGILAN --}}
+
+                    {{-- ADDRESS --}}
                     <div>
 
                         <flux:text class="mb-2 font-medium">
@@ -846,6 +1236,7 @@ new class extends Component {
                 </div>
             @endif
 
+
             {{-- PREVIEW --}}
             <div>
 
@@ -862,6 +1253,7 @@ new class extends Component {
                     @endif
 
                 </div>
+
 
                 <div class="overflow-hidden rounded-2xl border border-zinc-200 shadow-sm dark:border-zinc-700">
 
@@ -887,6 +1279,7 @@ new class extends Component {
 
                     </div>
 
+
                     {{-- CHAT BODY --}}
                     <div class="min-h-80 overflow-y-auto bg-[#efeae2] p-4 dark:bg-zinc-950">
 
@@ -898,13 +1291,15 @@ new class extends Component {
 
                                     <div
                                         class="whitespace-pre-line wrap-break-words text-[13px] leading-relaxed text-zinc-800 dark:text-zinc-100">
+
                                         {{ $message }}
+
                                     </div>
 
                                     <div class="mt-1 flex items-center justify-end gap-1 text-[10px] text-zinc-500">
 
                                         <span>
-                                            {{ now()->format('H\:i') }}
+                                            {{ now()->format('H:i') }}
                                         </span>
 
                                         <flux:icon name="check" variant="mini" class="text-blue-500" />
@@ -936,6 +1331,7 @@ new class extends Component {
 
             </div>
 
+
             {{-- FOOTER --}}
             <flux:separator />
 
@@ -945,20 +1341,16 @@ new class extends Component {
                     Batal
                 </flux:button>
 
-                <div class="flex gap-2">
-
-                    @if ($this->whatsappUrl)
-                        <flux:button href="{{ $this->whatsappUrl }}" target="_blank" variant="primary"
-                            icon="arrow-top-right-on-square" wire:click="markContacted">
-                            Buka WhatsApp
-                        </flux:button>
-                    @else
-                        <flux:button type="button" variant="primary" icon="arrow-top-right-on-square" disabled>
-                            Buka WhatsApp
-                        </flux:button>
-                    @endif
-
-                </div>
+                @if ($this->whatsappUrl)
+                    <flux:button href="{{ $this->whatsappUrl }}" target="_blank" variant="primary"
+                        icon="arrow-top-right-on-square" wire:click="markContacted">
+                        Buka WhatsApp
+                    </flux:button>
+                @else
+                    <flux:button type="button" variant="primary" icon="arrow-top-right-on-square" disabled>
+                        Buka WhatsApp
+                    </flux:button>
+                @endif
 
             </div>
 

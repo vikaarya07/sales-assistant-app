@@ -33,7 +33,7 @@
 
         <flux:sidebar.nav>
             <flux:sidebar.group :heading="__('Platform')" class="grid">
-                <flux:sidebar.item icon="home" :href="route('templates')" :current="request()->routeIs('templates')"
+                <flux:sidebar.item icon="home" :href="route('message-templates')" :current="request()->routeIs('message-templates')"
                     wire:navigate>
                     {{ __('Template') }}
                 </flux:sidebar.item>
