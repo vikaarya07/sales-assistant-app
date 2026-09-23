@@ -30,6 +30,19 @@ jobs:
                   coverage: none
 
             # ----------------------------------------
+            # Install Composer dependencies
+            #
+            # HARUS dilakukan sebelum npm run build
+            # karena Flux CSS berada di vendor/livewire/flux
+            # ----------------------------------------
+            - name: Install Composer dependencies
+              run: |
+                  composer install \
+                    --no-interaction \
+                    --prefer-dist \
+                    --optimize-autoloader
+
+            # ----------------------------------------
             # Setup Node.js
             # ----------------------------------------
             - name: Setup Node.js
@@ -59,13 +72,10 @@ jobs:
                   server: ${{ secrets.FTP_SERVER }}
                   username: ${{ secrets.FTP_USERNAME }}
                   password: ${{ secrets.FTP_PASSWORD }}
-
                   protocol: ftp
                   port: 21
-
                   server-dir: ./
                   local-dir: ./
-
                   dangerous-clean-slate: false
 
                   exclude: |
@@ -85,7 +95,7 @@ jobs:
                       README.md
 
             # ----------------------------------------
-            # Deploy Laravel via SSH
+            # Install Laravel dependencies on Hostinger
             # ----------------------------------------
             - name: Run Laravel deployment
               uses: appleboy/ssh-action@v1.2.2
@@ -104,20 +114,32 @@ jobs:
 
                       cd "$PROJECT_PATH"
 
-                      echo "== PHP =="
+                      echo "========================================"
+                      echo "PHP VERSION"
+                      echo "========================================"
                       "$PHP" -v
 
-                      echo "== Composer =="
+                      echo "========================================"
+                      echo "COMPOSER VERSION"
+                      echo "========================================"
                       "$PHP" "$COMPOSER" --version
 
-                      echo "== Installing dependencies =="
+                      echo "========================================"
+                      echo "INSTALLING PRODUCTION DEPENDENCIES"
+                      echo "========================================"
+
                       "$PHP" "$COMPOSER" install \
                         --no-dev \
+                        --no-interaction \
                         --prefer-dist \
-                        --optimize-autoloader \
-                        --no-interaction
+                        --optimize-autoloader
 
-                      echo "== Laravel version =="
+                      echo "========================================"
+                      echo "LARAVEL VERSION"
+                      echo "========================================"
+
                       "$PHP" artisan --version
 
-                      echo "== Deployment source + vendor completed =="
+                      echo "========================================"
+                      echo "DEPLOYMENT COMPLETED"
+                      echo "========================================"
