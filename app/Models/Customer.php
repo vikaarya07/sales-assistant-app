@@ -4,10 +4,12 @@ namespace App\Models;
 
 use App\Enums\CustomerStatus;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class Customer extends Model
 {
     protected $fillable = [
+        'user_id',
         'phone',
         'phone_normalized',
         'name',
@@ -28,6 +30,12 @@ class Customer extends Model
             'status' => CustomerStatus::class,
         ];
     }
+
+    public function user(): BelongsTo
+    {
+        return $this->belongsTo(User::class);
+    }
+
 
     public function getFormattedAmountAttribute(): string
     {

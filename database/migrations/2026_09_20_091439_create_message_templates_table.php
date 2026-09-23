@@ -13,6 +13,9 @@ return new class extends Migration
     {
         Schema::create('message_templates', function (Blueprint $table) {
             $table->id();
+            $table->foreignId('user_id')
+                ->constrained()
+                ->cascadeOnDelete();
             $table->string('name');
             $table->text('content');
             $table->boolean('is_active')->default(true);

@@ -62,7 +62,7 @@ new class extends Component {
                     continue;
                 }
 
-                $exists = Customer::query()->where('phone_normalized', $customer['phone_normalized'])->exists();
+                $exists = auth()->user()->customers()->where('phone_normalized', $customer['phone_normalized'])->exists();
 
                 if ($exists) {
                     $duplicate++;
@@ -70,7 +70,7 @@ new class extends Component {
                     continue;
                 }
 
-                Customer::create($customer);
+                auth()->user()->customers()->create($customer);
 
                 $created++;
             }
@@ -201,17 +201,19 @@ new class extends Component {
 
     public function updateStatus(int $customerId, string $status): void
     {
+        $customer = auth()->user()->customers()->findOrFail($customerId);
+
+        $this->authorize('update', $customer);
+
         $newStatus = CustomerStatus::tryFrom($status);
 
         if (!$newStatus) {
             return;
         }
 
-        Customer::query()
-            ->findOrFail($customerId)
-            ->update([
-                'status' => $newStatus,
-            ]);
+        $customer->update([
+            'status' => $newStatus,
+        ]);
     }
 
     /*
@@ -219,15 +221,15 @@ new class extends Component {
     | WhatsApp Composer
     |--------------------------------------------------------------------------
     */
-
     public function openComposer(int $customerId): void
     {
-        $customer = Customer::query()->findOrFail($customerId);
+        $customer = auth()->user()->customers()->findOrFail($customerId);
+
+        $this->authorize('view', $customer);
 
         $this->selectedCustomerId = $customer->id;
         $this->selectedTemplateId = '';
         $this->message = '';
-
         $this->greeting = 'Selamat pagi';
         $this->address = 'Bapak';
 
@@ -269,9 +271,11 @@ new class extends Component {
             return;
         }
 
-        $customer = Customer::query()->findOrFail($this->selectedCustomerId);
+        $customer = auth()->user()->customers()->findOrFail($this->selectedCustomerId);
 
-        $template = MessageTemplate::query()->where('is_active', true)->findOrFail((int) $this->selectedTemplateId);
+        $this->authorize('view', $customer);
+
+        $template = auth()->user()->messageTemplates()->where('is_active', true)->findOrFail((int) $this->selectedTemplateId);
 
         $shortAddress = $this->address === 'Bapak' ? 'pak' : 'bu';
 
@@ -299,6 +303,8 @@ new class extends Component {
         }
 
         $customer = Customer::query()->findOrFail($this->selectedCustomerId);
+
+        $this->authorize('update', $customer);
 
         if ($customer->status === CustomerStatus::NEW) {
             $customer->update([
@@ -339,7 +345,11 @@ new class extends Component {
 
     public function deleteCustomer(int $id): void
     {
-        Customer::query()->findOrFail($id)->delete();
+        $customer = Customer::query()->findOrFail($id);
+
+        $this->authorize('delete', $customer);
+
+        $customer->delete();
 
         $this->resetPage();
     }
@@ -352,7 +362,9 @@ new class extends Component {
 
     public function render()
     {
-        $customers = Customer::query()
+        $customers = auth()
+            ->user()
+            ->customers()
             ->when($this->search, function ($query) {
                 $query->where(function ($query) {
                     $query
@@ -375,9 +387,9 @@ new class extends Component {
         return $this->view([
             'customers' => $customers,
 
-            'selectedCustomer' => $this->selectedCustomerId ? Customer::query()->find($this->selectedCustomerId) : null,
+            'selectedCustomer' => $this->selectedCustomerId ? auth()->user()->customers()->find($this->selectedCustomerId) : null,
 
-            'templates' => MessageTemplate::query()->where('is_active', true)->orderBy('name')->get(),
+            'templates' => auth()->user()->messageTemplates()->where('is_active', true)->orderBy('name')->get(),
 
             'statuses' => CustomerStatus::cases(),
         ]);

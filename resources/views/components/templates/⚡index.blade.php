@@ -19,6 +19,8 @@ new class extends Component {
 
     public function createTemplate(): void
     {
+        $this->authorize('create', MessageTemplate::class);
+
         $this->resetForm();
 
         $this->modal('template-form')->show();
@@ -26,7 +28,9 @@ new class extends Component {
 
     public function editTemplate(int $id): void
     {
-        $template = MessageTemplate::query()->findOrFail($id);
+        $template = auth()->user()->messageTemplates()->findOrFail($id);
+
+        $this->authorize('update', $template);
 
         $this->editingId = $template->id;
         $this->name = $template->name;
@@ -49,17 +53,24 @@ new class extends Component {
         if ($this->editingId) {
             $template = MessageTemplate::query()->findOrFail($this->editingId);
 
+            $this->authorize('update', $template);
+
             $template->update([
                 'name' => $this->name,
                 'content' => $this->content,
                 'is_active' => $this->isActive,
             ]);
         } else {
-            MessageTemplate::create([
-                'name' => $this->name,
-                'content' => $this->content,
-                'is_active' => $this->isActive,
-            ]);
+            $this->authorize('create', MessageTemplate::class);
+
+            auth()
+                ->user()
+                ->messageTemplates()
+                ->create([
+                    'name' => $this->name,
+                    'content' => $this->content,
+                    'is_active' => $this->isActive,
+                ]);
         }
 
         $this->resetForm();
@@ -69,14 +80,20 @@ new class extends Component {
 
     public function deleteTemplate(int $id): void
     {
-        MessageTemplate::query()->findOrFail($id)->delete();
+        $template = auth()->user()->messageTemplates()->findOrFail($id);
+
+        $this->authorize('delete', $template);
+
+        $template->delete();
 
         $this->resetPage();
     }
 
     public function toggleActive(int $id): void
     {
-        $template = MessageTemplate::query()->findOrFail($id);
+        $template = auth()->user()->messageTemplates()->findOrFail($id);
+
+        $this->authorize('update', $template);
 
         $template->update([
             'is_active' => !$template->is_active,
@@ -107,7 +124,7 @@ new class extends Component {
 
     public function render()
     {
-        $templates = MessageTemplate::query()->when($this->search, fn($query) => $query->where('name', 'like', '%' . $this->search . '%'))->latest()->paginate(20);
+        $templates = auth()->user()->messageTemplates()->when($this->search, fn($query) => $query->where('name', 'like', '%' . $this->search . '%'))->latest()->paginate(20);
 
         return $this->view([
             'templates' => $templates,
