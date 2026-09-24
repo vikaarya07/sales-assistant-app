@@ -136,258 +136,345 @@ new class extends Component {
 <div class="space-y-6">
 
     {{-- HEADER --}}
-    <div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-        <div>
-            <flux:heading size="xl">
-                Message Templates
-            </flux:heading>
+    <div class="relative overflow-hidden border-b border-zinc-200/70 bg-white dark:border-zinc-800 dark:bg-zinc-950">
 
-            <flux:text class="mt-1">
-                Buat dan kelola template pesan WhatsApp.
-            </flux:text>
+        <div
+            class="pointer-events-none absolute -top-32 left-1/2 h-72 w-72 -translate-x-1/2 rounded-full bg-indigo-500/10 blur-3xl dark:bg-indigo-500/15">
         </div>
 
-        <flux:button variant="primary" icon="plus" wire:click="createTemplate">
-            Add Template
-        </flux:button>
+        <div class="relative mx-auto max-w-7xl px-6 py-10 lg:px-8">
+
+            <div class="flex flex-col gap-5 sm:flex-row sm:items-center sm:justify-between">
+
+                <div>
+                    <div class="flex items-center gap-3">
+
+                        <div
+                            class="flex size-11 items-center justify-center rounded-2xl bg-linear-to-br from-indigo-500 to-violet-600 text-white shadow-lg shadow-indigo-500/20">
+                            <flux:icon name="document-text" class="size-5" />
+                        </div>
+
+                        <div>
+                            <flux:heading size="xl">
+                                Message Templates
+                            </flux:heading>
+
+                            <flux:text class="mt-1">
+                                Buat dan kelola template pesan WhatsApp.
+                            </flux:text>
+                        </div>
+
+                    </div>
+                </div>
+
+                <flux:button variant="primary" icon="plus" wire:click="createTemplate"
+                    class="shadow-lg shadow-indigo-500/20 transition duration-300 hover:-translate-y-0.5 hover:shadow-indigo-500/30">
+                    Add Template
+                </flux:button>
+
+            </div>
+
+        </div>
     </div>
 
 
-    {{-- SEARCH --}}
-    <flux:card>
-        <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-            <flux:input wire:model.live.debounce.300ms="search" placeholder="Cari template..." icon="magnifying-glass"
-                class="sm:max-w-md" />
+    {{-- CONTENT --}}
+    <div class="mx-auto max-w-7xl space-y-6 px-6 py-8 lg:px-8">
 
-            @if ($search)
-                <flux:button variant="ghost" size="sm" icon="x-mark" wire:click="$set('search', '')">
-                    Clear
-                </flux:button>
+        {{-- SEARCH --}}
+        <flux:card
+            class="border-zinc-200/80 bg-white/80 shadow-sm backdrop-blur transition duration-300 dark:border-zinc-800 dark:bg-zinc-900/80">
+
+            <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+
+                <flux:input wire:model.live.debounce.300ms="search" placeholder="Cari template..."
+                    icon="magnifying-glass" class="sm:max-w-md" />
+
+                @if ($search)
+                    <flux:button variant="ghost" size="sm" icon="x-mark" wire:click="$set('search', '')"
+                        class="hover:bg-red-50 hover:text-red-600 dark:hover:bg-red-500/10 dark:hover:text-red-400">
+                        Clear
+                    </flux:button>
+                @endif
+
+            </div>
+
+        </flux:card>
+
+        {{-- TEMPLATE LIST --}}
+        <flux:card class="overflow-hidden border-zinc-200/80 shadow-sm transition duration-300 dark:border-zinc-800">
+
+            <div class="overflow-x-auto">
+
+                <table class="w-full text-sm">
+
+                    {{-- TABLE HEADER --}}
+                    <thead>
+                        <tr
+                            class="border-b border-zinc-200 bg-zinc-50/80 text-left dark:border-zinc-800 dark:bg-zinc-900/60">
+
+                            <th class="px-4 py-3 font-semibold text-zinc-700 dark:text-zinc-300">
+                                Template
+                            </th>
+
+                            <th class="px-4 py-3 font-semibold text-zinc-700 dark:text-zinc-300">
+                                Preview
+                            </th>
+
+                            <th class="px-4 py-3 font-semibold text-zinc-700 dark:text-zinc-300">
+                                Status
+                            </th>
+
+                            <th class="px-4 py-3 text-right font-semibold text-zinc-700 dark:text-zinc-300">
+                                Action
+                            </th>
+
+                        </tr>
+                    </thead>
+
+
+                    {{-- TABLE BODY --}}
+                    <tbody>
+
+                        @forelse ($templates as $template)
+                            <tr wire:key="template-{{ $template->id }}"
+                                class="group border-b border-zinc-100 transition duration-200 last:border-0 hover:bg-indigo-50/40 dark:border-zinc-800 dark:hover:bg-indigo-500/5">
+
+                                {{-- TEMPLATE --}}
+                                <td class="px-4 py-4">
+
+                                    <div class="flex items-start gap-3">
+
+                                        <div
+                                            class="flex size-10 shrink-0 items-center justify-center rounded-xl bg-linear-to-br from-indigo-50 to-violet-100 text-indigo-600 ring-1 ring-indigo-100 transition duration-300 group-hover:scale-105 group-hover:shadow-md group-hover:shadow-indigo-500/10 dark:from-indigo-500/10 dark:to-violet-500/10 dark:text-indigo-400 dark:ring-indigo-500/20">
+
+                                            <flux:icon name="document-text" class="size-5" />
+
+                                        </div>
+
+                                        <div class="min-w-0">
+
+                                            <div class="font-semibold text-zinc-900 dark:text-white">
+                                                {{ $template->name }}
+                                            </div>
+
+                                            <div class="mt-1 text-xs text-zinc-500 dark:text-zinc-500">
+                                                Dibuat
+                                                {{ $template->created_at->format('d M Y H:i') }}
+                                            </div>
+
+                                        </div>
+
+                                    </div>
+
+                                </td>
+
+
+                                {{-- PREVIEW --}}
+                                <td class="px-4 py-4">
+
+                                    <div class="max-w-xl">
+
+                                        <div
+                                            class="rounded-lg border border-zinc-100 bg-zinc-50/70 px-3 py-2 text-sm leading-relaxed text-zinc-600 transition group-hover:border-indigo-100 group-hover:bg-white dark:border-zinc-800 dark:bg-zinc-800/40 dark:text-zinc-400 dark:group-hover:border-indigo-500/20 dark:group-hover:bg-zinc-800/70">
+
+                                            <span class="line-clamp-3 whitespace-pre-line">
+                                                {{ \Illuminate\Support\Str::limit($template->content, 150) }}
+                                            </span>
+
+                                        </div>
+
+                                    </div>
+
+                                </td>
+
+
+                                {{-- STATUS --}}
+                                <td class="px-4 py-4">
+
+                                    @if ($template->is_active)
+                                        <flux:badge color="green" icon="check"
+                                            class="shadow-sm shadow-emerald-500/10">
+                                            Aktif
+                                        </flux:badge>
+                                    @else
+                                        <flux:badge color="zinc" icon="minus">
+                                            Nonaktif
+                                        </flux:badge>
+                                    @endif
+
+                                </td>
+
+
+                                {{-- ACTION --}}
+                                <td class="px-4 py-4">
+
+                                    <div class="flex justify-end gap-2">
+
+                                        {{-- TOGGLE --}}
+                                        <flux:button size="sm" variant="ghost"
+                                            :icon="$template->is_active ? 'eye-slash' : 'eye'"
+                                            wire:click="toggleActive({{ $template->id }})"
+                                            class="{{ $template->is_active
+                                                ? 'hover:bg-amber-50 hover:text-amber-600 dark:hover:bg-amber-500/10 dark:hover:text-amber-400'
+                                                : 'hover:bg-emerald-50 hover:text-emerald-600 dark:hover:bg-emerald-500/10 dark:hover:text-emerald-400' }}">
+
+                                            {{ $template->is_active ? 'Nonaktifkan' : 'Aktifkan' }}
+
+                                        </flux:button>
+
+
+                                        {{-- EDIT --}}
+                                        <flux:button size="sm" variant="ghost" icon="pencil"
+                                            wire:click="editTemplate({{ $template->id }})"
+                                            class="hover:bg-indigo-50 hover:text-indigo-600 dark:hover:bg-indigo-500/10 dark:hover:text-indigo-400">
+                                            Edit
+                                        </flux:button>
+
+
+                                        {{-- DELETE --}}
+                                        <flux:button size="sm" variant="ghost" icon="trash"
+                                            wire:click="deleteTemplate({{ $template->id }})"
+                                            wire:confirm="Hapus template ini?"
+                                            class="hover:bg-red-50 hover:text-red-600 dark:hover:bg-red-500/10 dark:hover:text-red-400">
+                                            Hapus
+                                        </flux:button>
+
+                                    </div>
+
+                                </td>
+
+                            </tr>
+
+                        @empty
+
+                            <tr>
+
+                                <td colspan="4">
+
+                                    <div class="flex flex-col items-center justify-center py-20 text-center">
+
+                                        <div
+                                            class="relative flex size-16 items-center justify-center rounded-2xl bg-linear-to-br from-indigo-50 to-violet-100 text-indigo-500 shadow-inner dark:from-indigo-500/10 dark:to-violet-500/10 dark:text-indigo-400">
+
+                                            <div class="absolute inset-0 rounded-2xl bg-indigo-500/10 blur-xl">
+                                            </div>
+
+                                            <flux:icon name="document-text" class="relative size-7" />
+
+                                        </div>
+
+                                        <flux:heading size="sm" class="mt-5">
+                                            Belum ada template
+                                        </flux:heading>
+
+                                        <flux:text class="mt-1 max-w-sm">
+                                            Buat template pertama untuk digunakan
+                                            saat menghubungi customer.
+                                        </flux:text>
+
+                                        <flux:button class="mt-5 shadow-lg shadow-indigo-500/20" size="sm"
+                                            variant="primary" icon="plus" wire:click="createTemplate">
+                                            Add Template
+                                        </flux:button>
+
+                                    </div>
+
+                                </td>
+
+                            </tr>
+                        @endforelse
+
+                    </tbody>
+
+                </table>
+
+            </div>
+
+
+            {{-- PAGINATION --}}
+            @if ($templates->hasPages())
+                <flux:separator />
+
+                <div class="bg-zinc-50/50 p-4 dark:bg-zinc-900/40">
+                    {{ $templates->links() }}
+                </div>
             @endif
-        </div>
-    </flux:card>
+
+        </flux:card>
 
 
-    {{-- TEMPLATE LIST --}}
-    <flux:card class="overflow-hidden">
+        {{-- FORM MODAL --}}
+        <flux:modal name="template-form" class="w-full max-w-2xl" :dismissible="false">
 
-        <div class="overflow-x-auto">
-            <table class="w-full text-sm">
+            <form wire:submit="saveTemplate" class="space-y-6">
 
-                {{-- TABLE HEADER --}}
-                <thead>
-                    <tr class="border-b border-zinc-200 text-left dark:border-zinc-700">
-                        <th class="px-4 py-3 font-medium">
-                            Template
-                        </th>
+                {{-- MODAL HEADER --}}
+                <div class="flex items-start gap-4">
 
-                        <th class="px-4 py-3 font-medium">
-                            Preview
-                        </th>
+                    <div
+                        class="flex size-11 shrink-0 items-center justify-center rounded-xl bg-linear-to-br from-indigo-500 to-violet-600 text-white shadow-lg shadow-indigo-500/20">
 
-                        <th class="px-4 py-3 font-medium">
-                            Status
-                        </th>
+                        <flux:icon :name="$editingId ? 'pencil' : 'plus'" class="size-5" />
 
-                        <th class="px-4 py-3 text-right font-medium">
-                            Action
-                        </th>
-                    </tr>
-                </thead>
+                    </div>
 
+                    <div>
 
-                {{-- TABLE BODY --}}
-                <tbody>
+                        <flux:heading size="lg">
+                            {{ $editingId ? 'Edit Template' : 'Add Template' }}
+                        </flux:heading>
 
-                    @forelse ($templates as $template)
-                        <tr wire:key="template-{{ $template->id }}"
-                            class="border-b border-zinc-100 last:border-0 dark:border-zinc-800">
+                        <flux:text class="mt-1">
+                            Buat template pesan yang dapat digunakan
+                            saat menghubungi customer.
+                        </flux:text>
 
-                            {{-- TEMPLATE --}}
-                            <td class="px-4 py-4">
-                                <div class="flex items-start gap-3">
+                    </div>
 
-                                    <flux:avatar icon="document-text" size="sm" />
+                </div>
 
-                                    <div class="min-w-0">
+                {{-- TEMPLATE NAME --}}
+                <flux:input wire:model="name" label="Nama Template" placeholder="Contoh: Penawaran Prioritas Dana" />
 
-                                        <div class="font-medium">
-                                            {{ $template->name }}
-                                        </div>
+                {{-- MESSAGE CONTENT --}}
+                <div x-data="{
+                    insertVariable(variable) {
+                        const textarea = $refs.content;
+                
+                        textarea.focus();
+                
+                        const start = textarea.selectionStart;
+                        const end = textarea.selectionEnd;
+                
+                        textarea.setRangeText(
+                            variable,
+                            start,
+                            end,
+                            'end'
+                        );
+                
+                        textarea.dispatchEvent(
+                            new Event('input', { bubbles: true })
+                        );
+                
+                        textarea.focus();
+                    }
+                }" class="space-y-4">
 
-                                        <div class="mt-1 text-xs text-zinc-500">
-                                            Dibuat
-                                            {{ $template->created_at->format('d M Y H:i') }}
-                                        </div>
+                    <flux:text class="text-sm font-semibold">
+                        Isi Pesan
+                    </flux:text>
 
-                                    </div>
+                    <div class="relative">
 
-                                </div>
-                            </td>
+                        <div
+                            class="absolute -inset-px rounded-xl bg-linear-to-r from-indigo-500/20 via-violet-500/20 to-fuchsia-500/20 opacity-0 blur transition duration-300 focus-within:opacity-100">
+                        </div>
 
-
-                            {{-- PREVIEW --}}
-                            <td class="px-4 py-4">
-                                <div class="max-w-xl">
-
-                                    <div class="whitespace-pre-line text-sm text-zinc-600 dark:text-zinc-400">
-                                        {{ \Illuminate\Support\Str::limit($template->content, 150) }}
-                                    </div>
-
-                                </div>
-                            </td>
-
-
-                            {{-- STATUS --}}
-                            <td class="px-4 py-4">
-
-                                @if ($template->is_active)
-                                    <flux:badge color="green" icon="check">
-                                        Aktif
-                                    </flux:badge>
-                                @else
-                                    <flux:badge color="zinc" icon="minus">
-                                        Nonaktif
-                                    </flux:badge>
-                                @endif
-
-                            </td>
-
-
-                            {{-- ACTION --}}
-                            <td class="px-4 py-4">
-
-                                <div class="flex justify-end gap-2">
-
-                                    <flux:button size="sm" variant="ghost"
-                                        :icon="$template->is_active ? 'eye-slash' : 'eye'"
-                                        wire:click="toggleActive({{ $template->id }})">
-                                        {{ $template->is_active ? 'Nonaktifkan' : 'Aktifkan' }}
-                                    </flux:button>
-
-                                    <flux:button size="sm" variant="ghost" icon="pencil"
-                                        wire:click="editTemplate({{ $template->id }})">
-                                        Edit
-                                    </flux:button>
-
-                                    <flux:button size="sm" variant="ghost" icon="trash"
-                                        wire:click="deleteTemplate({{ $template->id }})"
-                                        wire:confirm="Hapus template ini?">
-                                        Hapus
-                                    </flux:button>
-
-                                </div>
-
-                            </td>
-
-                        </tr>
-
-                    @empty
-
-                        <tr>
-                            <td colspan="4">
-
-                                <div class="flex flex-col items-center justify-center py-16 text-center">
-
-                                    <div
-                                        class="flex size-12 items-center justify-center rounded-full bg-zinc-100 dark:bg-zinc-800">
-                                        <flux:icon name="document-text" class="size-6 text-zinc-400" />
-                                    </div>
-
-                                    <flux:heading size="sm" class="mt-4">
-                                        Belum ada template
-                                    </flux:heading>
-
-                                    <flux:text class="mt-1">
-                                        Buat template pertama untuk digunakan saat menghubungi customer.
-                                    </flux:text>
-
-                                    <flux:button class="mt-4" size="sm" variant="primary" icon="plus"
-                                        wire:click="createTemplate">
-                                        Add Template
-                                    </flux:button>
-
-                                </div>
-
-                            </td>
-                        </tr>
-                    @endforelse
-
-                </tbody>
-
-            </table>
-        </div>
-
-
-        {{-- PAGINATION --}}
-        @if ($templates->hasPages())
-            <flux:separator />
-
-            <div class="p-4">
-                {{ $templates->links() }}
-            </div>
-        @endif
-
-    </flux:card>
-
-
-
-    {{-- FORM MODAL --}}
-    <flux:modal name="template-form" class="w-full max-w-2xl">
-
-        <form wire:submit="saveTemplate" class="space-y-6">
-
-            {{-- MODAL HEADER --}}
-            <div>
-
-                <flux:heading size="lg">
-                    {{ $editingId ? 'Edit Template' : 'Add Template' }}
-                </flux:heading>
-
-                <flux:text class="mt-1">
-                    Buat template pesan yang dapat digunakan
-                    saat menghubungi customer.
-                </flux:text>
-
-            </div>
-
-
-            {{-- TEMPLATE NAME --}}
-            <flux:input wire:model="name" label="Nama Template" placeholder="Contoh: Penawaran Prioritas Dana" />
-
-
-            {{-- MESSAGE CONTENT --}}
-            <div x-data="{
-                insertVariable(variable) {
-                    const textarea = $refs.content;
-            
-                    textarea.focus();
-            
-                    const start = textarea.selectionStart;
-                    const end = textarea.selectionEnd;
-            
-                    textarea.setRangeText(
-                        variable,
-                        start,
-                        end,
-                        'end'
-                    );
-            
-                    textarea.dispatchEvent(
-                        new Event('input', { bubbles: true })
-                    );
-            
-                    textarea.focus();
-                }
-            }" class="space-y-4">
-
-                <flux:text class="text-sm font-medium">
-                    Isi Pesan
-                </flux:text>
-
-                <textarea x-ref="content" wire:model="content" rows="12"
-                    class="w-full rounded-lg border border-zinc-300 bg-white px-3 py-2 text-sm text-zinc-900 shadow-sm outline-none transition focus:border-zinc-400 focus:ring-2 focus:ring-zinc-200 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-100 dark:focus:border-zinc-600 dark:focus:ring-zinc-800"
-                    placeholder="&#123;&#123;sapaan_waktu&#125;&#125;, &#123;&#123;panggilan&#125;&#125; *&#123;&#123;nama&#125;&#125;*
+                        <textarea x-ref="content" wire:model="content" rows="12"
+                            class="relative w-full rounded-xl border border-zinc-300 bg-white px-4 py-3 text-sm leading-relaxed text-zinc-900 shadow-sm outline-none transition duration-300 placeholder:text-zinc-400 focus:border-indigo-400 focus:ring-2 focus:ring-indigo-500/20 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-100 dark:focus:border-indigo-500 dark:focus:ring-indigo-500/20"
+                            placeholder="&#123;&#123;sapaan_waktu&#125;&#125;, &#123;&#123;panggilan&#125;&#125; *&#123;&#123;nama&#125;&#125;*
 
 Saya dari Astra Credit Companies (ACC) Prioritas Dana.
 
@@ -399,121 +486,166 @@ Info lebih lanjut:
 
 085113292236 (SETYA)"></textarea>
 
-
-                @error('content')
-                    <flux:text class="text-sm text-red-600">
-                        {{ $message }}
-                    </flux:text>
-                @enderror
-
-                <div class="space-y-4">
-
-                    <flux:text class="text-xs text-zinc-500">
-                        Klik variable untuk memasukkannya ke posisi cursor.
-                    </flux:text>
-
-                    {{-- DATA CUSTOMER --}}
-                    <div class="space-y-2">
-                        <flux:text class="text-xs font-medium text-zinc-700 dark:text-zinc-300">
-                            Data Customer
-                        </flux:text>
-
-                        <div class="flex flex-wrap gap-2">
-
-                            <button type="button" x-on:click="insertVariable('&#123;&#123;nama&#125;&#125;')"
-                                class="rounded-md border border-zinc-200 bg-white px-3 py-1.5 text-xs font-medium text-zinc-700 shadow-sm transition hover:bg-zinc-50 active:bg-zinc-100 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-200 dark:hover:bg-zinc-700">
-                                Nama
-                            </button>
-
-                            <button type="button" x-on:click="insertVariable('&#123;&#123;nomor_kontrak&#125;&#125;')"
-                                class="rounded-md border border-zinc-200 bg-white px-3 py-1.5 text-xs font-medium text-zinc-700 shadow-sm transition hover:bg-zinc-50 active:bg-zinc-100 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-200 dark:hover:bg-zinc-700">
-                                Nomor Kontrak
-                            </button>
-
-                            <button type="button" x-on:click="insertVariable('&#123;&#123;nominal&#125;&#125;')"
-                                class="rounded-md border border-zinc-200 bg-white px-3 py-1.5 text-xs font-medium text-zinc-700 shadow-sm transition hover:bg-zinc-50 active:bg-zinc-100 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-200 dark:hover:bg-zinc-700">
-                                Nominal
-                            </button>
-
-                            <button type="button" x-on:click="insertVariable('&#123;&#123;cabang&#125;&#125;')"
-                                class="rounded-md border border-zinc-200 bg-white px-3 py-1.5 text-xs font-medium text-zinc-700 shadow-sm transition hover:bg-zinc-50 active:bg-zinc-100 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-200 dark:hover:bg-zinc-700">
-                                Cabang
-                            </button>
-
-                        </div>
                     </div>
 
-                    {{-- PILIHAN SALES --}}
-                    <div class="space-y-2">
 
-                        <flux:text class="text-xs font-medium text-zinc-700 dark:text-zinc-300">
-                            Pilihan Saat Kirim
+                    @error('content')
+                        <flux:text class="text-sm text-red-600">
+                            {{ $message }}
+                        </flux:text>
+                    @enderror
+
+
+                    <div class="space-y-5">
+
+                        <flux:text class="text-xs text-zinc-500">
+                            Klik variable untuk memasukkannya ke posisi cursor.
                         </flux:text>
 
-                        <div class="flex flex-wrap gap-2">
 
-                            <button type="button" x-on:click="insertVariable('&#123;&#123;sapaan_waktu&#125;&#125;')"
-                                class="rounded-md border border-zinc-200 bg-white px-3 py-1.5 text-xs font-medium text-zinc-700 shadow-sm transition hover:bg-zinc-50 active:bg-zinc-100 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-200 dark:hover:bg-zinc-700">
-                                Sapaan Waktu
-                            </button>
+                        {{-- DATA CUSTOMER --}}
+                        <div
+                            class="rounded-xl border border-indigo-100 bg-indigo-50/50 p-4 dark:border-indigo-500/20 dark:bg-indigo-500/5">
 
-                            <button type="button" x-on:click="insertVariable('&#123;&#123;panggilan&#125;&#125;')"
-                                class="rounded-md border border-zinc-200 bg-white px-3 py-1.5 text-xs font-medium text-zinc-700 shadow-sm transition hover:bg-zinc-50 active:bg-zinc-100 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-200 dark:hover:bg-zinc-700">
-                                Panggilan
-                            </button>
+                            <div class="mb-3 flex items-center gap-2">
 
-                            <button type="button"
-                                x-on:click="insertVariable('&#123;&#123;panggilan_singkat&#125;&#125;')"
-                                class="rounded-md border border-zinc-200 bg-white px-3 py-1.5 text-xs font-medium text-zinc-700 shadow-sm transition hover:bg-zinc-50 active:bg-zinc-100 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-200 dark:hover:bg-zinc-700">
-                                Panggilan Singkat
-                            </button>
+                                <div
+                                    class="flex size-7 items-center justify-center rounded-lg bg-indigo-100 text-indigo-600 dark:bg-indigo-500/10 dark:text-indigo-400">
+
+                                    <flux:icon name="user" class="size-4" />
+
+                                </div>
+
+                                <flux:text class="text-xs font-semibold text-indigo-700 dark:text-indigo-300">
+                                    Data Customer
+                                </flux:text>
+
+                            </div>
+
+
+                            <div class="flex flex-wrap gap-2">
+
+                                <button type="button" x-on:click="insertVariable('&#123;&#123;nama&#125;&#125;')"
+                                    class="rounded-lg border border-indigo-200 bg-white px-3 py-1.5 text-xs font-medium text-indigo-700 shadow-sm transition duration-200 hover:-translate-y-0.5 hover:border-indigo-400 hover:bg-indigo-50 hover:shadow-md dark:border-indigo-500/30 dark:bg-zinc-900 dark:text-indigo-300 dark:hover:bg-indigo-500/10">
+                                    @{{ nama }}
+                                </button>
+
+                                <button type="button"
+                                    x-on:click="insertVariable('&#123;&#123;nomor_kontrak&#125;&#125;')"
+                                    class="rounded-lg border border-indigo-200 bg-white px-3 py-1.5 text-xs font-medium text-indigo-700 shadow-sm transition duration-200 hover:-translate-y-0.5 hover:border-indigo-400 hover:bg-indigo-50 hover:shadow-md dark:border-indigo-500/30 dark:bg-zinc-900 dark:text-indigo-300 dark:hover:bg-indigo-500/10">
+                                    @{{ nomor_kontrak }}
+                                </button>
+
+                                <button type="button" x-on:click="insertVariable('&#123;&#123;nominal&#125;&#125;')"
+                                    class="rounded-lg border border-indigo-200 bg-white px-3 py-1.5 text-xs font-medium text-indigo-700 shadow-sm transition duration-200 hover:-translate-y-0.5 hover:border-indigo-400 hover:bg-indigo-50 hover:shadow-md dark:border-indigo-500/30 dark:bg-zinc-900 dark:text-indigo-300 dark:hover:bg-indigo-500/10">
+                                    @{{ nominal }}
+                                </button>
+
+                                <button type="button" x-on:click="insertVariable('&#123;&#123;cabang&#125;&#125;')"
+                                    class="rounded-lg border border-indigo-200 bg-white px-3 py-1.5 text-xs font-medium text-indigo-700 shadow-sm transition duration-200 hover:-translate-y-0.5 hover:border-indigo-400 hover:bg-indigo-50 hover:shadow-md dark:border-indigo-500/30 dark:bg-zinc-900 dark:text-indigo-300 dark:hover:bg-indigo-500/10">
+                                    @{{ cabang }}
+                                </button>
+
+                            </div>
 
                         </div>
+
+
+                        {{-- PILIHAN SALES --}}
+                        <div
+                            class="rounded-xl border border-violet-100 bg-violet-50/50 p-4 dark:border-violet-500/20 dark:bg-violet-500/5">
+
+                            <div class="mb-3 flex items-center gap-2">
+
+                                <div
+                                    class="flex size-7 items-center justify-center rounded-lg bg-violet-100 text-violet-600 dark:bg-violet-500/10 dark:text-violet-400">
+
+                                    <flux:icon name="adjustments-horizontal" class="size-4" />
+
+                                </div>
+
+                                <flux:text class="text-xs font-semibold text-violet-700 dark:text-violet-300">
+                                    Pilihan Saat Kirim
+                                </flux:text>
+
+                            </div>
+
+
+                            <div class="flex flex-wrap gap-2">
+
+                                <button type="button"
+                                    x-on:click="insertVariable('&#123;&#123;sapaan_waktu&#125;&#125;')"
+                                    class="rounded-lg border border-violet-200 bg-white px-3 py-1.5 text-xs font-medium text-violet-700 shadow-sm transition duration-200 hover:-translate-y-0.5 hover:border-violet-400 hover:bg-violet-50 hover:shadow-md dark:border-violet-500/30 dark:bg-zinc-900 dark:text-violet-300 dark:hover:bg-violet-500/10">
+                                    @{{ sapaan_waktu }}
+                                </button>
+
+                                <button type="button"
+                                    x-on:click="insertVariable('&#123;&#123;panggilan&#125;&#125;')"
+                                    class="rounded-lg border border-violet-200 bg-white px-3 py-1.5 text-xs font-medium text-violet-700 shadow-sm transition duration-200 hover:-translate-y-0.5 hover:border-violet-400 hover:bg-violet-50 hover:shadow-md dark:border-violet-500/30 dark:bg-zinc-900 dark:text-violet-300 dark:hover:bg-violet-500/10">
+                                    @{{ panggilan }}
+                                </button>
+
+                                <button type="button"
+                                    x-on:click="insertVariable('&#123;&#123;panggilan_singkat&#125;&#125;')"
+                                    class="rounded-lg border border-violet-200 bg-white px-3 py-1.5 text-xs font-medium text-violet-700 shadow-sm transition duration-200 hover:-translate-y-0.5 hover:border-violet-400 hover:bg-violet-50 hover:shadow-md dark:border-violet-500/30 dark:bg-zinc-900 dark:text-violet-300 dark:hover:bg-violet-500/10">
+                                    @{{ panggilan_singkat }}
+                                </button>
+
+                            </div>
+
+                        </div>
+
                     </div>
 
                 </div>
 
+                {{-- INFO --}}
+                <div
+                    class="rounded-xl border border-cyan-200 bg-linear-to-r from-cyan-50 to-blue-50 p-4 dark:border-cyan-500/20 dark:from-cyan-500/5 dark:to-blue-500/5">
 
-            </div>
+                    <div class="flex gap-3">
 
-            {{-- INFO --}}
-            <div class="rounded-lg border border-zinc-200 bg-zinc-50 p-3 dark:border-zinc-700 dark:bg-zinc-800/50">
+                        <div
+                            class="flex size-8 shrink-0 items-center justify-center rounded-lg bg-cyan-100 text-cyan-600 dark:bg-cyan-500/10 dark:text-cyan-400">
 
-                <div class="flex gap-3">
+                            <flux:icon name="information-circle" class="size-5" />
 
-                    <flux:icon name="information-circle" class="mt-0.5 size-5 shrink-0 text-zinc-500" />
+                        </div>
 
-                    <div>
+                        <div>
 
-                        <flux:text class="text-xs">
-                            Variable akan otomatis diganti dengan data customer
-                            ketika pesan dibuat di WhatsApp Composer.
-                        </flux:text>
+                            <flux:text class="text-xs leading-relaxed">
+                                Variable akan otomatis diganti dengan data customer
+                                ketika pesan dibuat di WhatsApp Composer.
+                            </flux:text>
+
+                        </div>
 
                     </div>
 
                 </div>
 
-            </div>
+                {{-- FOOTER --}}
+                <flux:separator />
 
+                <div class="flex items-center justify-end gap-3">
 
-            {{-- FOOTER --}}
-            <flux:separator />
+                    <flux:button type="button" variant="ghost" wire:click="cancelForm"
+                        class="hover:bg-red-50 hover:text-red-600 dark:hover:bg-red-500/10 dark:hover:text-red-400">
+                        Batal
+                    </flux:button>
 
-            <div class="flex items-center justify-between gap-3">
+                    <flux:button type="submit" variant="primary" icon="{{ $editingId ? 'check' : 'plus' }}"
+                        class="shadow-lg shadow-indigo-500/20 transition duration-300 hover:shadow-indigo-500/30">
+                        {{ $editingId ? 'Update Template' : 'Simpan Template' }}
+                    </flux:button>
 
-                <flux:button type="button" variant="ghost" wire:click="cancelForm">
-                    Batal
-                </flux:button>
+                </div>
 
-                <flux:button type="submit" variant="primary" icon="{{ $editingId ? 'check' : 'plus' }}">
-                    {{ $editingId ? 'Update Template' : 'Simpan Template' }}
-                </flux:button>
+            </form>
 
-            </div>
+        </flux:modal>
 
-        </form>
-
-    </flux:modal>
+    </div>
 
 </div>

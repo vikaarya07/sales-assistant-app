@@ -606,7 +606,7 @@ new class extends Component {
             })
 
             ->latest()
-            ->paginate(20);
+            ->paginate(10);
 
         return $this->view([
             'customers' => $customers,
@@ -625,430 +625,609 @@ new class extends Component {
 <div class="space-y-6">
 
     {{-- HEADER --}}
-    <div>
-        <flux:heading size="xl">
-            Customers
-        </flux:heading>
+    <div class="relative overflow-hidden border-b border-zinc-200/70 bg-white dark:border-zinc-800 dark:bg-zinc-950">
 
-        <flux:text class="mt-1">
-            Kelola data customer Sales WhatsApp.
-        </flux:text>
+        {{-- Background Glow --}}
+        <div
+            class="pointer-events-none absolute -top-32 left-1/2 h-72 w-72 -translate-x-1/2 rounded-full bg-indigo-500/10 blur-3xl dark:bg-indigo-500/15">
+        </div>
+
+        <div class="relative mx-auto max-w-7xl px-6 py-10 lg:px-8">
+
+            <div class="flex flex-col gap-5 sm:flex-row sm:items-center sm:justify-between">
+
+                <div>
+
+                    <div class="flex items-center gap-3">
+
+                        <div
+                            class="flex size-11 items-center justify-center rounded-2xl bg-linear-to-br from-indigo-500 to-violet-600 text-white shadow-lg shadow-indigo-500/20">
+                            <flux:icon name="users" class="size-5" />
+                        </div>
+
+                        <div>
+
+                            <flux:heading size="xl">
+                                Customers
+                            </flux:heading>
+
+                            <flux:text class="mt-1">
+                                Kelola data customer Sales WhatsApp.
+                            </flux:text>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+                <flux:badge color="indigo" icon="phone-arrow-down-left" class="self-start sm:self-auto">
+                    Customer Management
+                </flux:badge>
+
+            </div>
+
+        </div>
     </div>
 
+    {{-- CONTENT --}}
+    <div class="mx-auto max-w-7xl space-y-6 px-6 py-8 lg:px-8">
 
-    {{-- IMPORT CUSTOMER --}}
-    <flux:card>
-        <form wire:submit="importCustomers" class="space-y-6">
 
-            <div class="flex items-start justify-between gap-4">
-                <div>
-                    <flux:heading size="lg">
-                        Import Customer
-                    </flux:heading>
+        {{-- IMPORT CUSTOMER --}}
+        <flux:card
+            class="group relative overflow-hidden border-indigo-200/70 bg-white shadow-sm dark:border-indigo-500/20 dark:bg-zinc-900">
 
-                    <flux:text class="mt-1">
-                        Copy data dari kantor lalu paste langsung di sini.
-                    </flux:text>
-                </div>
-
-                <flux:badge icon="clipboard-document" variant="outline">
-                    Paste Data
-                </flux:badge>
+            {{-- Glow --}}
+            <div
+                class="pointer-events-none absolute -right-20 -top-20 size-56 rounded-full bg-indigo-500/10 blur-3xl transition duration-500 group-hover:bg-violet-500/15">
             </div>
 
-            <flux:textarea wire:model="importText" label="Data Customer" rows="8"
-                placeholder="Paste data customer di sini..." />
+            <div class="relative p-6 sm:p-8">
 
-            @error('importText')
-                <flux:text class="text-red-600" variant="strong">
-                    {{ $message }}
-                </flux:text>
-            @enderror
+                <form wire:submit="importCustomers" class="space-y-6">
 
-            <div class="flex items-center justify-between gap-3">
+                    <div class="flex flex-col gap-5 sm:flex-row sm:items-start sm:justify-between">
 
-                <flux:text class="text-xs text-zinc-500">
-                    Format: Nomor HP · Nama · Nomor Kontrak · Nominal · Cabang
-                </flux:text>
+                        <div class="flex gap-4">
 
-                <flux:button type="submit" variant="primary" icon="arrow-up-tray">
-                    Import Customer
-                </flux:button>
+                            <div
+                                class="flex size-12 shrink-0 items-center justify-center rounded-2xl bg-linear-to-br from-indigo-500 to-violet-600 text-white shadow-lg shadow-indigo-500/20">
+                                <flux:icon name="arrow-up-tray" class="size-5" />
+                            </div>
 
-            </div>
+                            <div>
 
-        </form>
-    </flux:card>
+                                <flux:heading size="lg">
+                                    Import Customer
+                                </flux:heading>
 
+                                <flux:text class="mt-1 max-w-xl">
+                                    Copy data dari kantor lalu paste langsung
+                                    ke dalam aplikasi.
+                                </flux:text>
 
-    {{-- RESULT --}}
-    @if ($result)
-        <div class="grid gap-4 sm:grid-cols-3">
+                            </div>
 
-            <flux:card>
-                <div class="flex items-start justify-between">
-                    <div>
-                        <flux:text>
-                            Berhasil
-                        </flux:text>
+                        </div>
 
-                        <flux:heading size="xl" class="mt-1">
-                            {{ $result['created'] }}
-                        </flux:heading>
+                        <flux:badge color="indigo" icon="clipboard-document" variant="outline">
+                            Paste Data
+                        </flux:badge>
+
                     </div>
 
-                    <flux:badge color="green" icon="check">
-                        Import
-                    </flux:badge>
-                </div>
-            </flux:card>
 
-            <flux:card>
-                <div class="flex items-start justify-between">
-                    <div>
-                        <flux:text>
-                            Duplicate
-                        </flux:text>
+                    <div
+                        class="rounded-2xl border border-dashed border-zinc-300 bg-zinc-50/70 p-3 transition hover:border-indigo-300 hover:bg-indigo-50/30 dark:border-zinc-700 dark:bg-zinc-950/50 dark:hover:border-indigo-500/40">
 
-                        <flux:heading size="xl" class="mt-1">
-                            {{ $result['duplicate'] }}
-                        </flux:heading>
+                        <flux:textarea wire:model="importText" label="Data Customer" rows="8"
+                            placeholder="Paste data customer di sini..." />
+
                     </div>
 
-                    <flux:badge color="amber" icon="document-duplicate">
-                        Skip
-                    </flux:badge>
-                </div>
-            </flux:card>
 
-            <flux:card>
-                <div class="flex items-start justify-between">
-                    <div>
-                        <flux:text>
-                            Invalid
+                    @error('importText')
+                        <flux:text class="text-sm text-red-600 dark:text-red-400">
+                            {{ $message }}
                         </flux:text>
+                    @enderror
 
-                        <flux:heading size="xl" class="mt-1">
-                            {{ $result['invalid'] }}
-                        </flux:heading>
+
+                    <div
+                        class="flex flex-col gap-4 border-t border-zinc-200 pt-5 sm:flex-row sm:items-center sm:justify-between dark:border-zinc-800">
+
+                        <div class="flex items-center gap-2">
+
+                            <flux:icon name="information-circle" class="size-4 text-indigo-500" />
+
+                            <flux:text class="text-xs text-zinc-500">
+                                Nomor HP · Nama · Nomor Kontrak · Nominal · Cabang
+                            </flux:text>
+
+                        </div>
+
+                        <flux:button type="submit" variant="primary" icon="arrow-up-tray"
+                            class="shadow-lg shadow-indigo-500/20">
+                            Import Customer
+                        </flux:button>
+
                     </div>
 
-                    <flux:badge color="red" icon="exclamation-triangle">
-                        Error
-                    </flux:badge>
-                </div>
-            </flux:card>
-
-        </div>
-    @endif
-
-
-    {{-- SEARCH & FILTER --}}
-    <flux:card>
-
-        <div class="flex flex-col gap-4 lg:flex-row lg:items-end">
-
-            <div class="flex-1">
-
-                <flux:input wire:model.live.debounce.300ms="search" label="Cari Customer"
-                    placeholder="Nama, nomor kontrak, cabang..." icon="magnifying-glass" />
+                </form>
 
             </div>
 
-            <div class="w-full lg:w-56">
+        </flux:card>
 
-                <flux:select wire:model.live="status" label="Status" placeholder="Semua Status">
 
-                    <flux:select.option value="">
-                        Semua Status
-                    </flux:select.option>
+        {{-- RESULT --}}
+        @if ($result)
+            <div class="grid gap-4 sm:grid-cols-3">
 
-                    @foreach ($statuses as $customerStatus)
-                        <flux:select.option :value="$customerStatus->value">
-                            {{ $customerStatus->label() }}
+                {{-- SUCCESS --}}
+                <div
+                    class="group relative overflow-hidden rounded-2xl border border-emerald-200 bg-white p-5 shadow-sm transition duration-300 hover:-translate-y-0.5 hover:shadow-lg hover:shadow-emerald-500/10 dark:border-emerald-500/20 dark:bg-zinc-900">
+
+                    <div class="absolute -right-10 -top-10 size-28 rounded-full bg-emerald-500/10 blur-2xl">
+                    </div>
+
+                    <div class="relative flex items-start justify-between">
+
+                        <div>
+
+                            <flux:text>
+                                Berhasil
+                            </flux:text>
+
+                            <flux:heading size="xl" class="mt-1 text-emerald-600 dark:text-emerald-400">
+                                {{ $result['created'] }}
+                            </flux:heading>
+
+                            <flux:text class="mt-1 text-xs">
+                                Customer berhasil diimport
+                            </flux:text>
+
+                        </div>
+
+                        <div
+                            class="flex size-10 items-center justify-center rounded-xl bg-emerald-50 text-emerald-600 dark:bg-emerald-500/10 dark:text-emerald-400">
+                            <flux:icon name="check-circle" variant="solid" class="size-5" />
+                        </div>
+
+                    </div>
+
+                </div>
+
+
+                {{-- DUPLICATE --}}
+                <div
+                    class="group relative overflow-hidden rounded-2xl border border-amber-200 bg-white p-5 shadow-sm transition duration-300 hover:-translate-y-0.5 hover:shadow-lg hover:shadow-amber-500/10 dark:border-amber-500/20 dark:bg-zinc-900">
+
+                    <div class="absolute -right-10 -top-10 size-28 rounded-full bg-amber-500/10 blur-2xl">
+                    </div>
+
+                    <div class="relative flex items-start justify-between">
+
+                        <div>
+
+                            <flux:text>
+                                Duplicate
+                            </flux:text>
+
+                            <flux:heading size="xl" class="mt-1 text-amber-600 dark:text-amber-400">
+                                {{ $result['duplicate'] }}
+                            </flux:heading>
+
+                            <flux:text class="mt-1 text-xs">
+                                Data dilewati
+                            </flux:text>
+
+                        </div>
+
+                        <div
+                            class="flex size-10 items-center justify-center rounded-xl bg-amber-50 text-amber-600 dark:bg-amber-500/10 dark:text-amber-400">
+                            <flux:icon name="document-duplicate" class="size-5" />
+                        </div>
+
+                    </div>
+
+                </div>
+
+
+                {{-- INVALID --}}
+                <div
+                    class="group relative overflow-hidden rounded-2xl border border-red-200 bg-white p-5 shadow-sm transition duration-300 hover:-translate-y-0.5 hover:shadow-lg hover:shadow-red-500/10 dark:border-red-500/20 dark:bg-zinc-900">
+
+                    <div class="absolute -right-10 -top-10 size-28 rounded-full bg-red-500/10 blur-2xl">
+                    </div>
+
+                    <div class="relative flex items-start justify-between">
+
+                        <div>
+
+                            <flux:text>
+                                Invalid
+                            </flux:text>
+
+                            <flux:heading size="xl" class="mt-1 text-red-600 dark:text-red-400">
+                                {{ $result['invalid'] }}
+                            </flux:heading>
+
+                            <flux:text class="mt-1 text-xs">
+                                Data tidak valid
+                            </flux:text>
+
+                        </div>
+
+                        <div
+                            class="flex size-10 items-center justify-center rounded-xl bg-red-50 text-red-600 dark:bg-red-500/10 dark:text-red-400">
+                            <flux:icon name="exclamation-triangle" class="size-5" />
+                        </div>
+
+                    </div>
+
+                </div>
+
+            </div>
+        @endif
+
+
+        {{-- SEARCH & FILTER --}}
+        <flux:card class="border-zinc-200/80 shadow-sm dark:border-zinc-800">
+
+            <div class="flex flex-col gap-4 lg:flex-row lg:items-end">
+
+                <div class="flex-1">
+
+                    <flux:input wire:model.live.debounce.300ms="search" label="Cari Customer"
+                        placeholder="Nama, nomor kontrak, cabang..." icon="magnifying-glass" />
+
+                </div>
+
+                <div class="w-full lg:w-60">
+
+                    <flux:select wire:model.live="status" label="Status" placeholder="Semua Status">
+
+                        <flux:select.option value="">
+                            Semua Status
                         </flux:select.option>
-                    @endforeach
 
-                </flux:select>
+                        @foreach ($statuses as $customerStatus)
+                            <flux:select.option :value="$customerStatus->value">
+                                {{ $customerStatus->label() }}
+                            </flux:select.option>
+                        @endforeach
 
-            </div>
-
-        </div>
-
-    </flux:card>
-
-
-    {{-- BULK ACTION --}}
-    @if (count($selectedCustomers) > 0)
-        <flux:card>
-
-            <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-
-                <div class="flex items-center gap-3">
-
-                    <flux:badge color="red" icon="check">
-                        {{ count($selectedCustomers) }} dipilih
-                    </flux:badge>
-
-                    <flux:text class="text-sm">
-                        Customer terpilih
-                    </flux:text>
-
-                </div>
-
-                <div class="flex gap-2">
-
-                    <flux:button size="sm" variant="ghost" wire:click="clearSelection">
-                        Batal
-                    </flux:button>
-
-                    <flux:button size="sm" variant="danger" icon="trash" wire:click="deleteSelected"
-                        wire:confirm="Hapus semua customer yang dipilih?">
-                        Hapus Terpilih
-                    </flux:button>
+                    </flux:select>
 
                 </div>
 
             </div>
 
         </flux:card>
-    @endif
 
 
-    {{-- CUSTOMER TABLE --}}
-    <flux:card class="overflow-hidden">
+        {{-- BULK ACTION --}}
+        @if (count($selectedCustomers) > 0)
+            <div
+                class="rounded-2xl border border-red-200 bg-linear-to-r from-red-50 to-orange-50 p-4 shadow-sm dark:border-red-500/20 dark:from-red-500/10 dark:to-orange-500/5">
 
-        <div class="overflow-x-auto">
+                <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
 
-            <table class="w-full text-sm">
+                    <div class="flex items-center gap-3">
 
-                <thead>
+                        <div
+                            class="flex size-9 items-center justify-center rounded-xl bg-red-100 text-red-600 dark:bg-red-500/20 dark:text-red-400">
+                            <flux:icon name="check" class="size-4" />
+                        </div>
 
-                    <tr class="border-b border-zinc-200 dark:border-zinc-700">
+                        <div>
 
-                        {{-- SELECT ALL --}}
-                        <th class="w-12 px-4 py-3">
+                            <div class="font-medium">
+                                {{ count($selectedCustomers) }} customer dipilih
+                            </div>
 
-                            <input type="checkbox" wire:model.live="selectAll" wire:change="toggleSelectAll"
-                                class="size-4 rounded border-zinc-300">
+                            <div class="text-xs text-zinc-500">
+                                Pilih aksi yang ingin dilakukan
+                            </div>
 
-                        </th>
+                        </div>
 
-                        <th class="px-4 py-3 text-left font-medium">
-                            Customer
-                        </th>
+                    </div>
 
-                        <th class="px-4 py-3 text-left font-medium">
-                            Nomor Kontrak
-                        </th>
+                    <div class="flex gap-2">
 
-                        <th class="px-4 py-3 text-left font-medium">
-                            Nominal
-                        </th>
+                        <flux:button size="sm" variant="ghost" wire:click="clearSelection">
+                            Batal
+                        </flux:button>
 
-                        <th class="px-4 py-3 text-left font-medium">
-                            Cabang
-                        </th>
+                        <flux:button size="sm" variant="danger" icon="trash" wire:click="deleteSelected"
+                            wire:confirm="Hapus semua customer yang dipilih?">
+                            Hapus Terpilih
+                        </flux:button>
 
-                        <th class="px-4 py-3 text-left font-medium">
-                            Status
-                        </th>
+                    </div>
 
-                        <th class="px-4 py-3 text-right font-medium">
-                            Action
-                        </th>
+                </div>
 
-                    </tr>
-
-                </thead>
-
-
-                <tbody>
-
-                    @forelse ($customers as $customer)
-                        <tr wire:key="customer-{{ $customer->id }}"
-                            class="border-b border-zinc-100 last:border-0 dark:border-zinc-800">
-
-                            {{-- CHECKBOX --}}
-                            <td class="px-4 py-4">
-
-                                <input type="checkbox" value="{{ $customer->id }}" wire:model.live="selectedCustomers"
-                                    class="size-4 rounded border-zinc-300">
-
-                            </td>
+            </div>
+        @endif
 
 
-                            {{-- CUSTOMER --}}
-                            <td class="px-4 py-4">
+        {{-- CUSTOMER TABLE --}}
+        <flux:card class="overflow-hidden border-zinc-200/80 shadow-sm dark:border-zinc-800">
 
-                                <div class="flex items-center gap-3">
+            <div class="flex items-center justify-between border-b border-zinc-200 px-5 py-4 dark:border-zinc-800">
 
-                                    <flux:avatar :name="$customer->name" size="sm" />
+                <div class="flex items-center gap-3">
 
-                                    <div class="min-w-0">
+                    <div
+                        class="flex size-9 items-center justify-center rounded-xl bg-indigo-50 text-indigo-600 dark:bg-indigo-500/10 dark:text-indigo-400">
+                        <flux:icon name="users" class="size-4" />
+                    </div>
 
-                                        <div class="truncate font-medium">
-                                            {{ $customer->name }}
+                    <div>
+
+                        <flux:heading size="lg">
+                            Daftar Customer
+                        </flux:heading>
+
+                        <flux:text class="text-xs">
+                            Kelola dan hubungi customer
+                        </flux:text>
+
+                    </div>
+
+                </div>
+
+                <flux:badge variant="outline">
+                    {{ $customers->total() }} Customer
+                </flux:badge>
+
+            </div>
+
+
+            <div class="overflow-x-auto">
+
+                <table class="w-full text-sm">
+
+                    <thead>
+
+                        <tr class="border-b border-zinc-200 bg-zinc-50/80 dark:border-zinc-800 dark:bg-zinc-950/50">
+
+                            <th class="w-12 px-4 py-3">
+
+                                <input type="checkbox" wire:model.live="selectAll" wire:change="toggleSelectAll"
+                                    class="size-4 rounded border-zinc-300 text-indigo-600 focus:ring-indigo-500">
+
+                            </th>
+
+                            <th class="px-4 py-3 text-left font-medium text-zinc-500">
+                                Customer
+                            </th>
+
+                            <th class="px-4 py-3 text-left font-medium text-zinc-500">
+                                Nomor Kontrak
+                            </th>
+
+                            <th class="px-4 py-3 text-left font-medium text-zinc-500">
+                                Nominal
+                            </th>
+
+                            <th class="px-4 py-3 text-left font-medium text-zinc-500">
+                                Cabang
+                            </th>
+
+                            <th class="px-4 py-3 text-left font-medium text-zinc-500">
+                                Status
+                            </th>
+
+                            <th class="px-4 py-3 text-right font-medium text-zinc-500">
+                                Action
+                            </th>
+
+                        </tr>
+
+                    </thead>
+
+
+                    <tbody>
+
+                        @forelse ($customers as $customer)
+                            <tr wire:key="customer-{{ $customer->id }}"
+                                class="group border-b border-zinc-100 transition duration-200 last:border-0 hover:bg-indigo-50/30 dark:border-zinc-800 dark:hover:bg-indigo-500/5">
+
+                                {{-- CHECKBOX --}}
+                                <td class="px-4 py-4">
+
+                                    <input type="checkbox" value="{{ $customer->id }}"
+                                        wire:model.live="selectedCustomers"
+                                        class="size-4 rounded border-zinc-300 text-indigo-600 focus:ring-indigo-500">
+
+                                </td>
+
+                                {{-- CUSTOMER --}}
+                                <td class="px-4 py-4">
+
+                                    <div class="flex items-center gap-3">
+
+                                        <div class="relative">
+
+                                            <flux:avatar :name="$customer->name" color="auto" size="sm" />
+
                                         </div>
 
-                                        <div class="text-xs text-zinc-500">
-                                            +{{ $customer->phone_normalized }}
+                                        <div class="min-w-0">
+
+                                            <div class="truncate font-medium text-zinc-900 dark:text-white">
+                                                {{ $customer->name }}
+                                            </div>
+
+                                            <div class="mt-0.5 font-mono text-xs text-zinc-500">
+                                                +{{ $customer->phone_normalized }}
+                                            </div>
+
                                         </div>
 
                                     </div>
 
-                                </div>
+                                </td>
 
-                            </td>
+                                {{-- CONTRACT --}}
+                                <td class="px-4 py-4">
 
+                                    <span
+                                        class="rounded-lg bg-zinc-100 px-2 py-1 font-mono text-xs text-zinc-600 dark:bg-zinc-800 dark:text-zinc-300">
+                                        {{ $customer->contract_number }}
+                                    </span>
 
-                            {{-- CONTRACT --}}
-                            <td class="px-4 py-4">
+                                </td>
 
-                                <flux:text class="font-mono text-xs">
-                                    {{ $customer->contract_number }}
-                                </flux:text>
+                                {{-- AMOUNT --}}
+                                <td class="px-4 py-4 whitespace-nowrap">
 
-                            </td>
+                                    <span class="font-medium text-zinc-800 dark:text-zinc-200">
+                                        {{ $customer->formatted_amount }}
+                                    </span>
 
+                                </td>
 
-                            {{-- AMOUNT --}}
-                            <td class="px-4 py-4 whitespace-nowrap">
+                                {{-- BRANCH --}}
+                                <td class="px-4 py-4">
 
-                                <flux:text>
-                                    {{ $customer->formatted_amount }}
-                                </flux:text>
+                                    <flux:badge icon="building-office-2" variant="outline">
+                                        {{ $customer->branch }}
+                                    </flux:badge>
 
-                            </td>
+                                </td>
 
-
-                            {{-- BRANCH --}}
-                            <td class="px-4 py-4">
-
-                                <flux:badge icon="building-office-2" variant="outline">
-                                    {{ $customer->branch }}
-                                </flux:badge>
-
-                            </td>
-
-                            {{-- STATUS --}}
-                            <td class="px-4 py-4">
-                                <div class="flex items-center gap-2">
+                                {{-- STATUS --}}
+                                <td class="px-4 py-4">
 
                                     <flux:badge :color="$customer->status->color()" class="shrink-0">
                                         {{ $customer->status->label() }}
                                     </flux:badge>
 
-                                </div>
-                            </td>
+                                </td>
 
-                            {{-- ACTION --}}
-                            <td class="px-4 py-4">
+                                {{-- ACTION --}}
+                                <td class="px-4 py-4">
 
-                                <div class="flex justify-end gap-2">
+                                    <div class="flex justify-end gap-2">
 
-                                    <flux:button size="sm" variant="primary" icon="chat-bubble-left-right"
-                                        wire:click="openComposer({{ $customer->id }})">
-                                        Chat
-                                    </flux:button>
+                                        {{-- CHAT --}}
+                                        <flux:button size="sm" icon="chat-bubble-left-right"
+                                            wire:click="openComposer({{ $customer->id }})"
+                                            class="bg-emerald-500 text-white shadow-sm shadow-emerald-500/20 hover:bg-emerald-600">
+                                            Chat
+                                        </flux:button>
 
-                                    <flux:button size="sm" variant="ghost" icon="pencil"
-                                        wire:click="openEditCustomer({{ $customer->id }})">
-                                        Edit
-                                    </flux:button>
+                                        {{-- EDIT --}}
+                                        <flux:button size="sm" variant="ghost" icon="pencil"
+                                            wire:click="openEditCustomer({{ $customer->id }})"
+                                            class="hover:bg-indigo-50 hover:text-indigo-600 dark:hover:bg-indigo-500/10 dark:hover:text-indigo-400">
+                                        </flux:button>
 
-                                    <flux:button size="sm" variant="ghost" icon="trash"
-                                        wire:click="deleteCustomer({{ $customer->id }})"
-                                        wire:confirm="Hapus customer ini?">
-                                        Hapus
-                                    </flux:button>
+                                        {{-- DELETE --}}
+                                        <flux:button size="sm" variant="ghost" icon="trash"
+                                            wire:click="deleteCustomer({{ $customer->id }})"
+                                            wire:confirm="Hapus customer ini?"
+                                            class="hover:bg-red-50 hover:text-red-600 dark:hover:bg-red-500/10 dark:hover:text-red-400">
+                                        </flux:button>
 
-                                </div>
+                                    </div>
 
-                            </td>
+                                </td>
 
-                        </tr>
+                            </tr>
 
-                    @empty
+                        @empty
 
-                        <tr>
+                            <tr>
 
-                            <td colspan="7">
+                                <td colspan="7">
 
-                                <div class="flex flex-col items-center justify-center gap-2 py-16">
+                                    <div class="flex flex-col items-center justify-center py-20 text-center">
 
-                                    <flux:icon name="users" class="size-10 text-zinc-400" />
+                                        <div
+                                            class="flex size-16 items-center justify-center rounded-2xl bg-zinc-100 text-zinc-400 dark:bg-zinc-800">
+                                            <flux:icon name="users" class="size-7" />
+                                        </div>
 
-                                    <flux:heading size="sm">
-                                        Belum ada customer
-                                    </flux:heading>
+                                        <flux:heading size="sm" class="mt-4">
+                                            Belum ada customer
+                                        </flux:heading>
 
-                                    <flux:text>
-                                        Import data customer terlebih dahulu.
-                                    </flux:text>
+                                        <flux:text class="mt-1 max-w-sm">
+                                            Import data customer terlebih dahulu
+                                            untuk mulai menggunakan Customer Management.
+                                        </flux:text>
 
-                                </div>
+                                    </div>
 
-                            </td>
+                                </td>
 
-                        </tr>
-                    @endforelse
+                            </tr>
+                        @endforelse
 
-                </tbody>
+                    </tbody>
 
-            </table>
+                </table>
 
-        </div>
-
-
-        {{-- PAGINATION --}}
-        @if ($customers->hasPages())
-            <flux:separator />
-
-            <div class="p-4">
-                {{ $customers->links() }}
             </div>
-        @endif
 
-    </flux:card>
 
+            @if ($customers->hasPages())
+                <flux:separator />
+
+                <div class="p-4">
+                    {{ $customers->links() }}
+                </div>
+            @endif
+
+        </flux:card>
+
+    </div>
 
     {{-- EDIT CUSTOMER MODAL --}}
     <flux:modal name="customer-edit" class="w-full max-w-2xl">
 
         <form wire:submit="saveCustomer" class="space-y-6">
 
-            <div>
+            <div class="flex items-start gap-4">
 
-                <flux:heading size="lg">
-                    Edit Customer
-                </flux:heading>
+                <div
+                    class="flex size-11 shrink-0 items-center justify-center rounded-2xl bg-linear-to-br from-indigo-500 to-violet-600 text-white shadow-lg shadow-indigo-500/20">
+                    <flux:icon name="pencil-square" class="size-5" />
+                </div>
 
-                <flux:text class="mt-1">
-                    Ubah informasi customer dan statusnya.
-                </flux:text>
+                <div>
+
+                    <flux:heading size="lg">
+                        Edit Customer
+                    </flux:heading>
+
+                    <flux:text class="mt-1">
+                        Ubah informasi customer dan statusnya.
+                    </flux:text>
+
+                </div>
 
             </div>
 
-
             <div class="grid gap-5 sm:grid-cols-2">
 
-                {{-- NAME --}}
                 <flux:input wire:model="editName" label="Nama Customer" placeholder="Nama customer" />
 
-                {{-- PHONE --}}
                 <flux:input wire:model="editPhone" label="Nomor WhatsApp" placeholder="081234567890" />
 
-                {{-- CONTRACT --}}
                 <flux:input wire:model="editContractNumber" label="Nomor Kontrak" placeholder="Nomor kontrak" />
 
-                {{-- AMOUNT --}}
                 <flux:input wire:model="editAmount" label="Nominal" placeholder="30000000" />
 
-                {{-- BRANCH --}}
                 <flux:input wire:model="editBranch" label="Cabang" placeholder="KARAWACI" />
 
-                {{-- STATUS --}}
                 <flux:select wire:model="editStatus" label="Status">
 
                     @foreach ($statuses as $customerStatus)
@@ -1060,9 +1239,6 @@ new class extends Component {
                 </flux:select>
 
             </div>
-
-
-            {{-- ERRORS --}}
 
             @error('editPhone')
                 <flux:text class="text-sm text-red-600">
@@ -1082,9 +1258,7 @@ new class extends Component {
                 </flux:text>
             @enderror
 
-
             <flux:separator />
-
 
             <div class="flex items-center justify-between gap-3">
 
@@ -1092,7 +1266,7 @@ new class extends Component {
                     Batal
                 </flux:button>
 
-                <flux:button type="submit" variant="primary" icon="check">
+                <flux:button type="submit" variant="primary" icon="check" class="shadow-lg shadow-indigo-500/20">
                     Simpan Perubahan
                 </flux:button>
 
@@ -1102,7 +1276,6 @@ new class extends Component {
 
     </flux:modal>
 
-
     {{-- WHATSAPP COMPOSER --}}
     <flux:modal name="whatsapp-composer" class="w-full max-w-2xl" :dismissible="false">
 
@@ -1111,21 +1284,30 @@ new class extends Component {
             {{-- HEADER --}}
             <div class="flex items-end justify-between gap-4">
 
-                <div>
+                <div class="flex gap-4">
 
-                    <flux:heading size="lg">
-                        Kirim WhatsApp
-                    </flux:heading>
+                    <div
+                        class="flex size-11 shrink-0 items-center justify-center rounded-2xl bg-emerald-500 text-white shadow-lg shadow-emerald-500/20">
+                        <flux:icon name="chat-bubble-left-right" class="size-5" />
+                    </div>
 
-                    <flux:text class="mt-1">
-                        Siapkan pesan sebelum membuka WhatsApp.
-                    </flux:text>
+                    <div>
+
+                        <flux:heading size="lg">
+                            Kirim WhatsApp
+                        </flux:heading>
+
+                        <flux:text class="mt-1">
+                            Siapkan pesan sebelum membuka WhatsApp.
+                        </flux:text>
+
+                    </div>
 
                 </div>
 
                 @if ($selectedCustomer)
-                    <flux:badge icon="chat-bubble-left-right" color="green">
-                        WhatsApp
+                    <flux:badge color="green" icon="check">
+                        Ready
                     </flux:badge>
                 @endif
 
@@ -1134,27 +1316,32 @@ new class extends Component {
 
             {{-- CUSTOMER INFO --}}
             @if ($selectedCustomer)
-                <div class="flex items-center gap-3 rounded-xl border border-zinc-200 p-3 dark:border-zinc-700">
+                <div
+                    class="relative overflow-hidden rounded-2xl border border-emerald-200 bg-linear-to-r from-emerald-50 to-green-50 p-4 dark:border-emerald-500/20 dark:from-emerald-500/10 dark:to-green-500/5">
 
-                    <flux:avatar :name="$selectedCustomer->name" size="md" />
+                    <div class="flex items-center gap-3">
 
-                    <div class="min-w-0">
+                        <flux:avatar :name="$selectedCustomer->name" size="md" color="auto" />
 
-                        <div class="font-medium">
-                            {{ $selectedCustomer->name }}
+                        <div class="min-w-0">
+
+                            <div class="font-semibold">
+                                {{ $selectedCustomer->name }}
+                            </div>
+
+                            <flux:text class="text-xs">
+                                +{{ $selectedCustomer->phone_normalized }}
+                            </flux:text>
+
                         </div>
 
-                        <flux:text class="text-xs">
-                            +{{ $selectedCustomer->phone_normalized }}
-                        </flux:text>
+                        <flux:spacer />
+
+                        <flux:badge color="blue" variant="outline">
+                            {{ $selectedCustomer->branch }}
+                        </flux:badge>
 
                     </div>
-
-                    <flux:spacer />
-
-                    <flux:badge variant="outline">
-                        {{ $selectedCustomer->branch }}
-                    </flux:badge>
 
                 </div>
             @endif
@@ -1174,14 +1361,21 @@ new class extends Component {
 
             {{-- CUSTOMIZATION --}}
             @if ($selectedTemplateId)
-                <div class="grid gap-5 rounded-xl border border-zinc-200 p-4 dark:border-zinc-700 sm:grid-cols-2">
+                <div
+                    class="grid gap-5 rounded-2xl border border-indigo-100 bg-indigo-50/40 p-5 dark:border-indigo-500/20 dark:bg-indigo-500/5 sm:grid-cols-2">
 
                     {{-- GREETING --}}
                     <div>
 
-                        <flux:text class="mb-2 font-medium">
-                            Sapaan
-                        </flux:text>
+                        <div class="mb-2 flex items-center gap-2">
+
+                            <flux:icon name="sun" class="size-4 text-amber-500" />
+
+                            <flux:text class="font-medium">
+                                Sapaan
+                            </flux:text>
+
+                        </div>
 
                         <div class="flex flex-wrap gap-2">
 
@@ -1211,9 +1405,15 @@ new class extends Component {
                     {{-- ADDRESS --}}
                     <div>
 
-                        <flux:text class="mb-2 font-medium">
-                            Panggilan
-                        </flux:text>
+                        <div class="mb-2 flex items-center gap-2">
+
+                            <flux:icon name="user" class="size-4 text-indigo-500" />
+
+                            <flux:text class="font-medium">
+                                Panggilan
+                            </flux:text>
+
+                        </div>
 
                         <div class="flex flex-wrap gap-2">
 
@@ -1242,9 +1442,15 @@ new class extends Component {
 
                 <div class="mb-2 flex items-center justify-between">
 
-                    <flux:text class="font-medium">
-                        Preview Pesan
-                    </flux:text>
+                    <div class="flex items-center gap-2">
+
+                        <flux:icon name="eye" class="size-4 text-zinc-500" />
+
+                        <flux:text class="font-medium">
+                            Preview Pesan
+                        </flux:text>
+
+                    </div>
 
                     @if ($message)
                         <flux:badge color="green" icon="check">
@@ -1255,13 +1461,14 @@ new class extends Component {
                 </div>
 
 
-                <div class="overflow-hidden rounded-2xl border border-zinc-200 shadow-sm dark:border-zinc-700">
+                <div
+                    class="overflow-hidden rounded-2xl border border-zinc-200 shadow-lg shadow-zinc-900/5 dark:border-zinc-700">
 
                     {{-- CHAT HEADER --}}
                     <div
-                        class="flex items-center gap-3 border-b border-zinc-200 bg-white px-4 py-3 dark:border-zinc-700 dark:bg-zinc-900">
+                        class="flex items-center gap-3 border-b border-zinc-200 bg-[#075e54] px-4 py-3 text-white dark:border-zinc-700">
 
-                        <flux:avatar :name="$selectedCustomer?->name ?? 'Customer'" size="sm" />
+                        <flux:avatar :name="$selectedCustomer?->name ?? 'Customer'" circle size="sm" color="auto" />
 
                         <div class="min-w-0">
 
@@ -1270,7 +1477,7 @@ new class extends Component {
                             </div>
 
                             @if ($selectedCustomer)
-                                <div class="text-xs text-zinc-500">
+                                <div class="text-xs text-emerald-100">
                                     +{{ $selectedCustomer->phone_normalized }}
                                 </div>
                             @endif
@@ -1281,19 +1488,22 @@ new class extends Component {
 
 
                     {{-- CHAT BODY --}}
-                    <div class="min-h-80 overflow-y-auto bg-[#efeae2] p-4 dark:bg-zinc-950">
+                    <div class="relative min-h-80 overflow-y-auto bg-[#efeae2] p-4 dark:bg-zinc-950">
+
+                        {{-- Decorative --}}
+                        <div class="pointer-events-none absolute inset-0 opacity-[0.035]"
+                            style="background-image: radial-gradient(#000 1px, transparent 1px); background-size: 16px 16px;">
+                        </div>
 
                         @if (filled($message))
-                            <div class="flex justify-end">
+                            <div class="relative flex justify-end">
 
                                 <div
                                     class="max-w-[85%] rounded-xl rounded-tr-sm bg-[#d9fdd3] px-3 py-2 shadow-sm dark:bg-emerald-900">
 
                                     <div
                                         class="whitespace-pre-line wrap-break-words text-[13px] leading-relaxed text-zinc-800 dark:text-zinc-100">
-
                                         {{ $message }}
-
                                     </div>
 
                                     <div class="mt-1 flex items-center justify-end gap-1 text-[10px] text-zinc-500">
@@ -1310,11 +1520,16 @@ new class extends Component {
 
                             </div>
                         @else
-                            <div class="flex min-h-72 items-center justify-center">
+                            <div class="relative flex min-h-72 items-center justify-center">
 
                                 <div class="text-center">
 
-                                    <flux:icon name="chat-bubble-left-right" class="mx-auto size-10 text-zinc-400" />
+                                    <div
+                                        class="mx-auto flex size-14 items-center justify-center rounded-2xl bg-white/70 text-zinc-400 shadow-sm dark:bg-zinc-900/70">
+
+                                        <flux:icon name="chat-bubble-left-right" class="size-7" />
+
+                                    </div>
 
                                     <flux:text class="mt-3">
                                         Pilih template untuk melihat preview
@@ -1343,7 +1558,8 @@ new class extends Component {
 
                 @if ($this->whatsappUrl)
                     <flux:button href="{{ $this->whatsappUrl }}" target="_blank" variant="primary"
-                        icon="arrow-top-right-on-square" wire:click="markContacted">
+                        icon="arrow-top-right-on-square" wire:click="markContacted"
+                        class="bg-emerald-500 shadow-lg shadow-emerald-500/20 hover:bg-emerald-600">
                         Buka WhatsApp
                     </flux:button>
                 @else
