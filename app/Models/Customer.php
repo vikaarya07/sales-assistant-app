@@ -31,15 +31,17 @@ class Customer extends Model
         ];
     }
 
+    /**
+     * @return BelongsTo<User, $this>
+     */
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);
     }
 
-
     public function getFormattedAmountAttribute(): string
     {
-        return 'Rp ' . number_format(
+        return 'Rp '.number_format(
             $this->amount,
             0,
             ',',
@@ -49,9 +51,12 @@ class Customer extends Model
 
     public function getWhatsappUrlAttribute(): string
     {
-        return 'https://wa.me/' . $this->phone_normalized;
+        return 'https://wa.me/'.$this->phone_normalized;
     }
 
+    /**
+     * @param  array<string, mixed>  $variables
+     */
     public function replaceTemplateVariables(
         string $template,
         array $variables = []
@@ -78,8 +83,8 @@ class Customer extends Model
     public function whatsappUrlWithMessage(string $message): string
     {
         return 'https://api.whatsapp.com/send?phone='
-            . $this->phone_normalized
-            . '&text='
-            . rawurlencode($message);
+            .$this->phone_normalized
+            .'&text='
+            .rawurlencode($message);
     }
 }

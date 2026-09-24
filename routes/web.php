@@ -17,4 +17,4 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::livewire('/updates', 'updates')->name('updates');
 });
 
-require __DIR__ . '/settings.php';
+require __DIR__.'/settings.php';
