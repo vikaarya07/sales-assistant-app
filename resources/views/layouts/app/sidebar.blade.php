@@ -5,8 +5,12 @@
     @include('partials.head')
 </head>
 
-<body class="min-h-screen bg-white dark:bg-zinc-800 antialiased">
-    <flux:sidebar sticky collapsible class="bg-zinc-50 dark:bg-zinc-900 border-r border-zinc-200 dark:border-zinc-700">
+<body
+    class="min-h-screen bg-linear-to-br from-indigo-50 via-violet-50 to-fuchsia-50 dark:from-slate-950 dark:via-indigo-950/60 dark:to-fuchsia-950/40 antialiased">
+
+    <flux:sidebar sticky collapsible
+        class="bg-linear-to-b from-indigo-200/70 via-violet-200/60 to-fuchsia-200/60 dark:from-indigo-950/90 dark:via-violet-950/80 dark:to-fuchsia-950/70 border-r border-indigo-200/60 dark:border-violet-800/40">
+
         <flux:sidebar.header>
             <x-app-logo :sidebar="true" href="{{ route('dashboard') }}" wire:navigate />
 
@@ -41,6 +45,7 @@
             <flux:sidebar.item icon="arrow-path" :href="route('updates')" wire:navigate>
                 Updates
             </flux:sidebar.item>
+
             <flux:sidebar.item icon="information-circle" :href="route('about')" wire:navigate>
                 About Apps
             </flux:sidebar.item>
@@ -50,7 +55,9 @@
     </flux:sidebar>
 
     <!-- Mobile User Menu -->
-    <flux:header class="lg:hidden">
+    <flux:header
+        class="lg:hidden bg-linear-to-r from-indigo-100 via-violet-100 to-fuchsia-100 dark:from-indigo-950 dark:via-violet-950 dark:to-fuchsia-950 border-b border-indigo-200/60 dark:border-violet-800/40">
+
         <flux:sidebar.toggle class="lg:hidden" icon="bars-2" inset="left" />
 
         <flux:spacer />
@@ -84,6 +91,7 @@
 
                 <form method="POST" action="{{ route('logout') }}" class="w-full">
                     @csrf
+
                     <flux:menu.item as="button" type="submit" icon="arrow-right-start-on-rectangle"
                         class="w-full cursor-pointer" data-test="logout-button">
                         {{ __('Log out') }}

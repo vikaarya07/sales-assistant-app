@@ -1,4 +1,4 @@
-<section class="w-full">
+<section class="mx-auto max-w-7xl space-y-6 px-6 py-8 lg:px-8">
     @include('partials.settings-heading')
 
     <flux:heading level="2" class="sr-only">{{ __('Profile settings') }}</flux:heading>
@@ -15,17 +15,19 @@
                         <flux:text class="mt-4">
                             {{ __('Your email address is unverified.') }}
 
-                            <flux:link class="text-sm cursor-pointer" wire:click.prevent="resendVerificationNotification">
+                            <flux:link class="text-sm cursor-pointer"
+                                wire:click.prevent="resendVerificationNotification">
                                 {{ __('Click here to re-send the verification email.') }}
                             </flux:link>
                         </flux:text>
-
                     </div>
                 @endif
             </div>
 
             <div class="flex items-center gap-4">
-                <flux:button variant="primary" type="submit">{{ __('Save') }}</flux:button>
+                <flux:button variant="primary" type="submit">
+                    {{ __('Save') }}
+                </flux:button>
             </div>
         </form>
 

@@ -625,11 +625,12 @@ new class extends Component {
 <div class="space-y-6">
 
     {{-- HEADER --}}
-    <div class="relative overflow-hidden border-b border-zinc-200/70 bg-white dark:border-zinc-800 dark:bg-zinc-950">
+    <div
+        class="relative overflow-hidden border-b border-indigo-100/60 bg-linear-to-r from-indigo-50/50 via-violet-50/40 to-fuchsia-50/30 dark:border-violet-900/40 dark:from-indigo-950/30 dark:via-violet-950/25 dark:to-fuchsia-950/20">
 
         {{-- Background Glow --}}
         <div
-            class="pointer-events-none absolute -top-32 left-1/2 h-72 w-72 -translate-x-1/2 rounded-full bg-indigo-500/10 blur-3xl dark:bg-indigo-500/15">
+            class="pointer-events-none absolute -top-32 left-1/2 h-72 w-72 -translate-x-1/2 rounded-full bg-violet-400/8 blur-3xl dark:bg-violet-500/10">
         </div>
 
         <div class="relative mx-auto max-w-7xl px-6 py-10 lg:px-8">
@@ -641,7 +642,7 @@ new class extends Component {
                     <div class="flex items-center gap-3">
 
                         <div
-                            class="flex size-11 items-center justify-center rounded-2xl bg-linear-to-br from-indigo-500 to-violet-600 text-white shadow-lg shadow-indigo-500/20">
+                            class="flex size-11 items-center justify-center rounded-2xl bg-linear-to-br from-indigo-400 to-violet-500 text-white shadow-lg shadow-indigo-500/15">
                             <flux:icon name="users" class="size-5" />
                         </div>
 
@@ -676,11 +677,11 @@ new class extends Component {
 
         {{-- IMPORT CUSTOMER --}}
         <flux:card
-            class="group relative overflow-hidden border-indigo-200/70 bg-white shadow-sm dark:border-indigo-500/20 dark:bg-zinc-900">
+            class="group relative overflow-hidden border-indigo-100/70 bg-white shadow-sm dark:border-violet-900/40 dark:bg-zinc-900">
 
             {{-- Glow --}}
             <div
-                class="pointer-events-none absolute -right-20 -top-20 size-56 rounded-full bg-indigo-500/10 blur-3xl transition duration-500 group-hover:bg-violet-500/15">
+                class="pointer-events-none absolute -right-20 -top-20 size-56 rounded-full bg-violet-400/8 blur-3xl transition duration-500 group-hover:bg-fuchsia-400/10">
             </div>
 
             <div class="relative p-6 sm:p-8">
@@ -692,7 +693,7 @@ new class extends Component {
                         <div class="flex gap-4">
 
                             <div
-                                class="flex size-12 shrink-0 items-center justify-center rounded-2xl bg-linear-to-br from-indigo-500 to-violet-600 text-white shadow-lg shadow-indigo-500/20">
+                                class="flex size-12 shrink-0 items-center justify-center rounded-2xl bg-linear-to-br from-indigo-400 to-violet-500 text-white shadow-lg shadow-indigo-500/15">
                                 <flux:icon name="arrow-up-tray" class="size-5" />
                             </div>
 
@@ -719,7 +720,7 @@ new class extends Component {
 
 
                     <div
-                        class="rounded-2xl border border-dashed border-zinc-300 bg-zinc-50/70 p-3 transition hover:border-indigo-300 hover:bg-indigo-50/30 dark:border-zinc-700 dark:bg-zinc-950/50 dark:hover:border-indigo-500/40">
+                        class="rounded-2xl border border-dashed border-indigo-200/70 bg-indigo-50/30 p-3 transition hover:border-violet-300/70 hover:bg-violet-50/30 dark:border-violet-800/50 dark:bg-indigo-950/20 dark:hover:border-fuchsia-500/30">
 
                         <flux:textarea wire:model="importText" label="Data Customer" rows="8"
                             placeholder="Paste data customer di sini..." />
@@ -735,11 +736,11 @@ new class extends Component {
 
 
                     <div
-                        class="flex flex-col gap-4 border-t border-zinc-200 pt-5 sm:flex-row sm:items-center sm:justify-between dark:border-zinc-800">
+                        class="flex flex-col gap-4 border-t border-indigo-100 pt-5 sm:flex-row sm:items-center sm:justify-between dark:border-violet-900/40">
 
                         <div class="flex items-center gap-2">
 
-                            <flux:icon name="information-circle" class="size-4 text-indigo-500" />
+                            <flux:icon name="information-circle" class="size-4 text-indigo-400" />
 
                             <flux:text class="text-xs text-zinc-500">
                                 Nomor HP · Nama · Nomor Kontrak · Nominal · Cabang
@@ -748,7 +749,7 @@ new class extends Component {
                         </div>
 
                         <flux:button type="submit" variant="primary" icon="arrow-up-tray"
-                            class="shadow-lg shadow-indigo-500/20">
+                            class="shadow-lg shadow-indigo-500/15">
                             Import Customer
                         </flux:button>
 
@@ -769,7 +770,7 @@ new class extends Component {
                 <div
                     class="group relative overflow-hidden rounded-2xl border border-emerald-200 bg-white p-5 shadow-sm transition duration-300 hover:-translate-y-0.5 hover:shadow-lg hover:shadow-emerald-500/10 dark:border-emerald-500/20 dark:bg-zinc-900">
 
-                    <div class="absolute -right-10 -top-10 size-28 rounded-full bg-emerald-500/10 blur-2xl">
+                    <div class="absolute -right-10 -top-10 size-28 rounded-full bg-emerald-500/8 blur-2xl">
                     </div>
 
                     <div class="relative flex items-start justify-between">
@@ -804,7 +805,7 @@ new class extends Component {
                 <div
                     class="group relative overflow-hidden rounded-2xl border border-amber-200 bg-white p-5 shadow-sm transition duration-300 hover:-translate-y-0.5 hover:shadow-lg hover:shadow-amber-500/10 dark:border-amber-500/20 dark:bg-zinc-900">
 
-                    <div class="absolute -right-10 -top-10 size-28 rounded-full bg-amber-500/10 blur-2xl">
+                    <div class="absolute -right-10 -top-10 size-28 rounded-full bg-amber-500/8 blur-2xl">
                     </div>
 
                     <div class="relative flex items-start justify-between">
@@ -839,7 +840,7 @@ new class extends Component {
                 <div
                     class="group relative overflow-hidden rounded-2xl border border-red-200 bg-white p-5 shadow-sm transition duration-300 hover:-translate-y-0.5 hover:shadow-lg hover:shadow-red-500/10 dark:border-red-500/20 dark:bg-zinc-900">
 
-                    <div class="absolute -right-10 -top-10 size-28 rounded-full bg-red-500/10 blur-2xl">
+                    <div class="absolute -right-10 -top-10 size-28 rounded-full bg-red-500/8 blur-2xl">
                     </div>
 
                     <div class="relative flex items-start justify-between">
@@ -874,7 +875,7 @@ new class extends Component {
 
 
         {{-- SEARCH & FILTER --}}
-        <flux:card class="border-zinc-200/80 shadow-sm dark:border-zinc-800">
+        <flux:card class="border-indigo-100/70 shadow-sm dark:border-violet-900/40">
 
             <div class="flex flex-col gap-4 lg:flex-row lg:items-end">
 
@@ -956,14 +957,15 @@ new class extends Component {
 
 
         {{-- CUSTOMER TABLE --}}
-        <flux:card class="overflow-hidden border-zinc-200/80 shadow-sm dark:border-zinc-800">
+        <flux:card class="overflow-hidden border-indigo-100/70 shadow-sm dark:border-violet-900/40">
 
-            <div class="flex items-center justify-between border-b border-zinc-200 px-5 py-4 dark:border-zinc-800">
+            <div
+                class="flex items-center justify-between border-b border-indigo-100 px-5 py-4 dark:border-violet-900/40">
 
                 <div class="flex items-center gap-3">
 
                     <div
-                        class="flex size-9 items-center justify-center rounded-xl bg-indigo-50 text-indigo-600 dark:bg-indigo-500/10 dark:text-indigo-400">
+                        class="flex size-9 items-center justify-center rounded-xl bg-indigo-50 text-indigo-500 dark:bg-indigo-500/10 dark:text-indigo-300">
                         <flux:icon name="users" class="size-4" />
                     </div>
 
@@ -994,12 +996,13 @@ new class extends Component {
 
                     <thead>
 
-                        <tr class="border-b border-zinc-200 bg-zinc-50/80 dark:border-zinc-800 dark:bg-zinc-950/50">
+                        <tr
+                            class="border-b border-indigo-100 bg-linear-to-r from-indigo-50/50 via-violet-50/30 to-fuchsia-50/20 dark:border-violet-900/40 dark:from-indigo-950/30 dark:via-violet-950/20 dark:to-fuchsia-950/10">
 
                             <th class="w-12 px-4 py-3">
 
                                 <input type="checkbox" wire:model.live="selectAll" wire:change="toggleSelectAll"
-                                    class="size-4 rounded border-zinc-300 text-indigo-600 focus:ring-indigo-500">
+                                    class="size-4 rounded border-zinc-300 text-indigo-500 focus:ring-indigo-400">
 
                             </th>
 
@@ -1036,14 +1039,14 @@ new class extends Component {
 
                         @forelse ($customers as $customer)
                             <tr wire:key="customer-{{ $customer->id }}"
-                                class="group border-b border-zinc-100 transition duration-200 last:border-0 hover:bg-indigo-50/30 dark:border-zinc-800 dark:hover:bg-indigo-500/5">
+                                class="group border-b border-indigo-50 transition duration-200 last:border-0 hover:bg-linear-to-r hover:from-indigo-50/30 hover:via-violet-50/20 hover:to-fuchsia-50/20 dark:border-zinc-800 dark:hover:from-indigo-500/5 dark:hover:via-violet-500/5 dark:hover:to-fuchsia-500/5">
 
                                 {{-- CHECKBOX --}}
                                 <td class="px-4 py-4">
 
                                     <input type="checkbox" value="{{ $customer->id }}"
                                         wire:model.live="selectedCustomers"
-                                        class="size-4 rounded border-zinc-300 text-indigo-600 focus:ring-indigo-500">
+                                        class="size-4 rounded border-zinc-300 text-indigo-500 focus:ring-indigo-400">
 
                                 </td>
 
@@ -1078,7 +1081,7 @@ new class extends Component {
                                 <td class="px-4 py-4">
 
                                     <span
-                                        class="rounded-lg bg-zinc-100 px-2 py-1 font-mono text-xs text-zinc-600 dark:bg-zinc-800 dark:text-zinc-300">
+                                        class="rounded-lg bg-indigo-50 px-2 py-1 font-mono text-xs text-indigo-700 dark:bg-indigo-500/10 dark:text-indigo-300">
                                         {{ $customer->contract_number }}
                                     </span>
 
@@ -1119,14 +1122,14 @@ new class extends Component {
                                         {{-- CHAT --}}
                                         <flux:button size="sm" icon="chat-bubble-left-right"
                                             wire:click="openComposer({{ $customer->id }})"
-                                            class="bg-emerald-500 text-white shadow-sm shadow-emerald-500/20 hover:bg-emerald-600">
+                                            class="bg-emerald-500 text-white shadow-sm shadow-emerald-500/15 hover:bg-emerald-600">
                                             Chat
                                         </flux:button>
 
                                         {{-- EDIT --}}
                                         <flux:button size="sm" variant="ghost" icon="pencil"
                                             wire:click="openEditCustomer({{ $customer->id }})"
-                                            class="hover:bg-indigo-50 hover:text-indigo-600 dark:hover:bg-indigo-500/10 dark:hover:text-indigo-400">
+                                            class="hover:bg-indigo-50 hover:text-indigo-600 dark:hover:bg-indigo-500/10 dark:hover:text-indigo-300">
                                         </flux:button>
 
                                         {{-- DELETE --}}
@@ -1151,7 +1154,7 @@ new class extends Component {
                                     <div class="flex flex-col items-center justify-center py-20 text-center">
 
                                         <div
-                                            class="flex size-16 items-center justify-center rounded-2xl bg-zinc-100 text-zinc-400 dark:bg-zinc-800">
+                                            class="flex size-16 items-center justify-center rounded-2xl bg-linear-to-br from-indigo-50 via-violet-50 to-fuchsia-50 text-indigo-400 dark:from-indigo-950/40 dark:via-violet-950/30 dark:to-fuchsia-950/20">
                                             <flux:icon name="users" class="size-7" />
                                         </div>
 
@@ -1198,7 +1201,7 @@ new class extends Component {
             <div class="flex items-start gap-4">
 
                 <div
-                    class="flex size-11 shrink-0 items-center justify-center rounded-2xl bg-linear-to-br from-indigo-500 to-violet-600 text-white shadow-lg shadow-indigo-500/20">
+                    class="flex size-11 shrink-0 items-center justify-center rounded-2xl bg-linear-to-br from-indigo-400 to-violet-500 text-white shadow-lg shadow-indigo-500/15">
                     <flux:icon name="pencil-square" class="size-5" />
                 </div>
 
@@ -1266,7 +1269,7 @@ new class extends Component {
                     Batal
                 </flux:button>
 
-                <flux:button type="submit" variant="primary" icon="check" class="shadow-lg shadow-indigo-500/20">
+                <flux:button type="submit" variant="primary" icon="check" class="shadow-lg shadow-indigo-500/15">
                     Simpan Perubahan
                 </flux:button>
 
@@ -1287,7 +1290,7 @@ new class extends Component {
                 <div class="flex gap-4">
 
                     <div
-                        class="flex size-11 shrink-0 items-center justify-center rounded-2xl bg-emerald-500 text-white shadow-lg shadow-emerald-500/20">
+                        class="flex size-11 shrink-0 items-center justify-center rounded-2xl bg-linear-to-br from-indigo-400 via-violet-400 to-fuchsia-400 text-white shadow-lg shadow-violet-500/15">
                         <flux:icon name="chat-bubble-left-right" class="size-5" />
                     </div>
 
@@ -1317,7 +1320,7 @@ new class extends Component {
             {{-- CUSTOMER INFO --}}
             @if ($selectedCustomer)
                 <div
-                    class="relative overflow-hidden rounded-2xl border border-emerald-200 bg-linear-to-r from-emerald-50 to-green-50 p-4 dark:border-emerald-500/20 dark:from-emerald-500/10 dark:to-green-500/5">
+                    class="relative overflow-hidden rounded-2xl border border-indigo-100 bg-linear-to-r from-indigo-50/60 via-violet-50/50 to-fuchsia-50/30 p-4 dark:border-violet-900/40 dark:from-indigo-500/10 dark:via-violet-500/8 dark:to-fuchsia-500/5">
 
                     <div class="flex items-center gap-3">
 
@@ -1362,14 +1365,14 @@ new class extends Component {
             {{-- CUSTOMIZATION --}}
             @if ($selectedTemplateId)
                 <div
-                    class="grid gap-5 rounded-2xl border border-indigo-100 bg-indigo-50/40 p-5 dark:border-indigo-500/20 dark:bg-indigo-500/5 sm:grid-cols-2">
+                    class="grid gap-5 rounded-2xl border border-indigo-100 bg-linear-to-r from-indigo-50/40 via-violet-50/30 to-fuchsia-50/20 p-5 dark:border-violet-900/40 dark:from-indigo-500/5 dark:via-violet-500/5 dark:to-fuchsia-500/5 sm:grid-cols-2">
 
                     {{-- GREETING --}}
                     <div>
 
                         <div class="mb-2 flex items-center gap-2">
 
-                            <flux:icon name="sun" class="size-4 text-amber-500" />
+                            <flux:icon name="sun" class="size-4 text-violet-400" />
 
                             <flux:text class="font-medium">
                                 Sapaan
@@ -1407,7 +1410,7 @@ new class extends Component {
 
                         <div class="mb-2 flex items-center gap-2">
 
-                            <flux:icon name="user" class="size-4 text-indigo-500" />
+                            <flux:icon name="user" class="size-4 text-fuchsia-400" />
 
                             <flux:text class="font-medium">
                                 Panggilan
@@ -1444,7 +1447,7 @@ new class extends Component {
 
                     <div class="flex items-center gap-2">
 
-                        <flux:icon name="eye" class="size-4 text-zinc-500" />
+                        <flux:icon name="eye" class="size-4 text-violet-400" />
 
                         <flux:text class="font-medium">
                             Preview Pesan
@@ -1462,13 +1465,14 @@ new class extends Component {
 
 
                 <div
-                    class="overflow-hidden rounded-2xl border border-zinc-200 shadow-lg shadow-zinc-900/5 dark:border-zinc-700">
+                    class="overflow-hidden rounded-2xl border border-indigo-100 shadow-lg shadow-violet-900/5 dark:border-violet-900/40">
 
                     {{-- CHAT HEADER --}}
                     <div
-                        class="flex items-center gap-3 border-b border-zinc-200 bg-[#075e54] px-4 py-3 text-white dark:border-zinc-700">
+                        class="flex items-center gap-3 border-b border-violet-900/20 bg-linear-to-r from-indigo-600 via-violet-600 to-fuchsia-600 px-4 py-3 text-white dark:border-violet-800">
 
-                        <flux:avatar :name="$selectedCustomer?->name ?? 'Customer'" circle size="sm" color="auto" />
+                        <flux:avatar :name="$selectedCustomer?->name ?? 'Customer'" circle size="sm"
+                            color="auto" />
 
                         <div class="min-w-0">
 
@@ -1477,7 +1481,7 @@ new class extends Component {
                             </div>
 
                             @if ($selectedCustomer)
-                                <div class="text-xs text-emerald-100">
+                                <div class="text-xs text-indigo-100">
                                     +{{ $selectedCustomer->phone_normalized }}
                                 </div>
                             @endif
@@ -1525,7 +1529,7 @@ new class extends Component {
                                 <div class="text-center">
 
                                     <div
-                                        class="mx-auto flex size-14 items-center justify-center rounded-2xl bg-white/70 text-zinc-400 shadow-sm dark:bg-zinc-900/70">
+                                        class="mx-auto flex size-14 items-center justify-center rounded-2xl bg-linear-to-br from-indigo-50 via-violet-50 to-fuchsia-50 text-violet-400 shadow-sm dark:from-indigo-950/40 dark:via-violet-950/30 dark:to-fuchsia-950/20">
 
                                         <flux:icon name="chat-bubble-left-right" class="size-7" />
 
@@ -1559,7 +1563,7 @@ new class extends Component {
                 @if ($this->whatsappUrl)
                     <flux:button href="{{ $this->whatsappUrl }}" target="_blank" variant="primary"
                         icon="arrow-top-right-on-square" wire:click="markContacted"
-                        class="bg-emerald-500 shadow-lg shadow-emerald-500/20 hover:bg-emerald-600">
+                        class="bg-linear-to-r from-indigo-500 via-violet-500 to-fuchsia-500 shadow-lg shadow-violet-500/15 hover:from-indigo-600 hover:via-violet-600 hover:to-fuchsia-600">
                         Buka WhatsApp
                     </flux:button>
                 @else

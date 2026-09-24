@@ -5,42 +5,46 @@
     @include('partials.head')
 </head>
 
-<body class="min-h-screen bg-white dark:bg-zinc-800">
-    <flux:sidebar sticky collapsible="mobile"
-        class="border-e border-zinc-200 bg-zinc-50 dark:border-zinc-700 dark:bg-zinc-900">
+<body class="min-h-screen bg-white dark:bg-zinc-800 antialiased">
+    <flux:sidebar sticky collapsible class="bg-zinc-50 dark:bg-zinc-900 border-r border-zinc-200 dark:border-zinc-700">
         <flux:sidebar.header>
             <x-app-logo :sidebar="true" href="{{ route('dashboard') }}" wire:navigate />
-            <flux:sidebar.collapse class="lg:hidden" />
+
+            <flux:sidebar.collapse
+                class="in-data-flux-sidebar-on-desktop:not-in-data-flux-sidebar-collapsed-desktop:-mr-2" />
         </flux:sidebar.header>
 
         <flux:sidebar.nav>
-            <flux:sidebar.group :heading="__('Platform')" class="grid">
-                <flux:sidebar.item icon="home" :href="route('dashboard')" :current="request()->routeIs('dashboard')"
-                    wire:navigate>
-                    {{ __('Dashboard') }}
-                </flux:sidebar.item>
-            </flux:sidebar.group>
+            <flux:sidebar.item icon="home" :href="route('dashboard')" :current="request()->routeIs('dashboard')"
+                wire:navigate>
+                {{ __('Dashboard') }}
+            </flux:sidebar.item>
         </flux:sidebar.nav>
 
         <flux:sidebar.nav>
-            <flux:sidebar.group :heading="__('Platform')" class="grid">
-                <flux:sidebar.item icon="home" :href="route('customers')" :current="request()->routeIs('customers')"
-                    wire:navigate>
-                    {{ __('Customer') }}
-                </flux:sidebar.item>
-            </flux:sidebar.group>
+            <flux:sidebar.item icon="user-group" :href="route('customers')" :current="request()->routeIs('customers')"
+                wire:navigate>
+                {{ __('Customer') }}
+            </flux:sidebar.item>
         </flux:sidebar.nav>
 
         <flux:sidebar.nav>
-            <flux:sidebar.group :heading="__('Platform')" class="grid">
-                <flux:sidebar.item icon="home" :href="route('message-templates')" :current="request()->routeIs('message-templates')"
-                    wire:navigate>
-                    {{ __('Template') }}
-                </flux:sidebar.item>
-            </flux:sidebar.group>
+            <flux:sidebar.item icon="chat-bubble-bottom-center-text" :href="route('message-templates')"
+                :current="request()->routeIs('message-templates')" wire:navigate>
+                {{ __('Template') }}
+            </flux:sidebar.item>
         </flux:sidebar.nav>
 
-        <flux:spacer />
+        <flux:sidebar.spacer />
+
+        <flux:sidebar.nav>
+            <flux:sidebar.item icon="arrow-path" :href="route('updates')" wire:navigate>
+                Updates
+            </flux:sidebar.item>
+            <flux:sidebar.item icon="information-circle" :href="route('about')" wire:navigate>
+                About Apps
+            </flux:sidebar.item>
+        </flux:sidebar.nav>
 
         <x-desktop-user-menu class="hidden lg:block" :name="auth()->user()->name" />
     </flux:sidebar>
@@ -92,9 +96,9 @@
     {{ $slot }}
 
     @persist('toast')
-        <flux:toast.group>
-            <flux:toast />
-        </flux:toast.group>
+    <flux:toast.group>
+        <flux:toast />
+    </flux:toast.group>
     @endpersist
 
     @fluxScripts
