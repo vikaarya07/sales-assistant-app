@@ -5,25 +5,27 @@ namespace App\Enums;
 enum CustomerStatus: string
 {
     case NEW = 'new';
-    case CONTACTED = 'contacted';
+    case BLAST = 'blast';
     case REPLIED = 'replied';
     case FOLLOW_UP = 'follow_up';
     case INTERESTED = 'interested';
     case NOT_INTERESTED = 'not_interested';
-    case CONVERTED = 'converted';
+    case APP_IN = 'app_in';
+    case VALID = 'valid';
     case INVALID = 'invalid';
 
     public function label(): string
     {
         return match ($this) {
             self::NEW => 'Baru',
-            self::CONTACTED => 'Sudah Dihubungi',
+            self::BLAST => 'Blast',
             self::REPLIED => 'Membalas',
             self::FOLLOW_UP => 'Follow Up',
-            self::INTERESTED => 'Tertarik',
-            self::NOT_INTERESTED => 'Tidak Tertarik',
-            self::CONVERTED => 'Berhasil',
-            self::INVALID => 'Invalid',
+            self::INTERESTED => 'Minat',
+            self::NOT_INTERESTED => 'Tidak Minat',
+            self::APP_IN => 'Pangajuan',
+            self::VALID => 'Valid',
+            self::INVALID => 'Gagal',
         };
     }
 
@@ -31,12 +33,13 @@ enum CustomerStatus: string
     {
         return match ($this) {
             self::NEW => 'zinc',
-            self::CONTACTED => 'blue',
+            self::BLAST => 'blue',
             self::REPLIED => 'cyan',
             self::FOLLOW_UP => 'amber',
-            self::INTERESTED => 'green',
-            self::NOT_INTERESTED => 'red',
-            self::CONVERTED => 'emerald',
+            self::INTERESTED => 'lime',
+            self::NOT_INTERESTED => 'pink',
+            self::APP_IN => 'teal',
+            self::VALID => 'green',
             self::INVALID => 'red',
         };
     }

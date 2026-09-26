@@ -6,6 +6,65 @@ use App\Models\MessageTemplate;
 use Livewire\Component;
 
 new class extends Component {
+    public string $selectedMonth;
+
+    public array $monthOptions = [];
+
+    public function mount(): void
+    {
+        $currentMonth = now()->startOfMonth();
+        $this->selectedMonth = $currentMonth->format('Y-m');
+
+        $this->monthOptions = collect(range(-6, 6))
+            ->map(function ($offset) use ($currentMonth) {
+                $date = $currentMonth->copy()->addMonths($offset);
+
+                return [
+                    'value' => $date->format('Y-m'),
+                    'label' => $date->translatedFormat('F Y'),
+                ];
+            })
+            ->sortBy('value')
+            ->values()
+            ->all();
+    }
+
+    public function updatedSelectedMonth(): void
+    {
+        $this->dispatch('overview-chart-updated', data: $this->getChartData());
+    }
+
+    private function getChartData(): array
+    {
+        $user = auth()->user();
+
+        $selectedDate = \Carbon\Carbon::createFromFormat('Y-m', $this->selectedMonth);
+
+        $previousDate = $selectedDate->copy()->subMonth();
+
+        $statuses = [CustomerStatus::NEW, CustomerStatus::BLAST, CustomerStatus::REPLIED, CustomerStatus::FOLLOW_UP, CustomerStatus::INTERESTED, CustomerStatus::NOT_INTERESTED, CustomerStatus::APP_IN, CustomerStatus::VALID, CustomerStatus::INVALID];
+
+        $currentCustomers = $user
+            ->customers()
+            ->whereBetween('created_at', [$selectedDate->copy()->startOfMonth(), $selectedDate->copy()->endOfMonth()])
+            ->get()
+            ->groupBy('status');
+
+        $previousCustomers = $user
+            ->customers()
+            ->whereBetween('created_at', [$previousDate->copy()->startOfMonth(), $previousDate->copy()->endOfMonth()])
+            ->get()
+            ->groupBy('status');
+
+        return [
+            'labels' => collect($statuses)->map(fn($status) => $status->label())->values()->all(),
+
+            'current' => collect($statuses)->map(fn($status) => $currentCustomers->get($status->value, collect())->count())->values()->all(),
+
+            'previous' => collect($statuses)->map(fn($status) => $previousCustomers->get($status->value, collect())->count())->values()->all(),
+        ];
+    }
+
     public function render()
     {
         $user = auth()->user();
@@ -14,12 +73,13 @@ new class extends Component {
 
         $totalCustomers = (clone $customers)->count();
         $newCustomers = (clone $customers)->where('status', CustomerStatus::NEW->value)->count();
-        $contactedCustomers = (clone $customers)->where('status', CustomerStatus::CONTACTED->value)->count();
+        $blastedCustomers = (clone $customers)->where('status', CustomerStatus::BLAST->value)->count();
         $repliedCustomers = (clone $customers)->where('status', CustomerStatus::REPLIED->value)->count();
-        $interestedCustomers = (clone $customers)->where('status', CustomerStatus::INTERESTED->value)->count();
         $followUpCustomers = (clone $customers)->where('status', CustomerStatus::FOLLOW_UP->value)->count();
-        $convertedCustomers = (clone $customers)->where('status', CustomerStatus::CONVERTED->value)->count();
+        $interestedCustomers = (clone $customers)->where('status', CustomerStatus::INTERESTED->value)->count();
         $notInterestedCustomers = (clone $customers)->where('status', CustomerStatus::NOT_INTERESTED->value)->count();
+        $appInCustomers = (clone $customers)->where('status', CustomerStatus::APP_IN->value)->count();
+        $validCustomers = (clone $customers)->where('status', CustomerStatus::VALID->value)->count();
         $invalidCustomers = (clone $customers)->where('status', CustomerStatus::INVALID->value)->count();
 
         $contactedToday = (clone $customers)->whereDate('last_contacted_at', today())->count();
@@ -36,8 +96,8 @@ new class extends Component {
                 'count' => $newCustomers,
             ],
             [
-                'status' => CustomerStatus::CONTACTED,
-                'count' => $contactedCustomers,
+                'status' => CustomerStatus::BLAST,
+                'count' => $blastedCustomers,
             ],
             [
                 'status' => CustomerStatus::REPLIED,
@@ -52,12 +112,16 @@ new class extends Component {
                 'count' => $interestedCustomers,
             ],
             [
-                'status' => CustomerStatus::CONVERTED,
-                'count' => $convertedCustomers,
-            ],
-            [
                 'status' => CustomerStatus::NOT_INTERESTED,
                 'count' => $notInterestedCustomers,
+            ],
+            [
+                'status' => CustomerStatus::APP_IN,
+                'count' => $appInCustomers,
+            ],
+            [
+                'status' => CustomerStatus::VALID,
+                'count' => $validCustomers,
             ],
             [
                 'status' => CustomerStatus::INVALID,
@@ -65,21 +129,25 @@ new class extends Component {
             ],
         ];
 
+        $chartData = $this->getChartData();
+
         return $this->view([
             'totalCustomers' => $totalCustomers,
             'newCustomers' => $newCustomers,
-            'contactedCustomers' => $contactedCustomers,
+            'blastedCustomers' => $blastedCustomers,
             'repliedCustomers' => $repliedCustomers,
-            'interestedCustomers' => $interestedCustomers,
             'followUpCustomers' => $followUpCustomers,
-            'convertedCustomers' => $convertedCustomers,
+            'interestedCustomers' => $interestedCustomers,
             'notInterestedCustomers' => $notInterestedCustomers,
+            'appInCustomers' => $appInCustomers,
+            'validCustomers' => $validCustomers,
             'invalidCustomers' => $invalidCustomers,
             'contactedToday' => $contactedToday,
             'contactedThisWeek' => $contactedThisWeek,
             'recentCustomers' => $recentCustomers,
             'activeTemplates' => $activeTemplates,
             'statusOverview' => $statusOverview,
+            'chartData' => $chartData,
         ]);
     }
 };
@@ -221,15 +289,15 @@ new class extends Component {
 
                     <div>
                         <flux:text>
-                            Sudah Dihubungi
+                            Total Customer Blast
                         </flux:text>
 
                         <flux:heading size="xl" class="mt-1">
-                            {{ number_format($contactedCustomers) }}
+                            {{ number_format($blastedCustomers) }}
                         </flux:heading>
 
                         <flux:text class="mt-1 text-xs text-zinc-500">
-                            Total customer contacted
+                            Sudah Diblast WA
                         </flux:text>
                     </div>
 
@@ -255,7 +323,7 @@ new class extends Component {
 
                     <div>
                         <flux:text>
-                            Interested
+                            Customer Minat
                         </flux:text>
 
                         <flux:heading size="xl" class="mt-1 text-emerald-600 dark:text-emerald-400">
@@ -279,7 +347,7 @@ new class extends Component {
         </div>
 
         {{-- ACTIVITY --}}
-        <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
 
             @php
                 $activities = [
@@ -302,10 +370,16 @@ new class extends Component {
                         'color' => 'amber',
                     ],
                     [
-                        'label' => 'Converted',
-                        'value' => $convertedCustomers,
+                        'label' => 'Pengajuan',
+                        'value' => $appInCustomers,
+                        'icon' => 'arrow-left-end-on-rectangle',
+                        'color' => 'teal',
+                    ],
+                    [
+                        'label' => 'Valid',
+                        'value' => $validCustomers,
                         'icon' => 'check-circle',
-                        'color' => 'emerald',
+                        'color' => 'green',
                     ],
                 ];
             @endphp
@@ -338,9 +412,129 @@ new class extends Component {
 
         </div>
 
+        {{-- CUSTOMER STATUS CHART --}}
+        <flux:card
+            class="overflow-hidden border-indigo-200/70 bg-white shadow-sm transition duration-300 hover:shadow-md dark:border-indigo-500/20 dark:bg-zinc-900">
+
+            {{-- HEADER --}}
+            <div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+
+                <div class="flex items-center gap-3">
+
+                    <div
+                        class="flex size-10 shrink-0 items-center justify-center rounded-xl bg-indigo-50 text-indigo-600 dark:bg-indigo-500/10 dark:text-indigo-400">
+                        <flux:icon name="chart-bar" class="size-5" />
+                    </div>
+
+                    <div>
+                        <flux:heading size="lg">
+                            Customer Status
+                        </flux:heading>
+
+                        <flux:text class="mt-1">
+                            Perbandingan customer berdasarkan status.
+                        </flux:text>
+                    </div>
+
+                </div>
+
+                {{-- MONTH FILTER --}}
+                <div class="w-full sm:w-auto">
+                    <flux:select wire:model.live="selectedMonth" class="w-full sm:w-52">
+                        @foreach ($monthOptions as $month)
+                            <flux:select.option value="{{ $month['value'] }}">
+                                {{ $month['label'] }}
+                            </flux:select.option>
+                        @endforeach
+                    </flux:select>
+                </div>
+
+            </div>
+
+            {{-- SUMMARY --}}
+            <div class="mt-6 grid gap-3 sm:grid-cols-3">
+
+                {{-- CURRENT MONTH --}}
+                <div
+                    class="rounded-xl border border-indigo-100 bg-indigo-50/70 p-4 dark:border-indigo-500/10 dark:bg-indigo-500/5">
+
+                    <flux:text class="text-xs text-indigo-600 dark:text-indigo-400">
+                        Bulan Dipilih
+                    </flux:text>
+
+                    <flux:heading size="lg" class="mt-1">
+                        {{ number_format(collect($chartData['current'])->sum()) }}
+                    </flux:heading>
+
+                </div>
+
+                {{-- PREVIOUS MONTH --}}
+                <div
+                    class="rounded-xl border border-zinc-200 bg-zinc-50/70 p-4 dark:border-zinc-800 dark:bg-zinc-800/40">
+
+                    <flux:text class="text-xs">
+                        Bulan Sebelumnya
+                    </flux:text>
+
+                    <flux:heading size="lg" class="mt-1">
+                        {{ number_format(collect($chartData['previous'])->sum()) }}
+                    </flux:heading>
+
+                </div>
+
+                {{-- DIFFERENCE --}}
+                @php
+                    $currentTotal = collect($chartData['current'])->sum();
+                    $previousTotal = collect($chartData['previous'])->sum();
+
+                    $difference = $currentTotal - $previousTotal;
+
+                    $percentageChange =
+                        $previousTotal > 0
+                            ? round(($difference / $previousTotal) * 100, 1)
+                            : ($currentTotal > 0
+                                ? 100
+                                : 0);
+                @endphp
+
+                <div
+                    class="rounded-xl border border-emerald-100 bg-emerald-50/70 p-4 dark:border-emerald-500/10 dark:bg-emerald-500/5">
+
+                    <flux:text class="text-xs text-emerald-600 dark:text-emerald-400">
+                        Perubahan
+                    </flux:text>
+
+                    <div class="mt-1 flex items-center gap-2">
+
+                        <flux:heading size="lg"
+                            class="{{ $difference >= 0 ? 'text-emerald-600 dark:text-emerald-400' : 'text-red-600 dark:text-red-400' }}">
+
+                            {{ $difference >= 0 ? '+' : '' }}{{ number_format($difference) }}
+                        </flux:heading>
+
+                        <span
+                            class="text-xs font-medium {{ $difference >= 0 ? 'text-emerald-600 dark:text-emerald-400' : 'text-red-600 dark:text-red-400' }}">
+
+                            {{ $percentageChange >= 0 ? '+' : '' }}{{ $percentageChange }}%
+
+                        </span>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+            {{-- CHART --}}
+            <div wire:ignore class="relative mt-6 h-90 w-full" x-data="overviewChart(@js($chartData))"
+                x-on:overview-chart-updated.window="update($event.detail.data)">
+                <canvas x-ref="canvas"></canvas>
+            </div>
+
+        </flux:card>
+
         {{-- STATUS + QUICK ACTION --}}
         <div class="grid gap-6 lg:grid-cols-3">
-
 
             {{-- STATUS --}}
             <flux:card class="overflow-hidden border-indigo-200/60 shadow-sm dark:border-indigo-500/20 lg:col-span-2">
@@ -371,7 +565,6 @@ new class extends Component {
                     </flux:button>
 
                 </div>
-
 
                 <div class="mt-6 space-y-5">
 
@@ -414,58 +607,48 @@ new class extends Component {
 
             </flux:card>
 
-
             {{-- QUICK ACTION --}}
             <flux:card
-                class="relative overflow-hidden border-violet-200/70 bg-linear-to-br from-indigo-50/80 via-white to-violet-50/80 shadow-sm dark:border-violet-500/20 dark:from-indigo-500/10 dark:via-zinc-900 dark:to-violet-500/10">
+                class="overflow-hidden border-violet-200/70 bg-linear-to-br from-indigo-100/80 via-white to-violet-100/80 shadow-sm dark:border-violet-500/20 dark:from-indigo-500/10 dark:via-zinc-900 dark:to-violet-500/10">
 
-                <div
-                    class="pointer-events-none absolute -right-16 -top-16 size-40 rounded-full bg-violet-500/10 blur-3xl">
+                <div class="flex items-center gap-3">
+
+                    <div
+                        class="flex size-10 items-center justify-center rounded-xl bg-violet-100 text-violet-600 dark:bg-violet-500/10 dark:text-violet-400">
+                        <flux:icon name="bolt" class="size-5" />
+                    </div>
+
+                    <div>
+                        <flux:heading size="lg">
+                            Quick Actions
+                        </flux:heading>
+
+                        <flux:text class="mt-1">
+                            Akses fitur yang sering digunakan.
+                        </flux:text>
+                    </div>
+
                 </div>
 
-                <div class="relative">
+                <div class="mt-6 space-y-3">
 
-                    <div class="flex items-center gap-3">
+                    <flux:button href="{{ route('customers') }}" wire:navigate variant="outline"
+                        class="w-full justify-start border-indigo-200 bg-white/70 hover:bg-indigo-50 dark:border-indigo-500/20 dark:bg-zinc-900/50 dark:hover:bg-indigo-500/10"
+                        icon="user-plus">
+                        Import Customer
+                    </flux:button>
 
-                        <div
-                            class="flex size-10 items-center justify-center rounded-xl bg-violet-100 text-violet-600 dark:bg-violet-500/10 dark:text-violet-400">
-                            <flux:icon name="bolt" class="size-5" />
-                        </div>
+                    <flux:button href="{{ route('customers') }}" wire:navigate variant="outline"
+                        class="w-full justify-start border-emerald-200 bg-white/70 hover:bg-emerald-50 dark:border-emerald-500/20 dark:bg-zinc-900/50 dark:hover:bg-emerald-500/10"
+                        icon="chat-bubble-left-right">
+                        Hubungi Customer
+                    </flux:button>
 
-                        <div>
-                            <flux:heading size="lg">
-                                Quick Actions
-                            </flux:heading>
-
-                            <flux:text class="mt-1">
-                                Akses fitur yang sering digunakan.
-                            </flux:text>
-                        </div>
-
-                    </div>
-
-
-                    <div class="mt-6 space-y-3">
-
-                        <flux:button href="{{ route('customers') }}" wire:navigate variant="outline"
-                            class="w-full justify-start border-indigo-200 bg-white/70 hover:bg-indigo-50 dark:border-indigo-500/20 dark:bg-zinc-900/50 dark:hover:bg-indigo-500/10"
-                            icon="user-plus">
-                            Import Customer
-                        </flux:button>
-
-                        <flux:button href="{{ route('customers') }}" wire:navigate variant="outline"
-                            class="w-full justify-start border-emerald-200 bg-white/70 hover:bg-emerald-50 dark:border-emerald-500/20 dark:bg-zinc-900/50 dark:hover:bg-emerald-500/10"
-                            icon="chat-bubble-left-right">
-                            Hubungi Customer
-                        </flux:button>
-
-                        <flux:button href="{{ route('message-templates') }}" wire:navigate variant="outline"
-                            class="w-full justify-start border-violet-200 bg-white/70 hover:bg-violet-50 dark:border-violet-500/20 dark:bg-zinc-900/50 dark:hover:bg-violet-500/10"
-                            icon="document-plus">
-                            Buat Template
-                        </flux:button>
-
-                    </div>
+                    <flux:button href="{{ route('message-templates') }}" wire:navigate variant="outline"
+                        class="w-full justify-start border-violet-200 bg-white/70 hover:bg-violet-50 dark:border-violet-500/20 dark:bg-zinc-900/50 dark:hover:bg-violet-500/10"
+                        icon="document-plus">
+                        Buat Template
+                    </flux:button>
 
                 </div>
 
@@ -506,7 +689,6 @@ new class extends Component {
                     </flux:button>
 
                 </div>
-
 
                 <div class="mt-5 divide-y divide-zinc-100 dark:divide-zinc-800">
 
@@ -550,7 +732,6 @@ new class extends Component {
                 </div>
 
             </flux:card>
-
 
             {{-- ACTIVE TEMPLATES --}}
             <flux:card class="overflow-hidden border-zinc-200/80 shadow-sm dark:border-zinc-800">
