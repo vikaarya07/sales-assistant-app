@@ -622,164 +622,108 @@ new class extends Component {
 
 ?>
 
-<div class="space-y-6">
+<div class="p-5 md:p-8 space-y-6">
 
     {{-- HEADER --}}
-    <div
-        class="relative overflow-hidden border-b border-indigo-100/60 bg-linear-to-r from-indigo-50/50 via-violet-50/40 to-fuchsia-50/30 dark:border-violet-900/40 dark:from-indigo-950/30 dark:via-violet-950/25 dark:to-fuchsia-950/20">
-
-        {{-- Background Glow --}}
-        <div
-            class="pointer-events-none absolute -top-32 left-1/2 h-72 w-72 -translate-x-1/2 rounded-full bg-violet-400/8 blur-3xl dark:bg-violet-500/10">
-        </div>
-
-        <div class="relative mx-auto max-w-7xl px-6 py-10 lg:px-8">
-
-            <div class="flex flex-col gap-5 sm:flex-row sm:items-center sm:justify-between">
-
-                <div>
-
-                    <div class="flex items-center gap-3">
-
-                        <div
-                            class="flex size-11 items-center justify-center rounded-2xl bg-linear-to-br from-indigo-400 to-violet-500 text-white shadow-lg shadow-indigo-500/15">
-                            <flux:icon name="users" class="size-5" />
-                        </div>
-
-                        <div>
-
-                            <flux:heading size="xl">
-                                Customers
-                            </flux:heading>
-
-                            <flux:text class="mt-1">
-                                Kelola data customer Sales WhatsApp.
-                            </flux:text>
-
-                        </div>
-
-                    </div>
-
+    <div class="border-b border-indigo-100">
+        <div class="mx-auto flex max-w-7xl items-center justify-between gap-4 mb-4">
+            <div class="flex items-center gap-3">
+                <div
+                    class="flex size-10 shrink-0 items-center justify-center rounded-xl bg-linear-to-br from-indigo-400 to-violet-500 text-white shadow-lg shadow-indigo-500/15">
+                    <flux:icon name="users" class="size-5" />
                 </div>
 
-                <flux:badge color="indigo" icon="phone-arrow-down-left" class="self-start sm:self-auto">
-                    Customer Management
-                </flux:badge>
+                <div>
+                    <flux:heading size="xl">
+                        Customers
+                    </flux:heading>
 
+                    <flux:text class="mt-1">
+                        Kelola data customer Sales WhatsApp.
+                    </flux:text>
+                </div>
             </div>
 
+            <flux:badge color="indigo" icon="phone-arrow-down-left" class="self-start sm:self-auto">
+                Customer Management
+            </flux:badge>
         </div>
     </div>
 
     {{-- CONTENT --}}
-    <div class="mx-auto max-w-7xl space-y-6 px-6 py-8 lg:px-8">
-
+    <div class="mx-auto max-w-7xl space-y-6">
 
         {{-- IMPORT CUSTOMER --}}
         <flux:card
-            class="group relative overflow-hidden border-indigo-100/70 bg-white shadow-sm dark:border-violet-900/40 dark:bg-zinc-900">
+            class="overflow-hidden border-indigo-100 bg-white shadow-sm dark:border-violet-900/40 dark:bg-zinc-900">
 
-            {{-- Glow --}}
-            <div
-                class="pointer-events-none absolute -right-20 -top-20 size-56 rounded-full bg-violet-400/8 blur-3xl transition duration-500 group-hover:bg-fuchsia-400/10">
-            </div>
+            <form wire:submit="importCustomers" class="space-y-6">
 
-            <div class="relative p-6 sm:p-8">
+                <div class="flex flex-col gap-5 sm:flex-row sm:items-start sm:justify-between">
 
-                <form wire:submit="importCustomers" class="space-y-6">
+                    <div class="flex gap-4">
 
-                    <div class="flex flex-col gap-5 sm:flex-row sm:items-start sm:justify-between">
-
-                        <div class="flex gap-4">
-
-                            <div
-                                class="flex size-12 shrink-0 items-center justify-center rounded-2xl bg-linear-to-br from-indigo-400 to-violet-500 text-white shadow-lg shadow-indigo-500/15">
-                                <flux:icon name="arrow-up-tray" class="size-5" />
-                            </div>
-
-                            <div>
-
-                                <flux:heading size="lg">
-                                    Import Customer
-                                </flux:heading>
-
-                                <flux:text class="mt-1 max-w-xl">
-                                    Copy data dari kantor lalu paste langsung
-                                    ke dalam aplikasi.
-                                </flux:text>
-
-                            </div>
-
+                        <div
+                            class="flex size-12 shrink-0 items-center justify-center rounded-2xl bg-linear-to-br from-indigo-400 to-violet-500 text-white shadow-lg shadow-indigo-500/15">
+                            <flux:icon name="arrow-up-tray" class="size-5" />
                         </div>
 
-                        <flux:badge color="indigo" icon="clipboard-document" variant="outline">
-                            Paste Data
-                        </flux:badge>
+                        <div>
 
-                    </div>
+                            <flux:heading size="lg">
+                                Import Customer
+                            </flux:heading>
 
-
-                    <div
-                        class="rounded-2xl border border-dashed border-indigo-200/70 bg-indigo-50/30 p-3 transition hover:border-violet-300/70 hover:bg-violet-50/30 dark:border-violet-800/50 dark:bg-indigo-950/20 dark:hover:border-fuchsia-500/30">
-
-                        <flux:textarea wire:model="importText" label="Data Customer" rows="8"
-                            placeholder="Paste data customer di sini..." />
-
-                    </div>
-
-
-                    @error('importText')
-                        <flux:text class="text-sm text-red-600 dark:text-red-400">
-                            {{ $message }}
-                        </flux:text>
-                    @enderror
-
-
-                    <div
-                        class="flex flex-col gap-4 border-t border-indigo-100 pt-5 sm:flex-row sm:items-center sm:justify-between dark:border-violet-900/40">
-
-                        <div class="flex items-center gap-2">
-
-                            <flux:icon name="information-circle" class="size-4 text-indigo-400" />
-
-                            <flux:text class="text-xs text-zinc-500">
-                                Nomor HP · Nama · Nomor Kontrak · Nominal · Cabang
+                            <flux:text class="mt-1 max-w-xl">
+                                Copy data dari EXCEL/SPREADSHEET lalu paste langsung
+                                ke dalam aplikasi.
                             </flux:text>
 
                         </div>
 
-                        <flux:button type="submit" variant="primary" icon="arrow-up-tray"
-                            class="shadow-lg shadow-indigo-500/15">
-                            Import Customer
-                        </flux:button>
-
                     </div>
 
-                </form>
+                    <flux:badge color="indigo" icon="clipboard-document" variant="outline">
+                        Paste Data
+                    </flux:badge>
 
-            </div>
+                </div>
+
+                <div
+                    class="rounded-2xl border border-dashed border-indigo-200/70 bg-indigo-50/30 p-3 transition hover:border-violet-300/70 hover:bg-violet-50/30 dark:border-violet-800/50 dark:bg-indigo-950/20 dark:hover:border-fuchsia-500/30">
+
+                    <flux:textarea wire:model="importText" label="Data Customer" rows="7"
+                        placeholder="Contoh : 85799928828 SETYA PRIORITAS DANA 07000000000000000 30.000.000 YOGYAKARTA" />
+
+                </div>
+
+                <div
+                    class="flex flex-col gap-4 border-t border-indigo-100 pt-3 sm:flex-row sm:items-center sm:justify-between dark:border-violet-900/40">
+
+                    <flux:badge color="fuchsia" icon="information-circle" variant="outline">
+                        Nomor HP · Nama · Nomor Kontrak · Nominal · Cabang
+                    </flux:badge>
+
+                    <flux:button type="submit" variant="primary" icon="arrow-up-tray"
+                        class="shadow-lg shadow-indigo-500/15">
+                        Import Customer
+                    </flux:button>
+
+                </div>
+
+            </form>
 
         </flux:card>
-
 
         {{-- RESULT --}}
         @if ($result)
             <div class="grid gap-4 sm:grid-cols-3">
 
                 {{-- SUCCESS --}}
-                <div
-                    class="group relative overflow-hidden rounded-2xl border border-emerald-200 bg-white p-5 shadow-sm transition duration-300 hover:-translate-y-0.5 hover:shadow-lg hover:shadow-emerald-500/10 dark:border-emerald-500/20 dark:bg-zinc-900">
-
-                    <div class="absolute -right-10 -top-10 size-28 rounded-full bg-emerald-500/8 blur-2xl">
-                    </div>
-
-                    <div class="relative flex items-start justify-between">
-
+                <flux:card class="border-emerald-200 dark:border-emerald-500/20">
+                    <div class="flex items-center justify-between">
                         <div>
-
-                            <flux:text>
-                                Berhasil
-                            </flux:text>
+                            <flux:text>Berhasil</flux:text>
 
                             <flux:heading size="xl" class="mt-1 text-emerald-600 dark:text-emerald-400">
                                 {{ $result['created'] }}
@@ -788,33 +732,17 @@ new class extends Component {
                             <flux:text class="mt-1 text-xs">
                                 Customer berhasil diimport
                             </flux:text>
-
                         </div>
 
-                        <div
-                            class="flex size-10 items-center justify-center rounded-xl bg-emerald-50 text-emerald-600 dark:bg-emerald-500/10 dark:text-emerald-400">
-                            <flux:icon name="check-circle" variant="solid" class="size-5" />
-                        </div>
-
+                        <flux:icon name="check-circle" variant="solid" class="size-8 text-emerald-500" />
                     </div>
-
-                </div>
-
+                </flux:card>
 
                 {{-- DUPLICATE --}}
-                <div
-                    class="group relative overflow-hidden rounded-2xl border border-amber-200 bg-white p-5 shadow-sm transition duration-300 hover:-translate-y-0.5 hover:shadow-lg hover:shadow-amber-500/10 dark:border-amber-500/20 dark:bg-zinc-900">
-
-                    <div class="absolute -right-10 -top-10 size-28 rounded-full bg-amber-500/8 blur-2xl">
-                    </div>
-
-                    <div class="relative flex items-start justify-between">
-
+                <flux:card class="border-amber-200 dark:border-amber-500/20">
+                    <div class="flex items-center justify-between">
                         <div>
-
-                            <flux:text>
-                                Duplicate
-                            </flux:text>
+                            <flux:text>Duplicate</flux:text>
 
                             <flux:heading size="xl" class="mt-1 text-amber-600 dark:text-amber-400">
                                 {{ $result['duplicate'] }}
@@ -823,33 +751,17 @@ new class extends Component {
                             <flux:text class="mt-1 text-xs">
                                 Data dilewati
                             </flux:text>
-
                         </div>
 
-                        <div
-                            class="flex size-10 items-center justify-center rounded-xl bg-amber-50 text-amber-600 dark:bg-amber-500/10 dark:text-amber-400">
-                            <flux:icon name="document-duplicate" class="size-5" />
-                        </div>
-
+                        <flux:icon name="document-duplicate" class="size-8 text-amber-500" />
                     </div>
-
-                </div>
-
+                </flux:card>
 
                 {{-- INVALID --}}
-                <div
-                    class="group relative overflow-hidden rounded-2xl border border-red-200 bg-white p-5 shadow-sm transition duration-300 hover:-translate-y-0.5 hover:shadow-lg hover:shadow-red-500/10 dark:border-red-500/20 dark:bg-zinc-900">
-
-                    <div class="absolute -right-10 -top-10 size-28 rounded-full bg-red-500/8 blur-2xl">
-                    </div>
-
-                    <div class="relative flex items-start justify-between">
-
+                <flux:card class="border-red-200 dark:border-red-500/20">
+                    <div class="flex items-center justify-between">
                         <div>
-
-                            <flux:text>
-                                Invalid
-                            </flux:text>
+                            <flux:text>Invalid</flux:text>
 
                             <flux:heading size="xl" class="mt-1 text-red-600 dark:text-red-400">
                                 {{ $result['invalid'] }}
@@ -858,21 +770,14 @@ new class extends Component {
                             <flux:text class="mt-1 text-xs">
                                 Data tidak valid
                             </flux:text>
-
                         </div>
 
-                        <div
-                            class="flex size-10 items-center justify-center rounded-xl bg-red-50 text-red-600 dark:bg-red-500/10 dark:text-red-400">
-                            <flux:icon name="exclamation-triangle" class="size-5" />
-                        </div>
-
+                        <flux:icon name="exclamation-triangle" class="size-8 text-red-500" />
                     </div>
-
-                </div>
+                </flux:card>
 
             </div>
         @endif
-
 
         {{-- SEARCH & FILTER --}}
         <flux:card class="border-indigo-100/70 shadow-sm dark:border-violet-900/40">
@@ -907,7 +812,6 @@ new class extends Component {
             </div>
 
         </flux:card>
-
 
         {{-- BULK ACTION --}}
         @if (count($selectedCustomers) > 0)
@@ -955,12 +859,10 @@ new class extends Component {
             </div>
         @endif
 
-
         {{-- CUSTOMER TABLE --}}
         <flux:card class="overflow-hidden border-indigo-100/70 shadow-sm dark:border-violet-900/40">
 
-            <div
-                class="flex items-center justify-between border-b border-indigo-100 px-5 py-4 dark:border-violet-900/40">
+            <div class="flex items-center justify-between pb-4">
 
                 <div class="flex items-center gap-3">
 
@@ -989,7 +891,6 @@ new class extends Component {
 
             </div>
 
-
             <div class="overflow-x-auto">
 
                 <table class="w-full text-sm">
@@ -997,7 +898,7 @@ new class extends Component {
                     <thead>
 
                         <tr
-                            class="border-b border-indigo-100 bg-linear-to-r from-indigo-50/50 via-violet-50/30 to-fuchsia-50/20 dark:border-violet-900/40 dark:from-indigo-950/30 dark:via-violet-950/20 dark:to-fuchsia-950/10">
+                            class="border-b border-indigo-100 bg-linear-to-r from-indigo-100/50 via-violet-100/30 to-fuchsia-100/20 dark:border-violet-900/40 dark:from-indigo-950/30 dark:via-violet-950/20 dark:to-fuchsia-950/10">
 
                             <th class="w-12 px-4 py-3">
 
@@ -1026,14 +927,13 @@ new class extends Component {
                                 Status
                             </th>
 
-                            <th class="px-4 py-3 text-right font-medium text-zinc-500">
+                            <th class="px-4 py-3 text-center font-medium text-zinc-500">
                                 Action
                             </th>
 
                         </tr>
 
                     </thead>
-
 
                     <tbody>
 
@@ -1120,23 +1020,20 @@ new class extends Component {
                                     <div class="flex justify-end gap-2">
 
                                         {{-- CHAT --}}
-                                        <flux:button size="sm" icon="chat-bubble-left-right"
-                                            wire:click="openComposer({{ $customer->id }})"
-                                            class="bg-emerald-500 text-white shadow-sm shadow-emerald-500/15 hover:bg-emerald-600">
+                                        <flux:button size="sm" icon="chat-bubble-left-right" variant="primary" color="emerald"
+                                            wire:click="openComposer({{ $customer->id }})">
                                             Chat
                                         </flux:button>
 
                                         {{-- EDIT --}}
-                                        <flux:button size="sm" variant="ghost" icon="pencil"
-                                            wire:click="openEditCustomer({{ $customer->id }})"
-                                            class="hover:bg-indigo-50 hover:text-indigo-600 dark:hover:bg-indigo-500/10 dark:hover:text-indigo-300">
+                                        <flux:button size="sm" variant="ghost" color="indigo" icon="pencil"
+                                            wire:click="openEditCustomer({{ $customer->id }})">
                                         </flux:button>
 
                                         {{-- DELETE --}}
-                                        <flux:button size="sm" variant="ghost" icon="trash"
+                                        <flux:button size="sm" variant="ghost" color="red" icon="trash"
                                             wire:click="deleteCustomer({{ $customer->id }})"
-                                            wire:confirm="Hapus customer ini?"
-                                            class="hover:bg-red-50 hover:text-red-600 dark:hover:bg-red-500/10 dark:hover:text-red-400">
+                                            wire:confirm="Hapus customer ini?">
                                         </flux:button>
 
                                     </div>
@@ -1219,11 +1116,19 @@ new class extends Component {
 
             </div>
 
+            <flux:select wire:model="editStatus" label="Status">
+
+                @foreach ($statuses as $customerStatus)
+                    <flux:select.option :value="$customerStatus->value">
+                        {{ $customerStatus->label() }}
+                    </flux:select.option>
+                @endforeach
+
+            </flux:select>
+
             <div class="grid gap-5 sm:grid-cols-2">
 
                 <flux:input wire:model="editName" label="Nama Customer" placeholder="Nama customer" />
-
-                <flux:input wire:model="editPhone" label="Nomor WhatsApp" placeholder="081234567890" />
 
                 <flux:input wire:model="editContractNumber" label="Nomor Kontrak" placeholder="Nomor kontrak" />
 
@@ -1231,35 +1136,9 @@ new class extends Component {
 
                 <flux:input wire:model="editBranch" label="Cabang" placeholder="KARAWACI" />
 
-                <flux:select wire:model="editStatus" label="Status">
-
-                    @foreach ($statuses as $customerStatus)
-                        <flux:select.option :value="$customerStatus->value">
-                            {{ $customerStatus->label() }}
-                        </flux:select.option>
-                    @endforeach
-
-                </flux:select>
-
             </div>
 
-            @error('editPhone')
-                <flux:text class="text-sm text-red-600">
-                    {{ $message }}
-                </flux:text>
-            @enderror
-
-            @error('editAmount')
-                <flux:text class="text-sm text-red-600">
-                    {{ $message }}
-                </flux:text>
-            @enderror
-
-            @error('editStatus')
-                <flux:text class="text-sm text-red-600">
-                    {{ $message }}
-                </flux:text>
-            @enderror
+            <flux:input wire:model="editPhone" label="Nomor WhatsApp" placeholder="081234567890" />
 
             <flux:separator />
 
@@ -1280,7 +1159,7 @@ new class extends Component {
     </flux:modal>
 
     {{-- WHATSAPP COMPOSER --}}
-    <flux:modal name="whatsapp-composer" class="w-full max-w-2xl" :dismissible="false">
+    <flux:modal name="whatsapp-composer" class="w-sm md:w-full md:max-w-2xl" :dismissible="false">
 
         <div class="space-y-6">
 
@@ -1316,11 +1195,10 @@ new class extends Component {
 
             </div>
 
-
             {{-- CUSTOMER INFO --}}
             @if ($selectedCustomer)
                 <div
-                    class="relative overflow-hidden rounded-2xl border border-indigo-100 bg-linear-to-r from-indigo-50/60 via-violet-50/50 to-fuchsia-50/30 p-4 dark:border-violet-900/40 dark:from-indigo-500/10 dark:via-violet-500/8 dark:to-fuchsia-500/5">
+                    class="relative overflow-hidden rounded-2xl border border-indigo-100 bg-linear-to-r from-indigo-100/60 via-violet-100/50 to-fuchsia-100/60 p-4 dark:border-violet-900/40 dark:from-indigo-500/10 dark:via-violet-500/8 dark:to-fuchsia-500/5">
 
                     <div class="flex items-center gap-3">
 
@@ -1349,9 +1227,8 @@ new class extends Component {
                 </div>
             @endif
 
-
             {{-- TEMPLATE --}}
-            <flux:select wire:model.live="selectedTemplateId" label="Template Pesan" placeholder="Pilih template...">
+            <flux:select wire:model.live="selectedTemplateId" label="Template Pesan" placeholder="-- Pilih Template --">
 
                 @foreach ($templates as $template)
                     <flux:select.option :value="(string) $template->id">
@@ -1360,7 +1237,6 @@ new class extends Component {
                 @endforeach
 
             </flux:select>
-
 
             {{-- CUSTOMIZATION --}}
             @if ($selectedTemplateId)
@@ -1375,7 +1251,7 @@ new class extends Component {
                             <flux:icon name="sun" class="size-4 text-violet-400" />
 
                             <flux:text class="font-medium">
-                                Sapaan
+                                Sapaan Waktu
                             </flux:text>
 
                         </div>
@@ -1403,7 +1279,6 @@ new class extends Component {
                         </div>
 
                     </div>
-
 
                     {{-- ADDRESS --}}
                     <div>
@@ -1439,7 +1314,6 @@ new class extends Component {
                 </div>
             @endif
 
-
             {{-- PREVIEW --}}
             <div>
 
@@ -1447,7 +1321,7 @@ new class extends Component {
 
                     <div class="flex items-center gap-2">
 
-                        <flux:icon name="eye" class="size-4 text-violet-400" />
+                        <flux:icon name="eye" class="size-4 text-violet-500" />
 
                         <flux:text class="font-medium">
                             Preview Pesan
@@ -1463,13 +1337,12 @@ new class extends Component {
 
                 </div>
 
-
                 <div
                     class="overflow-hidden rounded-2xl border border-indigo-100 shadow-lg shadow-violet-900/5 dark:border-violet-900/40">
 
                     {{-- CHAT HEADER --}}
                     <div
-                        class="flex items-center gap-3 border-b border-violet-900/20 bg-linear-to-r from-indigo-600 via-violet-600 to-fuchsia-600 px-4 py-3 text-white dark:border-violet-800">
+                        class="flex items-center gap-3 border-b border-emerald-900/20 bg-emerald-600 px-4 py-3 text-white dark:border-emerald-800">
 
                         <flux:avatar :name="$selectedCustomer?->name ?? 'Customer'" circle size="sm"
                             color="auto" />
@@ -1489,7 +1362,6 @@ new class extends Component {
                         </div>
 
                     </div>
-
 
                     {{-- CHAT BODY --}}
                     <div class="relative min-h-80 overflow-y-auto bg-[#efeae2] p-4 dark:bg-zinc-950">
@@ -1550,7 +1422,6 @@ new class extends Component {
 
             </div>
 
-
             {{-- FOOTER --}}
             <flux:separator />
 
@@ -1562,8 +1433,7 @@ new class extends Component {
 
                 @if ($this->whatsappUrl)
                     <flux:button href="{{ $this->whatsappUrl }}" target="_blank" variant="primary"
-                        icon="arrow-top-right-on-square" wire:click="markContacted"
-                        class="bg-linear-to-r from-indigo-500 via-violet-500 to-fuchsia-500 shadow-lg shadow-violet-500/15 hover:from-indigo-600 hover:via-violet-600 hover:to-fuchsia-600">
+                        icon="arrow-top-right-on-square" color="emerald" wire:click="markContacted">
                         Buka WhatsApp
                     </flux:button>
                 @else

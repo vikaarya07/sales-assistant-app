@@ -6,10 +6,10 @@
 </head>
 
 <body
-    class="min-h-screen bg-linear-to-br from-indigo-50 via-violet-50 to-fuchsia-50 dark:from-slate-950 dark:via-indigo-950/60 dark:to-fuchsia-950/40 antialiased">
+    class="min-h-screen bg-linear-to-br from-indigo-50 via-violet-50 to-fuchsia-50 dark:from-slate-950 dark:via-indigo-950 dark:to-fuchsia-950 antialiased">
 
     <flux:sidebar sticky collapsible
-        class="bg-linear-to-b from-indigo-200/70 via-violet-200/60 to-fuchsia-200/60 dark:from-indigo-950/90 dark:via-violet-950/80 dark:to-fuchsia-950/70 border-r border-indigo-200/60 dark:border-violet-800/40">
+        class="bg-linear-to-b from-indigo-200 via-violet-200 to-fuchsia-200 dark:from-indigo-950 dark:via-violet-950 dark:to-fuchsia-950 border-r border-indigo-200 dark:border-violet-800">
 
         <flux:sidebar.header>
             <x-app-logo :sidebar="true" href="{{ route('dashboard') }}" wire:navigate />
@@ -56,7 +56,7 @@
 
     <!-- Mobile User Menu -->
     <flux:header
-        class="lg:hidden bg-linear-to-r from-indigo-100 via-violet-100 to-fuchsia-100 dark:from-indigo-950 dark:via-violet-950 dark:to-fuchsia-950 border-b border-indigo-200/60 dark:border-violet-800/40">
+        class="lg:hidden bg-linear-to-r from-indigo-100 via-violet-100 to-fuchsia-100 dark:from-indigo-950 dark:via-violet-950 dark:to-fuchsia-950 border-b border-indigo-200 dark:border-violet-800">
 
         <flux:sidebar.toggle class="lg:hidden" icon="bars-2" inset="left" />
 
