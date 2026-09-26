@@ -6,22 +6,20 @@
     <x-settings.layout :heading="__('Update password')" :subheading="__('Ensure your account is using a long, random password to stay secure')">
         <form method="POST" wire:submit="updatePassword" class="mt-6 space-y-6">
             <flux:input wire:model="current_password" :label="__('Current password')" type="password" required
-                autocomplete="current-password" viewable
-                class="focus-within:border-indigo-300 dark:focus-within:border-indigo-700" />
+                autocomplete="current-password" viewable />
 
             <flux:input wire:model="password" :label="__('New password')" type="password" required
                 autocomplete="new-password"
                 passwordrules="{{ \Illuminate\Validation\Rules\Password::defaults()->toPasswordRulesString() }}"
-                viewable class="focus-within:border-violet-300 dark:focus-within:border-violet-700" />
+                viewable />
 
             <flux:input wire:model="password_confirmation" :label="__('Confirm password')" type="password" required
                 autocomplete="new-password"
                 passwordrules="{{ \Illuminate\Validation\Rules\Password::defaults()->toPasswordRulesString() }}"
-                viewable class="focus-within:border-fuchsia-300 dark:focus-within:border-fuchsia-700" />
+                viewable />
 
             <div class="flex items-center gap-4">
-                <flux:button variant="primary" type="submit" data-test="update-password-button"
-                    class="bg-linear-to-r from-indigo-500/90 via-violet-500/90 to-fuchsia-500/80 hover:from-indigo-600 hover:via-violet-600 hover:to-fuchsia-600">
+                <flux:button variant="primary" color="violet" type="submit" data-test="update-password-button">
                     {{ __('Save') }}
                 </flux:button>
             </div>
@@ -29,11 +27,11 @@
 
         @if ($canManageTwoFactor)
             <section class="mt-12">
-                <flux:heading class="text-indigo-800 dark:text-indigo-200">
+                <flux:heading>
                     {{ __('Two-factor authentication') }}
                 </flux:heading>
 
-                <flux:subheading class="text-violet-700/75 dark:text-violet-300/75">
+                <flux:subheading>
                     {{ __('Manage your two-factor authentication settings') }}
                 </flux:subheading>
 
@@ -45,8 +43,7 @@
                             </flux:text>
 
                             <div class="flex justify-start">
-                                <flux:button variant="danger" wire:click="disable"
-                                    class="bg-linear-to-r from-indigo-500/80 via-violet-500/80 to-fuchsia-500/70 hover:from-indigo-600 hover:via-violet-600 hover:to-fuchsia-600">
+                                <flux:button variant="danger" color="red" wire:click="disable">
                                     {{ __('Disable 2FA') }}
                                 </flux:button>
                             </div>
@@ -59,8 +56,7 @@
                                 {{ __('When you enable two-factor authentication, you will be prompted for a secure pin during login. This pin can be retrieved from a TOTP-supported application on your phone.') }}
                             </flux:text>
 
-                            <flux:button variant="primary" wire:click="enable"
-                                class="bg-linear-to-r from-indigo-500/90 via-violet-500/90 to-fuchsia-500/80 hover:from-indigo-600 hover:via-violet-600 hover:to-fuchsia-600">
+                            <flux:button variant="primary" color="violet" wire:click="enable">
                                 {{ __('Enable 2FA') }}
                             </flux:button>
                         </div>
@@ -115,8 +111,7 @@
                                     {{ __('Back') }}
                                 </flux:button>
 
-                                <flux:button variant="primary"
-                                    class="flex-1 bg-linear-to-r from-indigo-500/90 via-violet-500/90 to-fuchsia-500/80"
+                                <flux:button variant="primary" color="violet" class="flex-1"
                                     wire:click="confirmTwoFactor" x-bind:disabled="$wire.code.length < 6">
                                     {{ __('Confirm') }}
                                 </flux:button>
@@ -148,21 +143,16 @@
                     </div>
 
                     <div>
-                        <flux:button :disabled="$errors->has('setupData')" variant="primary"
-                            class="w-full bg-linear-to-r from-indigo-500/90 via-violet-500/90 to-fuchsia-500/80"
-                            wire:click="showVerificationIfNecessary">
+                        <flux:button :disabled="$errors->has('setupData')" variant="primary" color="violet"
+                            class="w-full" wire:click="showVerificationIfNecessary">
                             {{ $this->modalConfig['buttonText'] }}
                         </flux:button>
                     </div>
 
                     <div class="space-y-4">
-                        <div class="relative flex items-center justify-center w-full">
-                            <div
-                                class="absolute inset-0 w-full h-px top-1/2 bg-linear-to-r from-indigo-200/60 via-violet-200/60 to-fuchsia-200/50 dark:from-indigo-800/50 dark:via-violet-800/50 dark:to-fuchsia-800/40">
-                            </div>
-
+                        <div class="flex items-center justify-center w-full">
                             <span
-                                class="relative px-2 text-sm bg-white dark:bg-zinc-800 text-violet-600 dark:text-violet-300">
+                                class="px-2 text-sm">
                                 {{ __('or, enter the code manually') }}
                             </span>
                         </div>
@@ -188,7 +178,7 @@
                                 </div>
                             @else
                                 <input type="text" readonly value="{{ $manualSetupKey }}"
-                                    class="w-full p-3 bg-transparent outline-none text-indigo-900 dark:text-indigo-100" />
+                                    class="w-full p-3 bg-transparent outline-none" />
 
                                 <button @click="copy()"
                                     class="px-3 transition-colors border-l cursor-pointer border-violet-200 dark:border-violet-800">
@@ -251,9 +241,8 @@
                             </div>
                         </div>
 
-                        <flux:button variant="ghost" size="sm" icon="trash" icon:variant="outline"
-                            wire:click="confirmDelete({{ $passkey['id'] }})"
-                            class="text-fuchsia-500 hover:text-fuchsia-600 hover:bg-fuchsia-50 dark:hover:bg-fuchsia-950/50" />
+                        <flux:button variant="ghost" color="red" size="sm" icon="trash"
+                            icon:variant="outline" wire:click="confirmDelete({{ $passkey['id'] }})" />
                     </div>
 
                 @empty
@@ -296,8 +285,7 @@ wire:model="showDeleteModal">
             {{ __('Cancel') }}
         </flux:button>
 
-        <flux:button variant="danger" wire:click="deletePasskey"
-            class="bg-linear-to-r from-indigo-500/80 via-violet-500/80 to-fuchsia-500/70 hover:from-indigo-600 hover:via-violet-600 hover:to-fuchsia-600">
+        <flux:button variant="danger" color="red" wire:click="deletePasskey">
             {{ __('Remove passkey') }}
         </flux:button>
     </div>

@@ -133,15 +133,15 @@ new class extends Component {
 };
 ?>
 
-<div class="p-5 md:p-8 space-y-6">
+<div class="space-y-6">
 
     {{-- HEADER --}}
-    <div class="border-b border-indigo-100">
-        <div class="mx-auto flex max-w-7xl items-center justify-between gap-4 mb-4">
+    <div class="m-5 md:my-5 md:ms-2 md:me-5 rounded-xl bg-white dark:bg-zinc-800">
+        <div class="mx-auto p-6 flex flex-col sm:flex-row items-center justify-between gap-4">
             <div class="flex items-center gap-3">
                 <div
-                    class="flex size-10 shrink-0 items-center justify-center rounded-xl bg-linear-to-br from-indigo-400 to-violet-500 text-white shadow-lg shadow-indigo-500/15">
-                    <flux:icon name="document-text" class="size-5" />
+                    class="flex size-12 shrink-0 items-center justify-center rounded-xl bg-linear-to-br from-indigo-400 to-violet-500 text-white shadow-lg shadow-indigo-500/15">
+                    <flux:icon name="document-text" class="size-6" />
                 </div>
 
                 <div>
@@ -155,18 +155,17 @@ new class extends Component {
                 </div>
             </div>
 
-            <flux:button variant="primary" color="violet" icon="plus" wire:click="createTemplate">
+            <flux:button variant="primary" color="violet" icon="plus" wire:click="createTemplate" class="w-full md:w-fit">
                 Add Template
             </flux:button>
         </div>
     </div>
 
     {{-- CONTENT --}}
-    <div class="mx-auto max-w-7xl space-y-6">
+    <div class="mx-auto  space-y-6">
 
         {{-- SEARCH --}}
-        <flux:card
-            class="border-indigo-100/70 bg-white/80 shadow-sm backdrop-blur transition duration-300 dark:border-indigo-500/10 dark:bg-zinc-900/80">
+        <flux:card variant="soft" class="m-5 md:my-5 md:ms-2 md:me-5 rounded-xl bg-white dark:bg-zinc-800">
 
             <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
 
@@ -185,8 +184,7 @@ new class extends Component {
         </flux:card>
 
         {{-- TEMPLATE LIST --}}
-        <flux:card
-            class="overflow-hidden border-indigo-100/70 shadow-sm transition duration-300 dark:border-indigo-500/10">
+        <flux:card variant="soft" class="m-5 md:my-5 md:ms-2 md:me-5 rounded-xl bg-white dark:bg-zinc-800">
 
             <div class="overflow-x-auto">
 
@@ -215,7 +213,6 @@ new class extends Component {
 
                         </tr>
                     </thead>
-
 
                     {{-- TABLE BODY --}}
                     <tbody>
@@ -260,7 +257,7 @@ new class extends Component {
                                     <div class="max-w-xl">
 
                                         <div
-                                            class="rounded-lg border border-indigo-100/60 bg-linear-to-r from-indigo-50/40 via-violet-50/30 to-fuchsia-50/20 px-3 py-2 text-sm leading-relaxed text-zinc-600 transition group-hover:border-violet-200/60 group-hover:from-indigo-50/60 group-hover:via-violet-50/50 group-hover:to-fuchsia-50/30 dark:border-indigo-500/10 dark:from-indigo-500/5 dark:via-violet-500/5 dark:to-fuchsia-500/5 dark:text-zinc-400 dark:group-hover:border-violet-500/15 dark:group-hover:bg-zinc-800/70">
+                                            class="rounded-lg border border-indigo-100/60 bg-linear-to-r from-indigo-50/40 via-violet-50/30 to-fuchsia-50/20 px-3 py-2 text-sm leading-relaxed text-zinc-600 transition group-hover:border-violet-200/60 dark:border-indigo-500/10 dark:from-indigo-500/10 dark:via-violet-500/10 dark:to-fuchsia-500/10 dark:text-zinc-400 dark:group-hover:border-violet-500/10">
 
                                             <span class="line-clamp-3 whitespace-pre-line">
                                                 {{ \Illuminate\Support\Str::limit($template->content, 150) }}
@@ -371,7 +368,6 @@ new class extends Component {
                 </table>
 
             </div>
-
 
             {{-- PAGINATION --}}
             @if ($templates->hasPages())

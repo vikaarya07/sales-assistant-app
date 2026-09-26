@@ -27,8 +27,7 @@ new class extends Component {
 
                 {{-- Badge --}}
                 <div class="flex justify-center">
-                    <flux:badge color="violet" icon="computer-desktop"
-                        class="border border-indigo-200 bg-indigo-50 px-4 py-2 text-indigo-700 dark:border-indigo-500/20 dark:bg-indigo-500/10 dark:text-indigo-300">
+                    <flux:badge color="violet" icon="computer-desktop">
                         About This Application
                     </flux:badge>
                 </div>

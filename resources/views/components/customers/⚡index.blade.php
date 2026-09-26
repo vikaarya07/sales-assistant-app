@@ -622,15 +622,15 @@ new class extends Component {
 
 ?>
 
-<div class="p-5 md:p-8 space-y-6">
+<div class="space-y-6">
 
     {{-- HEADER --}}
-    <div class="border-b border-indigo-100">
-        <div class="mx-auto flex max-w-7xl items-center justify-between gap-4 mb-4">
+    <div class="m-5 md:my-5 md:ms-2 md:me-5 rounded-xl bg-white dark:bg-zinc-800">
+        <div class="mx-auto p-6 flex flex-col sm:flex-row items-center justify-between gap-4">
             <div class="flex items-center gap-3">
                 <div
-                    class="flex size-10 shrink-0 items-center justify-center rounded-xl bg-linear-to-br from-indigo-400 to-violet-500 text-white shadow-lg shadow-indigo-500/15">
-                    <flux:icon name="users" class="size-5" />
+                    class="flex size-12 shrink-0 items-center justify-center rounded-xl bg-linear-to-br from-indigo-400 to-violet-500 text-white">
+                    <flux:icon name="users" class="size-6" />
                 </div>
 
                 <div>
@@ -651,11 +651,10 @@ new class extends Component {
     </div>
 
     {{-- CONTENT --}}
-    <div class="mx-auto max-w-7xl space-y-6">
+    <div class="m-5 md:my-5 md:ms-2 md:me-5 rounded-xl space-y-6">
 
         {{-- IMPORT CUSTOMER --}}
-        <flux:card
-            class="overflow-hidden border-indigo-100 bg-white shadow-sm dark:border-violet-900/40 dark:bg-zinc-900">
+        <flux:card variant="soft" class="bg-white dark:bg-zinc-800">
 
             <form wire:submit="importCustomers" class="space-y-6">
 
@@ -697,15 +696,18 @@ new class extends Component {
 
                 </div>
 
-                <div
-                    class="flex flex-col gap-4 border-t border-indigo-100 pt-3 sm:flex-row sm:items-center sm:justify-between dark:border-violet-900/40">
+                <div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
 
-                    <flux:badge color="fuchsia" icon="information-circle" variant="outline">
-                        Nomor HP · Nama · Nomor Kontrak · Nominal · Cabang
-                    </flux:badge>
+                    <div
+                        class="flex items-start gap-2 rounded-lg bg-fuchsia-100 px-3 py-2 text-xs text-fuchsia-600 dark:bg-fuchsia-950/30 dark:text-fuchsia-300">
+                        <flux:icon name="information-circle" class="mt-0.5 size-4 shrink-0" />
 
-                    <flux:button type="submit" variant="primary" icon="arrow-up-tray"
-                        class="shadow-lg shadow-indigo-500/15">
+                        <span class="font-semibold leading-relaxed">
+                            Nomor HP Nama Nomor Kontrak Nominal Cabang
+                        </span>
+                    </div>
+
+                    <flux:button type="submit" variant="primary" color="violet" icon="arrow-up-tray">
                         Import Customer
                     </flux:button>
 
@@ -780,7 +782,7 @@ new class extends Component {
         @endif
 
         {{-- SEARCH & FILTER --}}
-        <flux:card class="border-indigo-100/70 shadow-sm dark:border-violet-900/40">
+        <flux:card variant="soft" class="bg-white dark:bg-zinc-800">
 
             <div class="flex flex-col gap-4 lg:flex-row lg:items-end">
 
@@ -793,7 +795,7 @@ new class extends Component {
 
                 <div class="w-full lg:w-60">
 
-                    <flux:select wire:model.live="status" label="Status" placeholder="Semua Status">
+                    <flux:select wire:model.live="status" label="Status">
 
                         <flux:select.option value="">
                             Semua Status
@@ -860,15 +862,15 @@ new class extends Component {
         @endif
 
         {{-- CUSTOMER TABLE --}}
-        <flux:card class="overflow-hidden border-indigo-100/70 shadow-sm dark:border-violet-900/40">
+        <flux:card variant="soft" class="bg-white dark:bg-zinc-800">
 
             <div class="flex items-center justify-between pb-4">
 
                 <div class="flex items-center gap-3">
 
                     <div
-                        class="flex size-9 items-center justify-center rounded-xl bg-indigo-50 text-indigo-500 dark:bg-indigo-500/10 dark:text-indigo-300">
-                        <flux:icon name="users" class="size-4" />
+                        class="flex size-12 items-center justify-center rounded-xl bg-indigo-50 text-indigo-500 dark:bg-indigo-500/10 dark:text-indigo-300">
+                        <flux:icon name="users" class="size-6" />
                     </div>
 
                     <div>
@@ -898,36 +900,36 @@ new class extends Component {
                     <thead>
 
                         <tr
-                            class="border-b border-indigo-100 bg-linear-to-r from-indigo-100/50 via-violet-100/30 to-fuchsia-100/20 dark:border-violet-900/40 dark:from-indigo-950/30 dark:via-violet-950/20 dark:to-fuchsia-950/10">
+                            class="bg-linear-to-r from-indigo-100/50 via-violet-100/50 to-fuchsia-100/50 dark:from-indigo-950/30 dark:via-violet-950/20 dark:to-fuchsia-950/10">
 
                             <th class="w-12 px-4 py-3">
 
                                 <input type="checkbox" wire:model.live="selectAll" wire:change="toggleSelectAll"
-                                    class="size-4 rounded border-zinc-300 text-indigo-500 focus:ring-indigo-400">
+                                    class="size-4 rounded border-slate-300 text-indigo-500 focus:ring-indigo-400">
 
                             </th>
 
-                            <th class="px-4 py-3 text-left font-medium text-zinc-500">
+                            <th class="px-4 py-3 text-left font-medium text-slate-600">
                                 Customer
                             </th>
 
-                            <th class="px-4 py-3 text-left font-medium text-zinc-500">
+                            <th class="px-4 py-3 text-left font-medium text-slate-600">
                                 Nomor Kontrak
                             </th>
 
-                            <th class="px-4 py-3 text-left font-medium text-zinc-500">
+                            <th class="px-4 py-3 text-left font-medium text-slate-600">
                                 Nominal
                             </th>
 
-                            <th class="px-4 py-3 text-left font-medium text-zinc-500">
+                            <th class="px-4 py-3 text-left font-medium text-slate-600">
                                 Cabang
                             </th>
 
-                            <th class="px-4 py-3 text-left font-medium text-zinc-500">
+                            <th class="px-4 py-3 text-left font-medium text-slate-600">
                                 Status
                             </th>
 
-                            <th class="px-4 py-3 text-center font-medium text-zinc-500">
+                            <th class="px-4 py-3 text-center font-medium text-slate-600">
                                 Action
                             </th>
 
@@ -1020,8 +1022,8 @@ new class extends Component {
                                     <div class="flex justify-end gap-2">
 
                                         {{-- CHAT --}}
-                                        <flux:button size="sm" icon="chat-bubble-left-right" variant="primary" color="emerald"
-                                            wire:click="openComposer({{ $customer->id }})">
+                                        <flux:button size="sm" icon="chat-bubble-left-right" variant="primary"
+                                            color="emerald" wire:click="openComposer({{ $customer->id }})">
                                             Chat
                                         </flux:button>
 
@@ -1076,7 +1078,6 @@ new class extends Component {
                 </table>
 
             </div>
-
 
             @if ($customers->hasPages())
                 <flux:separator />
@@ -1142,7 +1143,7 @@ new class extends Component {
 
             <flux:separator />
 
-            <div class="flex items-center justify-between gap-3">
+            <div class="flex items-center justify-end gap-3">
 
                 <flux:button type="button" variant="ghost" wire:click="closeEditCustomer">
                     Batal
@@ -1228,7 +1229,8 @@ new class extends Component {
             @endif
 
             {{-- TEMPLATE --}}
-            <flux:select wire:model.live="selectedTemplateId" label="Template Pesan" placeholder="-- Pilih Template --">
+            <flux:select wire:model.live="selectedTemplateId" label="Template Pesan"
+                placeholder="-- Pilih Template --">
 
                 @foreach ($templates as $template)
                     <flux:select.option :value="(string) $template->id">
@@ -1354,7 +1356,7 @@ new class extends Component {
                             </div>
 
                             @if ($selectedCustomer)
-                                <div class="text-xs text-indigo-100">
+                                <div class="text-xs">
                                     +{{ $selectedCustomer->phone_normalized }}
                                 </div>
                             @endif
@@ -1364,7 +1366,7 @@ new class extends Component {
                     </div>
 
                     {{-- CHAT BODY --}}
-                    <div class="relative min-h-80 overflow-y-auto bg-[#efeae2] p-4 dark:bg-zinc-950">
+                    <div class="relative min-h-80 overflow-y-auto bg-[#efeae2] p-4 dark:bg-zinc-800">
 
                         {{-- Decorative --}}
                         <div class="pointer-events-none absolute inset-0 opacity-[0.035]"
