@@ -1,2 +1,9 @@
 *
 !.gitignore
+!profile-full.png
+!profile.png
+!logo.svg
+!icons/
+!icons/laravel.svg
+!icons/livewire.svg
+!icons/tailwind.svg

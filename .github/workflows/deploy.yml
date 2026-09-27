@@ -95,16 +95,15 @@ jobs:
                       README.md
 
             # ----------------------------------------
-            # Install Laravel dependencies on Hostinger
+            # Finalize Laravel deployment on Hostinger
             # ----------------------------------------
-            - name: Run Laravel deployment
+            - name: Finalize Laravel deployment
               uses: appleboy/ssh-action@v1.2.2
               with:
                   host: ${{ secrets.SSH_HOST }}
                   port: ${{ secrets.SSH_PORT }}
                   username: ${{ secrets.SSH_USERNAME }}
                   key: ${{ secrets.SSH_PRIVATE_KEY }}
-
                   script: |
                       set -e
 
@@ -127,7 +126,6 @@ jobs:
                       echo "========================================"
                       echo "INSTALLING PRODUCTION DEPENDENCIES"
                       echo "========================================"
-
                       "$PHP" "$COMPOSER" install \
                         --no-dev \
                         --no-interaction \
@@ -135,10 +133,36 @@ jobs:
                         --optimize-autoloader
 
                       echo "========================================"
-                      echo "LARAVEL VERSION"
+                      echo "RECREATING STORAGE LINK"
                       echo "========================================"
 
+                      if [ -L public/storage ]; then
+                          rm public/storage
+                      elif [ -e public/storage ]; then
+                          rm -rf public/storage
+                      fi
+
+                      "$PHP" artisan storage:link
+
+                      echo "========================================"
+                      echo "CLEARING LARAVEL CACHE"
+                      echo "========================================"
+                      "$PHP" artisan optimize:clear
+
+                      echo "========================================"
+                      echo "OPTIMIZING LARAVEL"
+                      echo "========================================"
+                      "$PHP" artisan optimize
+
+                      echo "========================================"
+                      echo "LARAVEL VERSION"
+                      echo "========================================"
                       "$PHP" artisan --version
+
+                      echo "========================================"
+                      echo "STORAGE LINK"
+                      echo "========================================"
+                      ls -la public/storage
 
                       echo "========================================"
                       echo "DEPLOYMENT COMPLETED"
