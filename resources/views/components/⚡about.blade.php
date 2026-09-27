@@ -436,7 +436,6 @@ new class extends Component {
                     </div>
                 </div>
 
-
                 {{-- Description --}}
                 <div class="p-8 lg:col-span-2 lg:p-12">
 
