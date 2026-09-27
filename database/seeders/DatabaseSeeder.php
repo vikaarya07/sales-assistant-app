@@ -53,6 +53,24 @@ class DatabaseSeeder extends Seeder
         );
 
         User::firstOrCreate(
+            ['email' => 'putri@vikaarya07.my.id'],
+            [
+                'name' => 'Putri GAJE',
+                'password' => Hash::make('password'),
+                'email_verified_at' => now(),
+            ],
+        );
+
+        User::firstOrCreate(
+            ['email' => 'tata@vikaarya07.my.id'],
+            [
+                'name' => 'Tata MESUM',
+                'password' => Hash::make('password'),
+                'email_verified_at' => now(),
+            ],
+        );
+
+        User::firstOrCreate(
             ['email' => 'guest@vikaarya07.my.id'],
             [
                 'name' => 'Tamu',
