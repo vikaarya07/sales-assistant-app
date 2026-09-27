@@ -410,7 +410,7 @@ new class extends Component {
                             {{-- Avatar --}}
                             <div
                                 class="size-28 overflow-hidden rounded-full border-4 border-white bg-zinc-100 dark:border-zinc-900 dark:bg-zinc-800">
-                                <img src="{{ asset('storage/profile-full.png') }}" alt="Vika Arya"
+                                <img src="{{ asset('profile-full.png') }}" alt="Vika Arya"
                                     class="h-full w-full object-cover">
                             </div>
                         </div>
@@ -514,7 +514,7 @@ new class extends Component {
 
                 <div
                     class="relative mx-auto flex size-14 items-center justify-center rounded-2xl bg-red-50 p-3 ring-1 ring-red-100 transition duration-300 group-hover:scale-110 group-hover:ring-red-200 dark:bg-red-500/10 dark:ring-red-500/10">
-                    <img src="{{ asset('storage/icons/laravel.svg') }}" alt="Laravel" class="size-7 object-contain">
+                    <img src="{{ asset('icons/laravel.svg') }}" alt="Laravel" class="size-7 object-contain">
                 </div>
 
                 <flux:heading size="lg" class="relative mt-4">
@@ -533,7 +533,7 @@ new class extends Component {
 
                 <div
                     class="relative mx-auto flex size-14 items-center justify-center rounded-2xl bg-pink-50 p-3 ring-1 ring-pink-100 transition duration-300 group-hover:scale-110 group-hover:ring-pink-200 dark:bg-pink-500/10 dark:ring-pink-500/10">
-                    <img src="{{ asset('storage/icons/livewire.svg') }}" alt="Livewire"
+                    <img src="{{ asset('icons/livewire.svg') }}" alt="Livewire"
                         class="size-7 object-contain">
                 </div>
 
@@ -572,7 +572,7 @@ new class extends Component {
 
                 <div
                     class="relative mx-auto flex size-14 items-center justify-center rounded-2xl bg-cyan-50 p-3 ring-1 ring-cyan-100 transition duration-300 group-hover:scale-110 group-hover:ring-cyan-200 dark:bg-cyan-500/10 dark:ring-cyan-500/10">
-                    <img src="{{ asset('storage/icons/tailwind.svg') }}" alt="Tailwind CSS"
+                    <img src="{{ asset('icons/tailwind.svg') }}" alt="Tailwind CSS"
                         class="size-7 object-contain">
                 </div>
 
@@ -589,7 +589,6 @@ new class extends Component {
 
 
     </section>
-
 
     {{-- QUOTE --}}
     <section class="mx-auto max-w-4xl px-6 py-16 text-center lg:px-8 lg:py-24">
@@ -615,7 +614,6 @@ new class extends Component {
         </div>
 
     </section>
-
 
     {{-- FOOTER --}}
     <footer class="border-t border-zinc-200 bg-white/50 dark:border-zinc-800 dark:bg-zinc-950">
