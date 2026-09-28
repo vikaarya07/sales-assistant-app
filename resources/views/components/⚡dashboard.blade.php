@@ -74,10 +74,11 @@ new class extends Component {
         $totalCustomers = (clone $customers)->count();
         $newCustomers = (clone $customers)->where('status', CustomerStatus::NEW->value)->count();
         $blastedCustomers = (clone $customers)->where('status', CustomerStatus::BLAST->value)->count();
-        $repliedCustomers = (clone $customers)->where('status', CustomerStatus::REPLIED->value)->count();
+        $noResponCustomers = (clone $customers)->where('status', CustomerStatus::NO_RESPON->value)->count();
         $followUpCustomers = (clone $customers)->where('status', CustomerStatus::FOLLOW_UP->value)->count();
         $interestedCustomers = (clone $customers)->where('status', CustomerStatus::INTERESTED->value)->count();
         $notInterestedCustomers = (clone $customers)->where('status', CustomerStatus::NOT_INTERESTED->value)->count();
+        $stnkSolCustomers = (clone $customers)->where('status', CustomerStatus::STNK_SOL->value)->count();
         $appInCustomers = (clone $customers)->where('status', CustomerStatus::APP_IN->value)->count();
         $validCustomers = (clone $customers)->where('status', CustomerStatus::VALID->value)->count();
         $invalidCustomers = (clone $customers)->where('status', CustomerStatus::INVALID->value)->count();
@@ -100,8 +101,8 @@ new class extends Component {
                 'count' => $blastedCustomers,
             ],
             [
-                'status' => CustomerStatus::REPLIED,
-                'count' => $repliedCustomers,
+                'status' => CustomerStatus::NO_RESPON,
+                'count' => $noResponCustomers,
             ],
             [
                 'status' => CustomerStatus::FOLLOW_UP,
@@ -114,6 +115,10 @@ new class extends Component {
             [
                 'status' => CustomerStatus::NOT_INTERESTED,
                 'count' => $notInterestedCustomers,
+            ],
+            [
+                'status' => CustomerStatus::STNK_SOL,
+                'count' => $stnkSolCustomers,
             ],
             [
                 'status' => CustomerStatus::APP_IN,
@@ -135,10 +140,11 @@ new class extends Component {
             'totalCustomers' => $totalCustomers,
             'newCustomers' => $newCustomers,
             'blastedCustomers' => $blastedCustomers,
-            'repliedCustomers' => $repliedCustomers,
+            'noResponCustomers' => $repliedCustomers,
             'followUpCustomers' => $followUpCustomers,
             'interestedCustomers' => $interestedCustomers,
             'notInterestedCustomers' => $notInterestedCustomers,
+            'stnkSolCustomers' => $sntkSolCustomers,
             'appInCustomers' => $appInCustomers,
             'validCustomers' => $validCustomers,
             'invalidCustomers' => $invalidCustomers,
