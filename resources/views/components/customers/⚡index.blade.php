@@ -529,7 +529,7 @@ new class extends Component {
 
         if ($customer->status === CustomerStatus::NEW) {
             $customer->update([
-                'status' => CustomerStatus::CONTACTED,
+                'status' => CustomerStatus::BLAST,
             ]);
         }
 
