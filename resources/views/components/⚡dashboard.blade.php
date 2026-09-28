@@ -144,7 +144,7 @@ new class extends Component {
             'followUpCustomers' => $followUpCustomers,
             'interestedCustomers' => $interestedCustomers,
             'notInterestedCustomers' => $notInterestedCustomers,
-            'stnkSolCustomers' => $sntkSolCustomers,
+            'stnkSolCustomers' => $stnkSolCustomers,
             'appInCustomers' => $appInCustomers,
             'validCustomers' => $validCustomers,
             'invalidCustomers' => $invalidCustomers,
