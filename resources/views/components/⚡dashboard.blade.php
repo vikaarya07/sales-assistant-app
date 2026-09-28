@@ -42,7 +42,7 @@ new class extends Component {
 
         $previousDate = $selectedDate->copy()->subMonth();
 
-        $statuses = [CustomerStatus::NEW, CustomerStatus::BLAST, CustomerStatus::REPLIED, CustomerStatus::FOLLOW_UP, CustomerStatus::INTERESTED, CustomerStatus::NOT_INTERESTED, CustomerStatus::APP_IN, CustomerStatus::VALID, CustomerStatus::INVALID];
+        $statuses = [CustomerStatus::NEW, CustomerStatus::BLAST, CustomerStatus::NO_RESPON, CustomerStatus::FOLLOW_UP, CustomerStatus::INTERESTED, CustomerStatus::NOT_INTERESTED, CustomerStatus::STNK_SOL, CustomerStatus::APP_IN, CustomerStatus::VALID, CustomerStatus::INVALID];
 
         $currentCustomers = $user
             ->customers()
@@ -140,7 +140,7 @@ new class extends Component {
             'totalCustomers' => $totalCustomers,
             'newCustomers' => $newCustomers,
             'blastedCustomers' => $blastedCustomers,
-            'noResponCustomers' => $repliedCustomers,
+            'noResponCustomers' => $noResponCustomers,
             'followUpCustomers' => $followUpCustomers,
             'interestedCustomers' => $interestedCustomers,
             'notInterestedCustomers' => $notInterestedCustomers,
