@@ -43,7 +43,6 @@ new class extends Component {
     */
 
     public ?int $editingCustomerId = null;
-
     public string $editName = '';
     public string $editPhone = '';
     public string $editContractNumber = '';
@@ -53,15 +52,34 @@ new class extends Component {
 
     /*
     |--------------------------------------------------------------------------
+    | Manual Customer
+    |--------------------------------------------------------------------------
+    */
+
+    public bool $showManualCustomer = false;
+    public string $manualName = '';
+    public string $manualPhone = '';
+    public string $manualContractNumber = '';
+    public string $manualAmount = '';
+    public string $manualBranch = '';
+
+    /*
+    |--------------------------------------------------------------------------
     | Import Customer
     |--------------------------------------------------------------------------
     */
 
     public function importCustomers(): void
     {
-        $this->validate([
-            'importText' => ['required', 'string'],
-        ]);
+        $this->validate(
+            [
+                'importText' => ['required', 'string'],
+            ],
+            [
+                'importText.required' => 'Data customer wajib diisi.',
+                'importText.string' => 'Data customer tidak valid.',
+            ],
+        );
 
         $lines = preg_split('/\r\n|\r|\n/', trim($this->importText));
 
@@ -104,8 +122,153 @@ new class extends Component {
         ];
 
         $this->reset('importText');
+        $this->resetPage();
+    }
+
+    /*
+    |--------------------------------------------------------------------------
+    | Manual Customer
+    |--------------------------------------------------------------------------
+    */
+
+    public function openManualCustomer(): void
+    {
+        $this->reset(['manualName', 'manualPhone', 'manualContractNumber', 'manualAmount', 'manualBranch']);
+
+        $this->resetValidation();
+
+        $this->modal('customer-manual')->show();
+    }
+
+    public function saveManualCustomer(): void
+    {
+        $this->validate(
+            [
+                'manualName' => ['required', 'string', 'max:255'],
+
+                'manualPhone' => ['required', 'string'],
+
+                'manualContractNumber' => ['required', 'string', 'digits:17'],
+
+                'manualAmount' => ['required', 'string'],
+
+                'manualBranch' => ['required', 'string', 'max:255'],
+            ],
+            [
+                'manualName.required' => 'Nama customer wajib diisi.',
+                'manualName.string' => 'Nama customer harus berupa teks.',
+                'manualName.max' => 'Nama customer maksimal 255 karakter.',
+
+                'manualPhone.required' => 'Nomor WhatsApp wajib diisi.',
+                'manualPhone.string' => 'Nomor WhatsApp harus berupa teks.',
+
+                'manualContractNumber.required' => 'Nomor kontrak wajib diisi.',
+                'manualContractNumber.string' => 'Nomor kontrak harus berupa angka.',
+                'manualContractNumber.digits' => 'Nomor kontrak harus tepat 17 digit.',
+
+                'manualAmount.required' => 'Nominal wajib diisi.',
+                'manualAmount.string' => 'Nominal tidak valid.',
+
+                'manualBranch.required' => 'Cabang wajib diisi.',
+                'manualBranch.string' => 'Nama cabang tidak valid.',
+                'manualBranch.max' => 'Nama cabang maksimal 255 karakter.',
+            ],
+        );
+
+        $phoneNormalized = $this->normalizePhone($this->manualPhone);
+
+        if ($phoneNormalized === null) {
+            $this->addError('manualPhone', 'Nomor WhatsApp tidak valid. Gunakan nomor Indonesia yang benar.');
+
+            return;
+        }
+
+        $amount = $this->unformatIdr($this->manualAmount);
+
+        if ($amount === '') {
+            $this->addError('manualAmount', 'Nominal tidak valid.');
+
+            return;
+        }
+
+        if ((int) $amount > 30000000) {
+            $this->addError('manualAmount', 'Nominal maksimal Rp30.000.000.');
+
+            return;
+        }
+
+        $exists = auth()->user()->customers()->where('phone_normalized', $phoneNormalized)->exists();
+
+        if ($exists) {
+            $this->addError('manualPhone', 'Nomor WhatsApp sudah digunakan customer lain.');
+
+            return;
+        }
+
+        auth()
+            ->user()
+            ->customers()
+            ->create([
+                'phone' => $this->manualPhone,
+                'phone_normalized' => $phoneNormalized,
+                'name' => $this->manualName,
+                'contract_number' => $this->manualContractNumber,
+                'amount' => (int) $amount,
+                'branch' => $this->manualBranch,
+                'source' => 'manual',
+                'status' => CustomerStatus::NEW,
+            ]);
+
+        $this->closeManualCustomer();
 
         $this->resetPage();
+
+        $this->result = [
+            'created' => 1,
+            'duplicate' => 0,
+            'invalid' => 0,
+        ];
+    }
+
+    public function closeManualCustomer(): void
+    {
+        $this->reset(['manualName', 'manualPhone', 'manualContractNumber', 'manualAmount', 'manualBranch']);
+
+        $this->resetValidation();
+
+        $this->modal('customer-manual')->close();
+    }
+
+    /*
+    |--------------------------------------------------------------------------
+    | Currency
+    |--------------------------------------------------------------------------
+    */
+
+    public function formatIdr(string|int|null $value): string
+    {
+        if ($value === null || $value === '') {
+            return '';
+        }
+
+        $number = preg_replace('/\D/', '', (string) $value);
+
+        return $number === '' ? '' : number_format((int) $number, 0, ',', '.');
+    }
+
+    public function unformatIdr(string|int|null $value): string
+    {
+        return preg_replace('/\D/', '', (string) $value) ?? '';
+    }
+
+    public function updatedManualAmount(): void
+    {
+        $this->manualAmount = $this->formatIdr($this->manualAmount);
+    }
+
+    public function updatedEditAmount(): void
+    {
+        $this->editAmount = $this->formatIdr($this->editAmount);
     }
 
     /*
@@ -132,6 +295,11 @@ new class extends Component {
             return null;
         }
 
+        // Nomor kontrak wajib tepat 17 digit.
+        if (!preg_match('/^\d{17}$/', $contractNumber)) {
+            return null;
+        }
+
         $phoneNormalized = $this->normalizePhone($phone);
 
         if ($phoneNormalized === null) {
@@ -141,6 +309,10 @@ new class extends Component {
         $amountValue = $this->normalizeAmount($amount);
 
         if ($amountValue === null) {
+            return null;
+        }
+
+        if ($amountValue > 30000000) {
             return null;
         }
 
@@ -295,7 +467,6 @@ new class extends Component {
         }
 
         $this->clearSelection();
-
         $this->resetPage();
     }
 
@@ -312,11 +483,12 @@ new class extends Component {
         $this->authorize('update', $customer);
 
         $this->editingCustomerId = $customer->id;
-
         $this->editName = $customer->name;
         $this->editPhone = $customer->phone;
         $this->editContractNumber = $customer->contract_number;
-        $this->editAmount = (string) $customer->amount;
+
+        $this->editAmount = $this->formatIdr($customer->amount);
+
         $this->editBranch = $customer->branch;
         $this->editStatus = $customer->status->value;
 
@@ -327,19 +499,43 @@ new class extends Component {
 
     public function saveCustomer(): void
     {
-        $this->validate([
-            'editName' => ['required', 'string', 'max:255'],
+        $this->validate(
+            [
+                'editName' => ['required', 'string', 'max:255'],
 
-            'editPhone' => ['required', 'string'],
+                'editPhone' => ['required', 'string'],
 
-            'editContractNumber' => ['required', 'string', 'max:255'],
+                'editContractNumber' => ['required', 'string', 'digits:17'],
 
-            'editAmount' => ['required', 'string'],
+                'editAmount' => ['required', 'string'],
 
-            'editBranch' => ['required', 'string', 'max:255'],
+                'editBranch' => ['required', 'string', 'max:255'],
 
-            'editStatus' => ['required', 'string'],
-        ]);
+                'editStatus' => ['required', 'string'],
+            ],
+            [
+                'editName.required' => 'Nama customer wajib diisi.',
+                'editName.string' => 'Nama customer harus berupa teks.',
+                'editName.max' => 'Nama customer maksimal 255 karakter.',
+
+                'editPhone.required' => 'Nomor WhatsApp wajib diisi.',
+                'editPhone.string' => 'Nomor WhatsApp harus berupa teks.',
+
+                'editContractNumber.required' => 'Nomor kontrak wajib diisi.',
+                'editContractNumber.string' => 'Nomor kontrak harus berupa angka.',
+                'editContractNumber.digits' => 'Nomor kontrak harus tepat 17 digit.',
+
+                'editAmount.required' => 'Nominal wajib diisi.',
+                'editAmount.string' => 'Nominal tidak valid.',
+
+                'editBranch.required' => 'Cabang wajib diisi.',
+                'editBranch.string' => 'Nama cabang tidak valid.',
+                'editBranch.max' => 'Nama cabang maksimal 255 karakter.',
+
+                'editStatus.required' => 'Status wajib dipilih.',
+                'editStatus.string' => 'Status tidak valid.',
+            ],
+        );
 
         if (!$this->editingCustomerId) {
             return;
@@ -352,15 +548,21 @@ new class extends Component {
         $phoneNormalized = $this->normalizePhone($this->editPhone);
 
         if ($phoneNormalized === null) {
-            $this->addError('editPhone', 'Nomor WhatsApp tidak valid.');
+            $this->addError('editPhone', 'Nomor WhatsApp tidak valid. Gunakan nomor Indonesia yang benar.');
 
             return;
         }
 
-        $amount = $this->normalizeAmount($this->editAmount);
+        $amount = $this->unformatIdr($this->editAmount);
 
-        if ($amount === null) {
+        if ($amount === '') {
             $this->addError('editAmount', 'Nominal tidak valid.');
+
+            return;
+        }
+
+        if ((int) $amount > 30000000) {
+            $this->addError('editAmount', 'Nominal maksimal Rp30.000.000.');
 
             return;
         }
@@ -386,7 +588,7 @@ new class extends Component {
             'phone' => $this->editPhone,
             'phone_normalized' => $phoneNormalized,
             'contract_number' => $this->editContractNumber,
-            'amount' => $amount,
+            'amount' => (int) $amount,
             'branch' => $this->editBranch,
             'status' => $newStatus,
         ]);
@@ -446,9 +648,9 @@ new class extends Component {
         $this->authorize('view', $customer);
 
         $this->selectedCustomerId = $customer->id;
+
         $this->selectedTemplateId = '';
         $this->message = '';
-
         $this->greeting = 'Selamat pagi';
         $this->address = 'Bapak';
 
@@ -462,7 +664,6 @@ new class extends Component {
         $this->selectedCustomerId = null;
         $this->selectedTemplateId = '';
         $this->message = '';
-
         $this->greeting = 'Selamat pagi';
         $this->address = 'Bapak';
 
@@ -586,7 +787,6 @@ new class extends Component {
         $customers = auth()
             ->user()
             ->customers()
-
             ->when($this->search, function ($query) {
                 $query->where(function ($query) {
                     $query
@@ -596,7 +796,6 @@ new class extends Component {
                         ->orWhere('branch', 'like', '%' . $this->search . '%');
                 });
             })
-
             ->when($this->status, function ($query) {
                 $customerStatus = CustomerStatus::tryFrom($this->status);
 
@@ -604,7 +803,6 @@ new class extends Component {
                     $query->where('status', $customerStatus->value);
                 }
             })
-
             ->latest()
             ->paginate(10);
 
@@ -682,9 +880,10 @@ new class extends Component {
 
                     </div>
 
-                    <flux:badge color="indigo" icon="clipboard-document" variant="outline">
-                        Paste Data
-                    </flux:badge>
+                    <flux:button type="button" size="sm" variant="primary" color="violet" icon="plus"
+                        wire:click="openManualCustomer">
+                        Input Manual
+                    </flux:button>
 
                 </div>
 
@@ -1091,8 +1290,96 @@ new class extends Component {
 
     </div>
 
+    {{-- MANUAL CUSTOMER MODAL --}}
+    <flux:modal name="customer-manual" class="w-full max-w-2xl" :dismissible="false">
+
+        <form wire:submit="saveManualCustomer" class="space-y-6">
+
+            {{-- HEADER --}}
+            <div class="flex items-start gap-4">
+
+                <div
+                    class="flex size-11 shrink-0 items-center justify-center rounded-2xl bg-linear-to-br from-indigo-400 to-violet-500 text-white shadow-lg shadow-indigo-500/15">
+                    <flux:icon name="user-plus" class="size-5" />
+                </div>
+
+                <div>
+                    <flux:heading size="lg">
+                        Tambah Customer
+                    </flux:heading>
+
+                    <flux:text class="mt-1">
+                        Input satu customer secara manual.
+                    </flux:text>
+                </div>
+
+            </div>
+
+            {{-- FORM --}}
+            <div class="space-y-5">
+
+                {{-- NAMA + PHONE --}}
+                <div class="grid gap-5 sm:grid-cols-2">
+
+                    <flux:input wire:model="manualName" label="Nama Customer" placeholder="Setya Prioritas Dana"
+                        autofocus />
+
+                    <flux:input wire:model="manualPhone" label="Nomor WhatsApp" placeholder="85799928828"
+                        type="tel" />
+
+                </div>
+
+                {{-- KONTRAK + NOMINAL --}}
+                <div class="grid gap-5 sm:grid-cols-2">
+
+                    <flux:input wire:model.live="manualContractNumber" label="Nomor Kontrak"
+                        placeholder="17 digit nomor kontrak" inputmode="numeric" maxlength="17" />
+
+                    <flux:input wire:model.live="manualAmount" label="Nominal" placeholder="30.000.000"
+                        inputmode="numeric" />
+
+                </div>
+
+                {{-- CABANG --}}
+                <flux:input wire:model="manualBranch" label="Cabang" placeholder="YOGYAKARTA" />
+
+            </div>
+
+            {{-- INFO --}}
+            <div
+                class="flex items-center gap-2 rounded-xl bg-indigo-50 px-3 py-2.5 text-xs text-indigo-600 dark:bg-indigo-950/30 dark:text-indigo-300">
+                <flux:icon name="information-circle" class="mt-0.5 size-4 shrink-0" />
+
+                <span class="leading-relaxed">
+                    Customer baru akan otomatis memiliki status
+                    <flux:badge :color="$customer->status->color()" class="shrink-0">
+                        {{ $customer->status->label() }}
+                    </flux:badge>
+                </span>
+            </div>
+
+            <flux:separator />
+
+            {{-- FOOTER --}}
+            <div class="flex items-center justify-end gap-3">
+
+                <flux:button type="button" variant="ghost" wire:click="closeManualCustomer">
+                    Batal
+                </flux:button>
+
+                <flux:button type="submit" variant="primary" color="violet" icon="check"
+                    class="shadow-lg shadow-indigo-500/15">
+                    Simpan Customer
+                </flux:button>
+
+            </div>
+
+        </form>
+
+    </flux:modal>
+
     {{-- EDIT CUSTOMER MODAL --}}
-    <flux:modal name="customer-edit" class="w-full max-w-2xl">
+    <flux:modal name="customer-edit" class="w-full max-w-2xl" :dismissible="false">
 
         <form wire:submit="saveCustomer" class="space-y-6">
 
@@ -1129,17 +1416,19 @@ new class extends Component {
 
             <div class="grid gap-5 sm:grid-cols-2">
 
-                <flux:input wire:model="editName" label="Nama Customer" placeholder="Nama customer" />
+                <flux:input wire:model="editName" label="Nama Customer" placeholder="Setya Prioritas Dana" />
 
-                <flux:input wire:model="editContractNumber" label="Nomor Kontrak" placeholder="Nomor kontrak" />
+                <flux:input wire:model="editPhone" label="Nomor WhatsApp" placeholder="85799928828" />
 
-                <flux:input wire:model="editAmount" label="Nominal" placeholder="30000000" />
+                <flux:input wire:model.live="editContractNumber" label="Nomor Kontrak"
+                    placeholder="17 digit nomor kontrak" inputmode="numeric" maxlength="17" />
 
-                <flux:input wire:model="editBranch" label="Cabang" placeholder="KARAWACI" />
+                <flux:input wire:model.live="editAmount" label="Nominal" placeholder="30.000.000"
+                    inputmode="numeric" />
 
             </div>
 
-            <flux:input wire:model="editPhone" label="Nomor WhatsApp" placeholder="081234567890" />
+            <flux:input wire:model="editBranch" label="Cabang" placeholder="YOGYAKARTA" />
 
             <flux:separator />
 
@@ -1149,7 +1438,8 @@ new class extends Component {
                     Batal
                 </flux:button>
 
-                <flux:button type="submit" variant="primary" icon="check" class="shadow-lg shadow-indigo-500/15">
+                <flux:button type="submit" variant="primary" color="violet" icon="check"
+                    class="shadow-lg shadow-indigo-500/15">
                     Simpan Perubahan
                 </flux:button>
 
