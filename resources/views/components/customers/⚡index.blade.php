@@ -17,6 +17,8 @@ new class extends Component {
     public string $greeting = 'Selamat pagi';
     public string $address = 'Bapak';
 
+    public string $createdDate = '';
+
     /*
     |--------------------------------------------------------------------------
     | WhatsApp Composer
@@ -392,6 +394,11 @@ new class extends Component {
     {
         $this->resetPage();
         $this->clearSelection();
+    }
+
+    public function updatedCreatedDate(): void
+    {
+        $this->resetPage();
     }
 
     /*
@@ -803,6 +810,9 @@ new class extends Component {
                     $query->where('status', $customerStatus->value);
                 }
             })
+            ->when($this->createdDate, function ($query) {
+                $query->whereDate('created_at', $this->createdDate);
+            })
             ->latest()
             ->paginate(10);
 
@@ -985,17 +995,36 @@ new class extends Component {
 
             <div class="flex flex-col gap-4 lg:flex-row lg:items-end">
 
-                <div class="flex-1">
+                {{-- Filter Tanggal --}}
+                <div class="relative">
+                    <flux:input type="date" wire:model.live="createdDate" label="Tanggal Dibuat" />
 
+                    @if ($createdDate)
+                        <button type="button" wire:click="$set('createdDate', '')"
+                            class="absolute right-8 top-[2.10rem] z-10 flex size-6 items-center justify-center rounded-full text-zinc-400 transition hover:bg-zinc-100 hover:text-zinc-600 dark:hover:bg-zinc-700 dark:hover:text-zinc-200"
+                            aria-label="Hapus tanggal">
+                            <flux:icon name="x-mark" class="size-5" />
+                        </button>
+                    @endif
+                </div>
+
+                {{-- Search --}}
+                <div class="relative flex-1">
                     <flux:input wire:model.live.debounce.300ms="search" label="Cari Customer"
                         placeholder="Nama, nomor kontrak, cabang..." icon="magnifying-glass" />
 
+                    @if ($search)
+                        <button type="button" wire:click="$set('search', '')"
+                            class="absolute right-3 top-[2.15rem] z-10 flex size-6 items-center justify-center rounded-full text-zinc-400 transition hover:bg-zinc-100 hover:text-zinc-600 dark:hover:bg-zinc-700 dark:hover:text-zinc-200"
+                            aria-label="Clear pencarian">
+                            <flux:icon name="x-mark" class="size-5" />
+                        </button>
+                    @endif
                 </div>
 
+                {{-- Status --}}
                 <div class="w-full lg:w-60">
-
                     <flux:select wire:model.live="status" label="Status">
-
                         <flux:select.option value="">
                             Semua Status
                         </flux:select.option>
@@ -1005,9 +1034,7 @@ new class extends Component {
                                 {{ $customerStatus->label() }}
                             </flux:select.option>
                         @endforeach
-
                     </flux:select>
-
                 </div>
 
             </div>
@@ -1352,8 +1379,8 @@ new class extends Component {
 
                 <span class="leading-relaxed">
                     Customer baru akan otomatis memiliki status
-                    <flux:badge :color="$customer->status->color()" class="shrink-0">
-                        {{ $customer->status->label() }}
+                    <flux:badge :color="CustomerStatus::NEW->color()" class="shrink-0">
+                        {{ CustomerStatus::NEW->label() }}
                     </flux:badge>
                 </span>
             </div>
