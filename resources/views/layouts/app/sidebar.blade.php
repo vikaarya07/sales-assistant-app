@@ -6,6 +6,10 @@
     @include('partials.head')
 </head>
 
+@auth
+    <livewire:activity-heartbeat />
+@endauth
+
 <body
     class="min-h-screen bg-linear-to-br from-indigo-50 via-violet-50 to-fuchsia-50 antialiased dark:from-slate-950 dark:via-indigo-950 dark:to-fuchsia-950">
 
@@ -34,28 +38,46 @@
                 class="in-data-flux-sidebar-on-desktop:not-in-data-flux-sidebar-collapsed-desktop:-mr-2" />
         </flux:sidebar.header>
 
-        {{-- MAIN NAVIGATION --}}
         <flux:sidebar.nav class="space-y-2">
 
-            <flux:sidebar.item icon="home" :href="route('dashboard')" :current="request()->routeIs('dashboard')"
-                wire:navigate>
-                {{ __('Dashboard') }}
-            </flux:sidebar.item>
+            @if (auth()->user()->isAdmin())
+                {{-- ADMIN --}}
+                <flux:sidebar.item icon="chart-bar-square" :href="route('admin.overview')"
+                    :current="request()->routeIs('admin.overview')" wire:navigate>
+                    Overview
+                </flux:sidebar.item>
 
-            <flux:sidebar.item icon="user-group" :href="route('customers')" :current="request()->routeIs('customers')"
-                wire:navigate>
-                {{ __('Customer') }}
-            </flux:sidebar.item>
+                <flux:sidebar.item icon="users" :href="route('admin.members')"
+                    :current="request()->routeIs('admin.members')" wire:navigate>
+                    Member
+                </flux:sidebar.item>
 
-            <flux:sidebar.item icon="chat-bubble-bottom-center-text" :href="route('message-templates')"
-                :current="request()->routeIs('message-templates')" wire:navigate>
-                {{ __('Template') }}
-            </flux:sidebar.item>
+                <flux:sidebar.item icon="musical-note" :href="route('music')" :current="request()->routeIs('music')"
+                    wire:navigate>
+                    {{ __('Music') }}
+                </flux:sidebar.item>
+            @else
+                {{-- MEMBER --}}
+                <flux:sidebar.item icon="home" :href="route('dashboard')" :current="request()->routeIs('dashboard')"
+                    wire:navigate>
+                    {{ __('Dashboard') }}
+                </flux:sidebar.item>
 
-            <flux:sidebar.item icon="musical-note" :href="route('music')" :current="request()->routeIs('music')"
-                wire:navigate>
-                {{ __('Music') }}
-            </flux:sidebar.item>
+                <flux:sidebar.item icon="user-group" :href="route('customers')"
+                    :current="request()->routeIs('customers')" wire:navigate>
+                    {{ __('Customer') }}
+                </flux:sidebar.item>
+
+                <flux:sidebar.item icon="chat-bubble-bottom-center-text" :href="route('message-templates')"
+                    :current="request()->routeIs('message-templates')" wire:navigate>
+                    {{ __('Template') }}
+                </flux:sidebar.item>
+
+                <flux:sidebar.item icon="musical-note" :href="route('music')" :current="request()->routeIs('music')"
+                    wire:navigate>
+                    {{ __('Music') }}
+                </flux:sidebar.item>
+            @endif
 
         </flux:sidebar.nav>
 

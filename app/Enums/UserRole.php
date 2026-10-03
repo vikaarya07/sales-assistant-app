@@ -24,7 +24,7 @@ enum UserRole: string
         return match ($this) {
             self::ADMIN => 'pink',
             self::PRIORITAS_DANA => 'emerald',
-            self::LANDING_PAGE => 'amber',
+            self::LANDING_PAGE => 'orange',
             self::MULTIGUNA => 'blue',
         };
     }

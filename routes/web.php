@@ -4,7 +4,7 @@ use Illuminate\Support\Facades\Route;
 
 Route::view('/', 'welcome')->name('home');
 
-Route::middleware(['auth', 'verified'])->group(function () {
+Route::middleware(['auth', 'verified', 'track.activity'])->group(function () {
 
     Route::livewire('dashboard', 'dashboard')->name('dashboard');
 
@@ -17,6 +17,14 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::livewire('/about', 'about')->name('about');
 
     Route::livewire('/updates', 'updates')->name('updates');
+
+    Route::middleware('admin')->group(function () {
+        Route::livewire('admin/overview', 'admin.overview')
+            ->name('admin.overview');
+
+        Route::livewire('admin/members', 'admin.members')
+            ->name('admin.members');
+    });
 });
 
-require __DIR__.'/settings.php';
+require __DIR__ . '/settings.php';
