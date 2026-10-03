@@ -25,6 +25,7 @@ use Laravel\Fortify\TwoFactorAuthenticatable;
  * @property UserRole $role
  * @property Carbon|null $email_verified_at
  * @property string $password
+ * @property UserStatus $status
  * @property string|null $two_factor_secret
  * @property string|null $two_factor_recovery_codes
  * @property Carbon|null $two_factor_confirmed_at
@@ -45,7 +46,7 @@ class User extends Authenticatable implements PasskeyUser
         'email',
         'password',
         'role',
-        'last_activity_at'
+        'last_activity_at',
     ];
 
     /**
@@ -114,7 +115,7 @@ class User extends Authenticatable implements PasskeyUser
         $initials = Str::initials($this->name, true);
 
         return Str::length($initials) > 1
-            ? Str::substr($initials, 0, 1) . Str::substr($initials, -1)
+            ? Str::substr($initials, 0, 1).Str::substr($initials, -1)
             : $initials;
     }
 }
