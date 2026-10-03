@@ -27,6 +27,7 @@ class ProfileUpdateTest extends TestCase
 
         $response = Livewire::test(Profile::class)
             ->set('name', 'Test User')
+            ->set('username', 'testuser')
             ->set('email', 'test@example.com')
             ->call('updateProfileInformation');
 
@@ -35,6 +36,7 @@ class ProfileUpdateTest extends TestCase
         $user->refresh();
 
         $this->assertEquals('Test User', $user->name);
+        $this->assertEquals('testuser', $user->username);
         $this->assertEquals('test@example.com', $user->email);
         $this->assertNull($user->email_verified_at);
     }
@@ -47,12 +49,61 @@ class ProfileUpdateTest extends TestCase
 
         $response = Livewire::test(Profile::class)
             ->set('name', 'Test User')
+            ->set('username', $user->username)
             ->set('email', $user->email)
             ->call('updateProfileInformation');
 
         $response->assertHasNoErrors();
 
         $this->assertNotNull($user->refresh()->email_verified_at);
+    }
+
+    public function test_username_must_be_unique(): void
+    {
+        User::factory()->create([
+            'username' => 'existinguser',
+        ]);
+
+        $user = User::factory()->create([
+            'username' => 'currentuser',
+        ]);
+
+        $this->actingAs($user);
+
+        $response = Livewire::test(Profile::class)
+            ->set('name', 'Test User')
+            ->set('username', 'existinguser')
+            ->set('email', $user->email)
+            ->call('updateProfileInformation');
+
+        $response->assertHasErrors(['username']);
+
+        $this->assertEquals(
+            'currentuser',
+            $user->refresh()->username
+        );
+    }
+
+    public function test_user_can_keep_their_current_username(): void
+    {
+        $user = User::factory()->create([
+            'username' => 'currentuser',
+        ]);
+
+        $this->actingAs($user);
+
+        $response = Livewire::test(Profile::class)
+            ->set('name', 'Updated User')
+            ->set('username', 'currentuser')
+            ->set('email', $user->email)
+            ->call('updateProfileInformation');
+
+        $response->assertHasNoErrors();
+
+        $this->assertEquals(
+            'currentuser',
+            $user->refresh()->username
+        );
     }
 
     public function test_user_can_delete_their_account(): void

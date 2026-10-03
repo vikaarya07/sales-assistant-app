@@ -52,10 +52,10 @@
                 {{ __('Template') }}
             </flux:sidebar.item>
 
-            <flux:navlist.item icon="musical-note" :href="route('music')" :current="request()->routeIs('music')"
+            <flux:sidebar.item icon="musical-note" :href="route('music')" :current="request()->routeIs('music')"
                 wire:navigate>
                 {{ __('Music') }}
-            </flux:navlist.item>
+            </flux:sidebar.item>
 
         </flux:sidebar.nav>
 
@@ -118,6 +118,10 @@
                                 <flux:heading class="truncate text-indigo-950 dark:text-indigo-50">
                                     {{ auth()->user()->name }}
                                 </flux:heading>
+
+                                <div class="truncate text-sm font-medium text-slate-500 dark:text-slate-100">
+                                    {{ '@' . auth()->user()->username }}
+                                </div>
 
                                 <flux:text class="truncate text-violet-700 dark:text-violet-300">
                                     {{ auth()->user()->email }}

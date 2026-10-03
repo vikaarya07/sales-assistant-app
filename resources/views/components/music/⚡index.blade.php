@@ -259,7 +259,7 @@ new class extends Component {
             <div class="flex items-center gap-3">
                 <div
                     class="flex size-12 shrink-0 items-center justify-center rounded-xl bg-linear-to-br from-indigo-400 to-violet-500 text-white">
-                    <flux:icon name="users" class="size-6" />
+                    <flux:icon name="musical-note" class="size-6" />
                 </div>
 
                 <div>

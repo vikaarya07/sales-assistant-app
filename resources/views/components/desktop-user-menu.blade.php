@@ -40,6 +40,10 @@
                     {{ auth()->user()->name }}
                 </div>
 
+                <div class="truncate text-sm font-medium text-slate-500 dark:text-slate-100">
+                    {{ '@' . auth()->user()->username }}
+                </div>
+
                 <div class="truncate text-xs text-slate-500 dark:text-slate-400">
                     {{ auth()->user()->email }}
                 </div>
@@ -51,8 +55,7 @@
 
         <flux:menu.radio.group>
 
-            <flux:menu.item :href="route('profile.edit')" icon="cog" wire:navigate
-                class="rounded-lg">
+            <flux:menu.item :href="route('profile.edit')" icon="cog" wire:navigate class="rounded-lg">
                 {{ __('Settings') }}
             </flux:menu.item>
 

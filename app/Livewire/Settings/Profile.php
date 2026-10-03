@@ -16,7 +16,7 @@ class Profile extends Component
     use ProfileValidationRules;
 
     public string $name = '';
-
+    public string $username = '';
     public string $email = '';
 
     /**
@@ -24,8 +24,11 @@ class Profile extends Component
      */
     public function mount(): void
     {
-        $this->name = Auth::user()->name;
-        $this->email = Auth::user()->email;
+        $user = Auth::user();
+
+        $this->name = $user->name;
+        $this->username = $user->username;
+        $this->email = $user->email;
     }
 
     /**
@@ -35,7 +38,9 @@ class Profile extends Component
     {
         $user = Auth::user();
 
-        $validated = $this->validate($this->profileRules($user->id));
+        $validated = $this->validate(
+            $this->profileRules($user->id)
+        );
 
         $user->fill($validated);
 
@@ -45,7 +50,10 @@ class Profile extends Component
 
         $user->save();
 
-        Flux::toast(variant: 'success', text: __('Profile updated.'));
+        Flux::toast(
+            variant: 'success',
+            text: __('Profile updated.')
+        );
     }
 
     /**
@@ -56,14 +64,18 @@ class Profile extends Component
         $user = Auth::user();
 
         if ($user->hasVerifiedEmail()) {
-            $this->redirectIntended(default: route('dashboard', absolute: false));
+            $this->redirectIntended(
+                default: route('dashboard', absolute: false)
+            );
 
             return;
         }
 
         $user->sendEmailVerificationNotification();
 
-        Flux::toast(text: __('A new verification link has been sent to your email address.'));
+        Flux::toast(
+            text: __('A new verification link has been sent to your email address.')
+        );
     }
 
     #[Computed]
@@ -71,7 +83,8 @@ class Profile extends Component
     {
         $user = Auth::user();
 
-        return $user instanceof MustVerifyEmail && ! $user->hasVerifiedEmail();
+        return $user instanceof MustVerifyEmail
+            && ! $user->hasVerifiedEmail();
     }
 
     #[Computed]
@@ -79,6 +92,7 @@ class Profile extends Component
     {
         $user = Auth::user();
 
-        return ! $user instanceof MustVerifyEmail || $user->hasVerifiedEmail();
+        return ! $user instanceof MustVerifyEmail
+            || $user->hasVerifiedEmail();
     }
 }

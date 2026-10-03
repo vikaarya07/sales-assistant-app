@@ -39,6 +39,7 @@ class User extends Authenticatable implements PasskeyUser
 
     protected $fillable = [
         'name',
+        'username',
         'email',
         'password',
         'role',
