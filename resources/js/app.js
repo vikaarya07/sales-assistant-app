@@ -1,6 +1,7 @@
-import Chart from 'chart.js/auto';
+import Chart from "chart.js/auto";
 
 window.Chart = Chart;
 
-import './chart.js';
-import './textarea.js';
+import "./chart";
+import "./textarea";
+import "./music-player";

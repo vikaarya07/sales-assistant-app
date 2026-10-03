@@ -52,6 +52,11 @@
                 {{ __('Template') }}
             </flux:sidebar.item>
 
+            <flux:navlist.item icon="musical-note" :href="route('music')" :current="request()->routeIs('music')"
+                wire:navigate>
+                {{ __('Music') }}
+            </flux:navlist.item>
+
         </flux:sidebar.nav>
 
         {{-- PUSH BOTTOM CONTENT --}}
@@ -90,7 +95,8 @@
         <flux:dropdown position="top" align="end">
 
             {{-- PROFILE BUTTON --}}
-            <flux:profile :initials="auth()->user()->initials()" avatar:color="auto" circle icon-trailing="chevron-down"
+            <flux:profile :initials="auth()->user()->initials()" avatar:color="auto" circle
+                icon-trailing="chevron-down"
                 class="text-indigo-900 hover:bg-indigo-200/60 dark:text-indigo-100 dark:hover:bg-indigo-900/60" />
 
             {{-- DROPDOWN --}}

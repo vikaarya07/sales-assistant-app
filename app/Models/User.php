@@ -3,6 +3,7 @@
 namespace App\Models;
 
 // use Illuminate\Contracts\Auth\MustVerifyEmail;
+use App\Enums\UserRole;
 use Database\Factories\UserFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Attributes\Hidden;
@@ -36,6 +37,13 @@ class User extends Authenticatable implements PasskeyUser
     /** @use HasFactory<UserFactory> */
     use HasFactory, Notifiable, PasskeyAuthenticatable, TwoFactorAuthenticatable;
 
+    protected $fillable = [
+        'name',
+        'email',
+        'password',
+        'role',
+    ];
+
     /**
      * Get the attributes that should be cast.
      *
@@ -46,6 +54,7 @@ class User extends Authenticatable implements PasskeyUser
         return [
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
+            'role' => UserRole::class,
         ];
     }
 
@@ -66,6 +75,31 @@ class User extends Authenticatable implements PasskeyUser
     }
 
     /**
+     * @return HasMany<Music, $this>
+     */
+    public function music(): HasMany
+    {
+        return $this->hasMany(Music::class);
+    }
+
+    /**
+     * @return HasMany<MusicRequest, $this>
+     */
+    public function musicRequests(): HasMany
+    {
+        return $this->hasMany(MusicRequest::class);
+    }
+
+    public function isAdmin(): bool
+    {
+        return $this->role === UserRole::ADMIN;
+    }
+
+    public function roleLabel(): string
+    {
+        return $this->role->label();
+    }
+    /**
      * Get the user's initials
      */
     public function initials(): string
@@ -73,7 +107,7 @@ class User extends Authenticatable implements PasskeyUser
         $initials = Str::initials($this->name, true);
 
         return Str::length($initials) > 1
-            ? Str::substr($initials, 0, 1).Str::substr($initials, -1)
+            ? Str::substr($initials, 0, 1) . Str::substr($initials, -1)
             : $initials;
     }
 }
