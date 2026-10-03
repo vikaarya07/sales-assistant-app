@@ -155,7 +155,8 @@ new class extends Component {
                 </div>
             </div>
 
-            <flux:button variant="primary" color="violet" icon="plus" wire:click="createTemplate" class="w-full md:w-fit">
+            <flux:button variant="primary" color="violet" icon="plus" wire:click="createTemplate"
+                class="w-full md:w-fit">
                 Add Template
             </flux:button>
         </div>
