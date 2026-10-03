@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Factories\Factory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -9,6 +10,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Music extends Model
 {
+    /** @use HasFactory<Factory> */
     use HasFactory;
 
     protected $table = 'music';
@@ -31,11 +33,17 @@ class Music extends Model
         ];
     }
 
+    /**
+     * @return BelongsTo<User, $this>
+     */
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);
     }
 
+    /**
+     * @return HasMany<MusicRequest, $this>
+     */
     public function requests(): HasMany
     {
         return $this->hasMany(MusicRequest::class);
@@ -43,7 +51,7 @@ class Music extends Model
 
     public function getUrlAttribute(): string
     {
-        return asset('storage/' . $this->path);
+        return asset('storage/'.$this->path);
     }
 
     public function getFormattedSizeAttribute(): string
@@ -51,19 +59,19 @@ class Music extends Model
         $bytes = $this->size;
 
         if ($bytes < 1024) {
-            return $bytes . ' B';
+            return $bytes.' B';
         }
 
         if ($bytes < 1024 * 1024) {
-            return number_format($bytes / 1024, 1) . ' KB';
+            return number_format($bytes / 1024, 1).' KB';
         }
 
-        return number_format($bytes / 1024 / 1024, 1) . ' MB';
+        return number_format($bytes / 1024 / 1024, 1).' MB';
     }
 
     public function getFormattedDurationAttribute(): string
     {
-        if (!$this->duration) {
+        if (! $this->duration) {
             return '--:--';
         }
 
