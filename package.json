@@ -12,6 +12,7 @@
         "chart.js": "^4.5.1",
         "concurrently": "^10.0.3",
         "laravel-vite-plugin": "^3.1",
+        "sweetalert2": "^11.26.25",
         "tailwindcss": "^4.3.3",
         "vite": "^8.0.0",
         "vite-plus": "0.3.0"

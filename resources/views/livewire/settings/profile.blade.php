@@ -10,7 +10,15 @@
 
             <flux:input wire:model="name" :label="__('Name')" type="text" required autofocus autocomplete="name" />
 
-            <flux:input wire:model="username" :label="__('Username')" type="text" required autocomplete="username" />
+
+            <flux:field>
+                <flux:label>{{ __('Username') }}</flux:label>
+                <flux:input.group>
+                    <flux:input.group.prefix>@</flux:input.group.prefix>
+                    <flux:input wire:model="username" type="text" required autocomplete="username" />
+                </flux:input.group>
+                <flux:error name="website" />
+            </flux:field>
 
             <div>
                 <flux:input wire:model="email" :label="__('Email')" type="email" required autocomplete="email"

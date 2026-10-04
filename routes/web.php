@@ -24,7 +24,12 @@ Route::middleware(['auth', 'verified', 'track.activity'])->group(function () {
 
         Route::livewire('admin/members', 'admin.members')
             ->name('admin.members');
+
+        Route::livewire('admin/music', 'admin.music')
+            ->name('admin.music');
+        Route::livewire('admin/request-music', 'admin.request-music')
+            ->name('admin.request-music');
     });
 });
 
-require __DIR__.'/settings.php';
+require __DIR__ . '/settings.php';
