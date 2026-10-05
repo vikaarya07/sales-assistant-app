@@ -83,6 +83,17 @@ class DatabaseSeeder extends Seeder
         );
 
         User::firstOrCreate(
+            ['email' => 'abdul@vikaarya07.my.id'],
+            [
+                'name' => 'Kang Abdul',
+                'username' => 'kang-abdul',
+                'role' => 'prioritas_dana',
+                'password' => Hash::make('password'),
+                'email_verified_at' => now(),
+            ],
+        );
+
+        User::firstOrCreate(
             ['email' => 'mgu@vikaarya07.my.id'],
             [
                 'name' => 'Multiguna',
