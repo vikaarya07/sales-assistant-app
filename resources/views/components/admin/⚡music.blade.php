@@ -1,5 +1,6 @@
 <?php
 
+use App\Enums\MusicGenre;
 use App\Models\Music;
 use Illuminate\Support\Facades\Storage;
 use Livewire\Attributes\On;
@@ -16,36 +17,38 @@ new class extends Component {
     public bool $showUploadModal = false;
 
     public string $title = '';
-
+    public string $genre = MusicGenre::OTHER->value;
     public $audio;
 
     public ?int $editingMusicId = null;
-
     public string $editTitle = '';
+    public string $editGenre = MusicGenre::OTHER->value;
 
     public ?int $deletingMusicId = null;
 
-    //  Lifecycle
+    // Lifecycle
 
     public function mount(): void
     {
         $this->adminOnly();
     }
 
-    //  Authorization
+    // Authorization
 
     private function adminOnly(): void
     {
         abort_unless(auth()->check() && auth()->user()->isAdmin(), 403);
     }
 
-    //  Helpers
+    // Helpers
 
     private function resetUploadForm(): void
     {
         $this->resetValidation();
 
         $this->reset(['title', 'audio']);
+
+        $this->genre = MusicGenre::OTHER->value;
     }
 
     private function resetEditForm(): void
@@ -53,16 +56,18 @@ new class extends Component {
         $this->resetValidation();
 
         $this->reset(['editingMusicId', 'editTitle']);
+
+        $this->editGenre = MusicGenre::OTHER->value;
     }
 
-    //  Search
+    // Search
 
     public function updatedSearch(): void
     {
         $this->resetPage();
     }
 
-    //  Upload Music
+    // Upload Music
 
     public function openUpload(): void
     {
@@ -80,11 +85,14 @@ new class extends Component {
         $this->validate(
             [
                 'title' => ['required', 'string', 'max:255'],
+                'genre' => ['required', 'string', 'in:' . implode(',', array_column(MusicGenre::cases(), 'value'))],
                 'audio' => ['required', 'file', 'mimes:ogg', 'max:20480'],
             ],
             [
                 'title.required' => 'Judul music wajib diisi.',
                 'title.max' => 'Judul music maksimal 255 karakter.',
+                'genre.required' => 'Genre music wajib dipilih.',
+                'genre.in' => 'Genre music tidak valid.',
                 'audio.required' => 'File .ogg wajib dipilih.',
                 'audio.file' => 'File music tidak valid.',
                 'audio.mimes' => 'File music harus berformat .ogg.',
@@ -99,6 +107,7 @@ new class extends Component {
         Music::create([
             'user_id' => auth()->id(),
             'title' => $this->title,
+            'genre' => $this->genre,
             'filename' => $this->audio->getClientOriginalName(),
             'path' => $path,
             'mime_type' => $this->audio->getMimeType() ?: 'audio/ogg',
@@ -106,13 +115,12 @@ new class extends Component {
         ]);
 
         $this->resetUploadForm();
-
         $this->showUploadModal = false;
 
         $this->dispatch('swal', type: 'success', title: 'Berhasil', message: 'Music berhasil ditambahkan.');
     }
 
-    //  Edit Music
+    // Edit Music
 
     public function openEdit(int $musicId): void
     {
@@ -122,6 +130,7 @@ new class extends Component {
 
         $this->editingMusicId = $music->id;
         $this->editTitle = $music->title;
+        $this->editGenre = $music->genre instanceof MusicGenre ? $music->genre->value : ($music->genre ?: MusicGenre::OTHER->value);
 
         $this->resetValidation();
 
@@ -135,10 +144,13 @@ new class extends Component {
         $this->validate(
             [
                 'editTitle' => ['required', 'string', 'max:255'],
+                'editGenre' => ['required', 'string', 'in:' . implode(',', array_column(MusicGenre::cases(), 'value'))],
             ],
             [
                 'editTitle.required' => 'Judul music wajib diisi.',
                 'editTitle.max' => 'Judul music maksimal 255 karakter.',
+                'editGenre.required' => 'Genre music wajib dipilih.',
+                'editGenre.in' => 'Genre music tidak valid.',
             ],
         );
 
@@ -146,6 +158,7 @@ new class extends Component {
 
         $music->update([
             'title' => $this->editTitle,
+            'genre' => $this->editGenre,
         ]);
 
         $this->resetEditForm();
@@ -155,7 +168,7 @@ new class extends Component {
         $this->dispatch('swal', type: 'success', title: 'Berhasil', message: 'Music berhasil diperbarui.');
     }
 
-    //  Delete Music
+    // Delete Music
 
     public function confirmDeleteMusic(int $musicId): void
     {
@@ -190,7 +203,7 @@ new class extends Component {
         $this->dispatch('swal', type: 'success', title: 'Berhasil', message: 'Music berhasil dihapus.');
     }
 
-    //  Render
+    // Render
 
     public function render()
     {
@@ -205,6 +218,7 @@ new class extends Component {
 
         return $this->view([
             'music' => $music,
+            'genres' => MusicGenre::cases(),
         ]);
     }
 };
@@ -212,14 +226,10 @@ new class extends Component {
 
 <div x-data x-on:open-edit-music-modal.window="$flux.modal('edit-music').show()"
     x-on:close-edit-music-modal.window="$flux.modal('edit-music').close()" class="space-y-6">
-
     {{-- Header --}}
     <div class="m-5 rounded-xl bg-white md:my-5 md:ms-2 md:me-5 dark:bg-zinc-800">
-
         <div class="flex flex-col items-center justify-between gap-4 p-6 sm:flex-row">
-
             <div class="flex items-center gap-3">
-
                 <div
                     class="flex size-12 shrink-0 items-center justify-center rounded-xl bg-linear-to-br from-indigo-400 to-violet-500 text-white">
                     <flux:icon name="musical-note" class="size-6" />
@@ -234,31 +244,24 @@ new class extends Component {
                         Dengarkan dan kelola koleksi music.
                     </flux:text>
                 </div>
-
             </div>
 
             <flux:button wire:click="openUpload" variant="primary" color="violet" icon="plus">
                 Upload Music
             </flux:button>
-
         </div>
-
     </div>
 
     {{-- Search --}}
     <flux:card class="m-5 border-none! md:my-5 md:ms-2 md:me-5">
-
         <flux:input wire:model.live.debounce.300ms="search" placeholder="Cari music..." icon="magnifying-glass" />
-
     </flux:card>
 
     {{-- Music List --}}
     <div class="m-5 grid grid-cols-1 gap-4 rounded-xl md:my-5 md:ms-2 md:me-5 md:grid-cols-2">
-
         @forelse ($music as $item)
             <flux:card wire:key="music-{{ $item->id }}"
                 class="m-0! rounded-2xl border-none! bg-white p-3 dark:bg-zinc-800">
-
                 <div class="flex items-center gap-3">
 
                     {{-- Play --}}
@@ -276,30 +279,31 @@ new class extends Component {
                     {{-- Content --}}
                     <div class="min-w-0 flex-1">
 
-                        <div class="flex items-center justify-between gap-2">
-
-                            <flux:heading size="sm" class="truncate">
+                        {{-- Title + Genre --}}
+                        <div class="flex items-center gap-2">
+                            <flux:heading size="sm" class="min-w-0 flex-1 truncate">
                                 {{ $item->title }}
                             </flux:heading>
+
+                            <flux:badge :color="$item->genre->color()" size="sm" class="shrink-0">
+                                {{ $item->genre->label() }}
+                            </flux:badge>
 
                             @if ($item->duration)
                                 <flux:text class="shrink-0 text-xs">
                                     {{ $item->formatted_duration }}
                                 </flux:text>
                             @endif
-
                         </div>
 
                         {{-- Waveform --}}
                         <div class="mt-1.5 w-full min-w-0">
-
                             <div id="waveform-{{ $item->id }}" data-waveform data-url="{{ $item->url }}"
                                 data-id="{{ $item->id }}" class="h-8 w-full cursor-pointer overflow-hidden"
                                 title="Klik waveform untuk mengatur posisi audio"></div>
 
                             <div
                                 class="mt-0.5 flex items-center justify-between text-[11px] leading-none text-zinc-500">
-
                                 <span data-music-current-time="{{ $item->id }}">
                                     00:00
                                 </span>
@@ -307,33 +311,23 @@ new class extends Component {
                                 <span data-music-duration="{{ $item->id }}">
                                     00:00
                                 </span>
-
                             </div>
-
                         </div>
-
                     </div>
 
                     {{-- Actions --}}
                     <div class="flex shrink-0 items-center gap-0.5">
-
                         <flux:button wire:click="openEdit({{ $item->id }})" variant="ghost" icon="pencil"
                             size="sm" tooltip="Edit musik" />
 
                         <flux:button wire:click="confirmDeleteMusic({{ $item->id }})" variant="ghost"
                             color="red" icon="trash" size="sm" tooltip="Hapus musik" />
-
                     </div>
-
                 </div>
-
             </flux:card>
-
         @empty
-
             <div
                 class="col-span-full rounded-2xl border border-dashed border-zinc-300 p-10 text-center dark:border-zinc-700">
-
                 <flux:icon name="musical-note" class="mx-auto size-10 text-zinc-400" />
 
                 <flux:heading size="sm" class="mt-3">
@@ -343,19 +337,15 @@ new class extends Component {
                 <flux:text class="mt-1">
                     Upload file .ogg pertama Anda.
                 </flux:text>
-
             </div>
         @endforelse
-
     </div>
 
     {{ $music->links() }}
 
     {{-- Upload Modal --}}
     <flux:modal wire:model="showUploadModal" class="w-full max-w-2xl" :dismissible="false">
-
         <form wire:submit="saveMusic" class="space-y-6">
-
             <div>
                 <flux:heading size="lg">
                     Upload Music
@@ -366,20 +356,43 @@ new class extends Component {
                 </flux:text>
             </div>
 
-            <flux:input wire:model="title" label="Judul Music" placeholder="Artist - Song" />
+            <div class="flex flex-col gap-4 sm:flex-row">
+                <div class="min-w-0 flex-1">
+                    <flux:input wire:model="title" label="Judul Music" placeholder="Artist - Song" />
+                </div>
 
-            <flux:input type="file" wire:model="audio" label="File Audio" accept=".ogg,audio/ogg" />
+                <div class="w-full sm:w-48">
+                    <flux:select wire:model="genre" label="Genre">
+                        @foreach ($genres as $item)
+                            <flux:select.option value="{{ $item->value }}">
+                                {{ $item->label() }}
+                            </flux:select.option>
+                        @endforeach
+                    </flux:select>
+                </div>
+            </div>
 
-            <flux:text class="text-xs">
-                Format .ogg · Maksimal 20 MB
-            </flux:text>
+            <div class="space-y-2">
+                <flux:input type="file" wire:model="audio" label="File Audio" accept=".ogg,audio/ogg" />
+
+                @if ($audio)
+                    <div class="rounded-lg bg-zinc-50 px-3 py-2 dark:bg-zinc-800">
+                        <flux:text class="break-all text-xs">
+                            {{ $audio->getClientOriginalName() }}
+                        </flux:text>
+                    </div>
+                @endif
+
+                <flux:text class="text-xs">
+                    Format .ogg · Maksimal 20 MB
+                </flux:text>
+            </div>
 
             <div wire:loading wire:target="audio" class="text-sm text-zinc-500">
                 Mengupload file...
             </div>
 
             <div class="flex justify-end gap-2">
-
                 <flux:button type="button" wire:click="$set('showUploadModal', false)">
                     Batal
                 </flux:button>
@@ -388,28 +401,35 @@ new class extends Component {
                     wire:target="saveMusic,audio">
                     Simpan
                 </flux:button>
-
             </div>
-
         </form>
-
     </flux:modal>
 
     {{-- Edit Modal --}}
     <flux:modal name="edit-music" class="w-full max-w-2xl" :dismissible="false">
-
         <form wire:submit="updateMusic" class="space-y-6">
 
             <div>
                 <flux:heading size="lg">
                     Edit Music
                 </flux:heading>
+
+                <flux:text class="mt-1">
+                    Perbarui informasi music.
+                </flux:text>
             </div>
 
             <flux:input wire:model="editTitle" label="Judul Music" />
 
-            <div class="flex justify-end gap-2">
+            <flux:select wire:model="editGenre" label="Genre">
+                @foreach ($genres as $item)
+                    <flux:select.option value="{{ $item->value }}">
+                        {{ $item->label() }}
+                    </flux:select.option>
+                @endforeach
+            </flux:select>
 
+            <div class="flex justify-end gap-2">
                 <flux:button type="button" x-on:click="$flux.modal('edit-music').close()">
                     Batal
                 </flux:button>
@@ -418,11 +438,7 @@ new class extends Component {
                     wire:target="updateMusic">
                     Simpan
                 </flux:button>
-
             </div>
-
         </form>
-
     </flux:modal>
-
 </div>

@@ -1,5 +1,6 @@
 <?php
 
+use App\Enums\MusicGenre;
 use App\Models\Music;
 use App\Models\MusicRequest;
 use Livewire\Component;
@@ -10,7 +11,10 @@ new class extends Component {
 
     public string $search = '';
 
+    public string $genre = '';
+
     public bool $showRequestModal = false;
+
     public bool $showRequestListModal = false;
 
     public string $requestNote = '';
@@ -25,6 +29,13 @@ new class extends Component {
     // Search
 
     public function updatedSearch(): void
+    {
+        $this->resetPage();
+    }
+
+    // Genre
+
+    public function updatedGenre(): void
     {
         $this->resetPage();
     }
@@ -46,6 +57,7 @@ new class extends Component {
     private function resetRequestForm(): void
     {
         $this->resetValidation();
+
         $this->reset('requestNote');
     }
 
@@ -68,6 +80,7 @@ new class extends Component {
         ]);
 
         $this->resetRequestForm();
+
         $this->showRequestModal = false;
 
         $this->dispatch('swal', type: 'success', title: 'Request Terkirim', message: 'Request music berhasil dikirim kepada admin.');
@@ -83,6 +96,9 @@ new class extends Component {
                     $query->where('title', 'like', "%{$this->search}%")->orWhere('filename', 'like', "%{$this->search}%");
                 });
             })
+            ->when($this->genre !== '', function ($query) {
+                $query->where('genre', $this->genre);
+            })
             ->latest()
             ->paginate(10);
 
@@ -94,6 +110,7 @@ new class extends Component {
         return $this->view([
             'music' => $music,
             'requests' => $requests,
+            'genres' => MusicGenre::cases(),
         ]);
     }
 };
@@ -123,23 +140,48 @@ new class extends Component {
         </div>
     </div>
 
-    {{-- Search --}}
-    <flux:card class="m-5 flex items-center gap-3 border-none! md:my-5 md:ms-2 md:me-5">
-        <div class="min-w-0 flex-1">
-            <flux:input wire:model.live.debounce.300ms="search" placeholder="Cari music..." icon="magnifying-glass" />
+    {{-- Search & Filter --}}
+    <flux:card class="m-5 border-none! md:my-5 md:ms-2 md:me-5">
+        <div class="flex flex-col gap-3 lg:flex-row items-center">
+
+            {{-- Search --}}
+            <div class="min-w-0 flex-1">
+                <flux:input wire:model.live.debounce.300ms="search" placeholder="Cari music..."
+                    icon="magnifying-glass" />
+            </div>
+
+            {{-- Genre --}}
+            <div class="w-full lg:w-52">
+                <flux:select wire:model.live="genre">
+                    <flux:select.option value="">
+                        Semua Genre
+                    </flux:select.option>
+
+                    @foreach ($genres as $item)
+                        <flux:select.option value="{{ $item->value }}">
+                            {{ $item->label() }}
+                        </flux:select.option>
+                    @endforeach
+                </flux:select>
+            </div>
+
+            {{-- Actions --}}
+            <div class="flex shrink-0 gap-2">
+                <flux:button wire:click="openRequest" variant="primary" color="emerald" icon="paper-airplane"
+                    size="sm">
+                    Request Lagu
+                </flux:button>
+
+                <flux:button wire:click="openRequestList" variant="ghost" icon="clipboard-document-list" size="sm">
+                    Daftar Request
+                </flux:button>
+            </div>
         </div>
-
-        <flux:button wire:click="openRequest" variant="primary" color="emerald" icon="paper-airplane" size="sm">
-            Request Lagu
-        </flux:button>
-
-        <flux:button wire:click="openRequestList" variant="ghost" icon="clipboard-document-list" size="sm">
-            Daftar Request
-        </flux:button>
     </flux:card>
 
     {{-- Music List --}}
-    <div class="m-5 grid grid-cols-1 gap-4 space-y-3 rounded-xl md:my-5 md:ms-2 md:me-5 md:grid-cols-2">
+    <div class="m-5 grid grid-cols-1 gap-4 rounded-xl md:my-5 md:ms-2 md:me-5 md:grid-cols-2">
+
         @forelse ($music as $item)
             <flux:card wire:key="music-{{ $item->id }}"
                 class="m-0! rounded-2xl border-none! bg-white p-3 dark:bg-zinc-800">
@@ -160,13 +202,15 @@ new class extends Component {
                     {{-- Content --}}
                     <div class="min-w-0 flex-1">
 
-                        {{-- Title --}}
-                        <div class="flex items-center justify-between gap-2">
-                            <div class="min-w-0">
-                                <flux:heading size="sm" class="truncate">
-                                    {{ $item->title }}
-                                </flux:heading>
-                            </div>
+                        {{-- Title + Genre --}}
+                        <div class="flex items-center gap-2">
+                            <flux:heading size="sm" class="min-w-0 flex-1 truncate">
+                                {{ $item->title }}
+                            </flux:heading>
+
+                            <flux:badge :color="$item->genre->color()" size="sm" class="shrink-0">
+                                {{ $item->genre->label() }}
+                            </flux:badge>
 
                             @if ($item->duration)
                                 <flux:text class="shrink-0 text-xs">
@@ -177,6 +221,7 @@ new class extends Component {
 
                         {{-- Waveform --}}
                         <div class="mt-1.5 w-full min-w-0">
+
                             <div id="waveform-{{ $item->id }}" data-waveform data-url="{{ $item->url }}"
                                 data-id="{{ $item->id }}" class="h-8 w-full cursor-pointer overflow-hidden"
                                 title="Klik waveform untuk mengatur posisi audio"></div>
@@ -192,10 +237,12 @@ new class extends Component {
                                     00:00
                                 </span>
                             </div>
+
                         </div>
                     </div>
                 </div>
             </flux:card>
+
         @empty
             <div
                 class="col-span-full rounded-2xl border border-dashed border-zinc-300 p-10 text-center dark:border-zinc-700">
@@ -210,6 +257,7 @@ new class extends Component {
                 </flux:text>
             </div>
         @endforelse
+
     </div>
 
     {{ $music->links() }}
@@ -231,6 +279,7 @@ new class extends Component {
 
             {{-- Request List --}}
             <div class="max-h-[60vh] space-y-3 overflow-y-auto">
+
                 @forelse ($requests as $request)
                     <div wire:key="my-music-request-{{ $request->id }}"
                         class="rounded-2xl border border-zinc-200 p-4 dark:border-zinc-700">
@@ -286,6 +335,7 @@ new class extends Component {
                             </flux:text>
                         </div>
                     @endforelse
+
                 </div>
 
                 {{-- Footer --}}
@@ -320,7 +370,8 @@ new class extends Component {
                         Batal
                     </flux:button>
 
-                    <flux:button type="submit" variant="primary" wire:loading.attr="disabled" wire:target="submitRequest">
+                    <flux:button type="submit" variant="primary" wire:loading.attr="disabled"
+                        wire:target="submitRequest">
                         Kirim Request
                     </flux:button>
                 </div>
