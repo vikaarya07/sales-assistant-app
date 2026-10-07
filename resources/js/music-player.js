@@ -1,10 +1,13 @@
 window.musicPlayer = {
     audio: null,
+
     currentId: null,
     currentTitle: "",
+
     initialized: false,
 
     animationFrame: null,
+
     playButtonBound: false,
     waveformClickBound: false,
 
@@ -13,7 +16,6 @@ window.musicPlayer = {
     waveformCache: new Map(),
     waveformQueue: [],
     waveformProcessing: false,
-    waveformObserver: null,
 
     init() {
         if (!this.audio) {
@@ -74,19 +76,28 @@ window.musicPlayer = {
             this.updateWaveformProgress();
         });
 
-        this.audio.addEventListener("ended", () => {
-            if (this.currentId) {
-                this.updateTimeDisplay(
-                    this.currentId,
-                    this.audio.duration || 0,
-                    this.audio.duration || 0,
-                );
+        /*
+         * Ketika lagu selesai:
+         *
+         * Lagu 1 selesai
+         *      ↓
+         * Cari tombol lagu berikutnya
+         *      ↓
+         * Play lagu berikutnya
+         */
+        this.audio.addEventListener("ended", async () => {
+            const finishedId = this.currentId;
 
-                this.setWaveformProgress(this.currentId, 1);
-                this.setButtonState(this.currentId, false);
+            if (!finishedId) {
+                return;
             }
 
+            this.setCurrentTime(this.audio.duration);
+            this.setWaveformProgress(finishedId, 1);
+            this.setButtonState(finishedId, false);
             this.stopAnimation();
+
+            await this.playNext(finishedId);
         });
 
         this.audio.addEventListener("pause", () => {
@@ -152,8 +163,10 @@ window.musicPlayer = {
         }
 
         /*
-         * Jika lagu yang sama sedang diputar,
-         * cukup pause/play.
+         * Jika lagu yang sama sedang aktif:
+         *
+         * paused  → play
+         * playing → pause
          */
         if (this.currentId === id && this.audio && this.audio.src) {
             if (this.audio.paused) {
@@ -175,7 +188,17 @@ window.musicPlayer = {
         await this.play(id, url, title);
     },
 
+    /*
+    |--------------------------------------------------------------------------
+    | PLAY
+    |--------------------------------------------------------------------------
+    */
+
     async play(id, url, title = "") {
+        if (!id || !url) {
+            return false;
+        }
+
         if (!this.audio) {
             this.init();
         }
@@ -191,27 +214,29 @@ window.musicPlayer = {
             this.resetTimeDisplay(this.currentId);
         }
 
-        this.currentId = id;
+        this.currentId = String(id);
         this.currentTitle = title;
 
         /*
-         * Set source hanya ketika user benar-benar menekan Play.
-         *
-         * Ini bagian penting untuk mengurangi ukuran reload.
+         * Normalisasi URL supaya perbandingan source
+         * konsisten antara relative URL dan absolute URL.
          */
-        if (this.audio.src !== new URL(url, window.location.href).href) {
+        const sourceUrl = new URL(url, window.location.href).href;
+
+        /*
+         * Hanya ganti source kalau memang lagu berbeda.
+         */
+        if (this.audio.src !== sourceUrl) {
             this.audio.pause();
 
-            this.audio.src = url;
+            this.audio.src = sourceUrl;
             this.audio.load();
         }
 
-        this.setButtonState(id, true);
-
         /*
-         * Coba play langsung.
+         * Jangan set button playing di sini.
          *
-         * Browser akan mengambil audio hanya ketika diperlukan.
+         * Biarkan event "play" yang mengubah state.
          */
         try {
             await this.audio.play();
@@ -219,15 +244,75 @@ window.musicPlayer = {
             console.error("Music playback failed:", error);
 
             this.setButtonState(id, false);
-            return;
+
+            /*
+             * Kalau browser membatalkan play karena alasan
+             * tertentu, jangan biarkan player terlihat playing.
+             */
+            if (this.currentId === String(id)) {
+                this.stopAnimation();
+            }
+
+            return false;
         }
 
         /*
-         * Waveform dibuat secara lazy.
-         *
-         * Tidak dilakukan sebelum user menekan Play.
+         * Waveform dibuat secara lazy setelah playback berhasil.
          */
         this.queueWaveform(id, url);
+
+        return true;
+    },
+
+    /*
+    |--------------------------------------------------------------------------
+    | PLAY NEXT
+    |--------------------------------------------------------------------------
+    */
+
+    async playNext(finishedId) {
+        const buttons = [...document.querySelectorAll("[data-music-play]")];
+
+        if (!buttons.length) {
+            return false;
+        }
+
+        /*
+         * Cari posisi lagu yang baru saja selesai.
+         */
+        const currentIndex = buttons.findIndex(
+            (button) => String(button.dataset.id) === String(finishedId),
+        );
+
+        if (currentIndex === -1) {
+            return false;
+        }
+
+        /*
+         * Ambil lagu setelah lagu yang selesai.
+         */
+        const nextButton = buttons[currentIndex + 1];
+
+        /*
+         * Kalau tidak ada:
+         * berarti sudah lagu terakhir.
+         */
+        if (!nextButton) {
+            return false;
+        }
+
+        const nextId = nextButton.dataset.id;
+        const nextUrl = nextButton.dataset.url;
+        const nextTitle = nextButton.dataset.title || "";
+
+        if (!nextId || !nextUrl) {
+            return false;
+        }
+
+        /*
+         * Play lagu berikutnya.
+         */
+        return await this.play(nextId, nextUrl, nextTitle);
     },
 
     /*
@@ -281,11 +366,6 @@ window.musicPlayer = {
             return;
         }
 
-        /*
-         * Jangan decode audio ketika halaman pertama dibuka.
-         *
-         * Cukup tampilkan placeholder ringan.
-         */
         elements.forEach((element) => {
             if (element.dataset.initialized) {
                 return;
@@ -299,6 +379,11 @@ window.musicPlayer = {
 
             element.dataset.initialized = "true";
 
+            /*
+             * Jangan decode audio ketika halaman pertama dibuka.
+             *
+             * Tampilkan placeholder terlebih dahulu.
+             */
             this.renderPlaceholder(element);
         });
     },
@@ -320,17 +405,17 @@ window.musicPlayer = {
                 ${Array.from(
                     { length: count },
                     () => `
-                    <span
-                        style="
-                            flex:1 1 0%;
-                            min-width:0;
-                            height:20%;
-                            border-radius:9999px;
-                            background:#d4d4d8;
-                            pointer-events:none;
-                        "
-                    ></span>
-                `,
+                        <span
+                            style="
+                                flex:1 1 0%;
+                                min-width:0;
+                                height:20%;
+                                border-radius:9999px;
+                                background:#d4d4d8;
+                                pointer-events:none;
+                            "
+                        ></span>
+                    `,
                 ).join("")}
             </div>
         `;
@@ -365,6 +450,7 @@ window.musicPlayer = {
             this.renderWaveform(element, this.waveformCache.get(cacheKey));
 
             this.updateWaveformProgress();
+
             return;
         }
 
@@ -445,14 +531,11 @@ window.musicPlayer = {
 
     /*
     |--------------------------------------------------------------------------
-    | DECODE AUDIO -> ACTUAL AMPLITUDE
+    | DECODE AUDIO → ACTUAL AMPLITUDE
     |--------------------------------------------------------------------------
     */
 
     async decodeWaveform(url, count) {
-        /*
-         * Cache sederhana berdasarkan URL + jumlah bar.
-         */
         const cacheKey = `${url}|${count}`;
 
         if (this.waveformCache.has(cacheKey)) {
@@ -482,9 +565,17 @@ window.musicPlayer = {
         }
 
         /*
-         * Decode hanya setelah user benar-benar
-         * memainkan lagu.
+         * Beberapa browser dapat membuat AudioContext
+         * suspended. Resume jika diperlukan.
          */
+        if (this.audioContext.state === "suspended") {
+            try {
+                await this.audioContext.resume();
+            } catch {
+                // Tidak fatal untuk waveform.
+            }
+        }
+
         const audioBuffer =
             await this.audioContext.decodeAudioData(arrayBuffer);
 
@@ -502,9 +593,6 @@ window.musicPlayer = {
 
         /*
          * Gunakan channel pertama.
-         *
-         * Untuk stereo, channel kiri sudah cukup
-         * untuk bentuk waveform visual.
          */
         const data = audioBuffer.getChannelData(0);
 
@@ -580,10 +668,16 @@ window.musicPlayer = {
         return amplitudes.map((value) => {
             const normalized = value / max;
 
-            // Lebih natural: bagian pelan tidak terlalu ditinggikan
+            /*
+             * Lebih natural:
+             * bagian pelan tidak terlalu ditinggikan.
+             */
             const enhanced = Math.pow(normalized, 1.2);
 
-            // Minimum 8%, maksimum 65%
+            /*
+             * Minimum 8%
+             * Maksimum 65%
+             */
             return 0.08 + enhanced * 0.57;
         });
     },
@@ -620,19 +714,19 @@ window.musicPlayer = {
                 ${amplitudes
                     .map(
                         (height, index) => `
-                        <span
-                            data-wave-bar="${index}"
-                            style="
-                                flex:1 1 0%;
-                                min-width:0;
-                                height:${height * 100}%;
-                                border-radius:9999px;
-                                background:#d4d4d8;
-                                transition:background-color 80ms linear;
-                                pointer-events:none;
-                            "
-                        ></span>
-                    `,
+                            <span
+                                data-wave-bar="${index}"
+                                style="
+                                    flex:1 1 0%;
+                                    min-width:0;
+                                    height:${height * 100}%;
+                                    border-radius:9999px;
+                                    background:#d4d4d8;
+                                    transition:background-color 80ms linear;
+                                    pointer-events:none;
+                                "
+                            ></span>
+                        `,
                     )
                     .join("")}
             </div>
@@ -705,8 +799,7 @@ window.musicPlayer = {
             }
 
             /*
-             * Hanya seek pada lagu yang sedang
-             * aktif.
+             * Hanya seek pada lagu yang sedang aktif.
              */
             if (
                 this.currentId !== id ||
@@ -771,7 +864,9 @@ window.musicPlayer = {
             return;
         }
 
-        const activeCount = Math.floor(bars.length * progress);
+        const safeProgress = Math.max(0, Math.min(1, progress));
+
+        const activeCount = Math.floor(bars.length * safeProgress);
 
         bars.forEach((bar, index) => {
             if (index < activeCount) {
@@ -823,6 +918,20 @@ window.musicPlayer = {
 
         if (total && Number.isFinite(duration)) {
             total.textContent = this.formatTime(duration);
+        }
+    },
+
+    setCurrentTime(seconds) {
+        if (!this.currentId) {
+            return;
+        }
+
+        const element = document.querySelector(
+            `[data-music-current-time="${CSS.escape(String(this.currentId))}"]`,
+        );
+
+        if (element) {
+            element.textContent = this.formatTime(seconds);
         }
     },
 

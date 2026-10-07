@@ -17,7 +17,7 @@ new class extends Component {
     public bool $showUploadModal = false;
 
     public string $title = '';
-    public string $genre = MusicGenre::OTHER->value;
+    public string $genre = '';
     public $audio;
 
     public ?int $editingMusicId = null;
@@ -60,9 +60,13 @@ new class extends Component {
         $this->editGenre = MusicGenre::OTHER->value;
     }
 
-    // Search
-
+    // Search & Filter
     public function updatedSearch(): void
+    {
+        $this->resetPage();
+    }
+
+    public function updatedGenre(): void
     {
         $this->resetPage();
     }
@@ -204,7 +208,6 @@ new class extends Component {
     }
 
     // Render
-
     public function render()
     {
         $music = Music::query()
@@ -212,6 +215,9 @@ new class extends Component {
                 $query->where(function ($query) {
                     $query->where('title', 'like', "%{$this->search}%")->orWhere('filename', 'like', "%{$this->search}%");
                 });
+            })
+            ->when($this->genre !== '', function ($query) {
+                $query->where('genre', $this->genre);
             })
             ->latest()
             ->paginate(10);
@@ -252,9 +258,30 @@ new class extends Component {
         </div>
     </div>
 
-    {{-- Search --}}
+    {{-- Search & Filter --}}
     <flux:card class="m-5 border-none! md:my-5 md:ms-2 md:me-5">
-        <flux:input wire:model.live.debounce.300ms="search" placeholder="Cari music..." icon="magnifying-glass" />
+        <div class="flex flex-col items-center gap-3 lg:flex-row">
+            {{-- Search --}}
+            <div class="min-w-0 flex-1">
+                <flux:input wire:model.live.debounce.300ms="search" placeholder="Cari music..."
+                    icon="magnifying-glass" />
+            </div>
+
+            {{-- Genre --}}
+            <div class="w-full lg:w-52">
+                <flux:select wire:model.live="genre">
+                    <flux:select.option value="">
+                        Semua Genre
+                    </flux:select.option>
+
+                    @foreach ($genres as $item)
+                        <flux:select.option value="{{ $item->value }}">
+                            {{ $item->label() }}
+                        </flux:select.option>
+                    @endforeach
+                </flux:select>
+            </div>
+        </div>
     </flux:card>
 
     {{-- Music List --}}
