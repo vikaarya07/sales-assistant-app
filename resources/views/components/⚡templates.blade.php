@@ -3,6 +3,7 @@
 use App\Models\MessageTemplate;
 use Livewire\Component;
 use Livewire\WithPagination;
+use Livewire\Attributes\On;
 
 new class extends Component {
     use WithPagination;
@@ -16,6 +17,8 @@ new class extends Component {
     public bool $isActive = true;
 
     public string $search = '';
+
+    public ?int $deletingId = null;
 
     public function createTemplate(): void
     {
@@ -60,6 +63,8 @@ new class extends Component {
                 'content' => $this->content,
                 'is_active' => $this->isActive,
             ]);
+
+            $message = 'Template berhasil diperbarui.';
         } else {
             $this->authorize('create', MessageTemplate::class);
 
@@ -71,22 +76,46 @@ new class extends Component {
                     'content' => $this->content,
                     'is_active' => $this->isActive,
                 ]);
+
+            $message = 'Template berhasil ditambahkan.';
         }
 
         $this->resetForm();
 
         $this->modal('template-form')->close();
+
+        $this->dispatch('swal', type: 'success', message: $message);
     }
 
-    public function deleteTemplate(int $id): void
+    public function confirmDelete(int $id): void
     {
         $template = auth()->user()->messageTemplates()->findOrFail($id);
 
         $this->authorize('delete', $template);
 
+        $this->deletingId = $template->id;
+
+        $this->dispatch('confirm', title: 'Hapus Template?', message: "{$template->name} akan dihapus secara permanen.", confirmText: 'Ya, hapus', cancelText: 'Batal', action: 'delete-template');
+    }
+
+    #[On('delete-template')]
+    public function deleteTemplate(): void
+    {
+        if (!$this->deletingId) {
+            return;
+        }
+
+        $template = auth()->user()->messageTemplates()->findOrFail($this->deletingId);
+
+        $this->authorize('delete', $template);
+
         $template->delete();
 
+        $this->deletingId = null;
+
         $this->resetPage();
+
+        $this->dispatch('swal', type: 'success', title: 'Berhasil', message: 'Template berhasil dihapus.');
     }
 
     public function toggleActive(int $id): void
@@ -98,6 +127,8 @@ new class extends Component {
         $template->update([
             'is_active' => !$template->is_active,
         ]);
+
+        $this->dispatch('swal', type: 'success', message: $template->is_active ? 'Template berhasil diaktifkan.' : 'Template berhasil dinonaktifkan.');
     }
 
     public function cancelForm(): void
@@ -311,11 +342,10 @@ new class extends Component {
                                             wire:click="editTemplate({{ $template->id }})">
                                         </flux:button>
 
-
                                         {{-- DELETE --}}
                                         <flux:button size="sm" variant="ghost" color="red" icon="trash"
-                                            wire:click="deleteTemplate({{ $template->id }})"
-                                            wire:confirm="Hapus template ini?">
+                                            wire:click="confirmDelete({{ $template->id }})"
+                                            wire:loading.attr="disabled">
                                         </flux:button>
 
                                     </div>

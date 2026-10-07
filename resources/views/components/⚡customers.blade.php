@@ -5,6 +5,7 @@ use App\Models\Customer;
 use Illuminate\Support\Facades\DB;
 use Livewire\Component;
 use Livewire\WithPagination;
+use Livewire\Attributes\On;
 
 new class extends Component {
     use WithPagination;
@@ -13,10 +14,8 @@ new class extends Component {
     public string $search = '';
     public string $status = '';
     public array $result = [];
-
     public string $greeting = 'Selamat pagi';
     public string $address = 'Bapak';
-
     public string $createdDate = '';
 
     /*
@@ -65,6 +64,8 @@ new class extends Component {
     public string $manualAmount = '';
     public string $manualBranch = '';
 
+    public ?int $deletingCustomerId = null;
+
     /*
     |--------------------------------------------------------------------------
     | Import Customer
@@ -101,6 +102,7 @@ new class extends Component {
 
                 if ($customer === null) {
                     $invalid++;
+
                     continue;
                 }
 
@@ -108,6 +110,7 @@ new class extends Component {
 
                 if ($exists) {
                     $duplicate++;
+
                     continue;
                 }
 
@@ -125,6 +128,14 @@ new class extends Component {
 
         $this->reset('importText');
         $this->resetPage();
+
+        if ($created > 0) {
+            $this->dispatch('swal', type: 'success', message: "{$created} customer berhasil diimport.");
+        } elseif ($duplicate > 0 && $invalid === 0) {
+            $this->dispatch('swal', type: 'warning', message: 'Tidak ada customer baru yang diimport. Semua data sudah terdaftar.');
+        } else {
+            $this->dispatch('swal', type: 'warning', message: 'Tidak ada data customer yang berhasil diimport.');
+        }
     }
 
     /*
@@ -147,30 +158,22 @@ new class extends Component {
         $this->validate(
             [
                 'manualName' => ['required', 'string', 'max:255'],
-
                 'manualPhone' => ['required', 'string'],
-
                 'manualContractNumber' => ['required', 'string', 'digits:17'],
-
                 'manualAmount' => ['required', 'string'],
-
                 'manualBranch' => ['required', 'string', 'max:255'],
             ],
             [
                 'manualName.required' => 'Nama customer wajib diisi.',
                 'manualName.string' => 'Nama customer harus berupa teks.',
                 'manualName.max' => 'Nama customer maksimal 255 karakter.',
-
                 'manualPhone.required' => 'Nomor WhatsApp wajib diisi.',
                 'manualPhone.string' => 'Nomor WhatsApp harus berupa teks.',
-
                 'manualContractNumber.required' => 'Nomor kontrak wajib diisi.',
                 'manualContractNumber.string' => 'Nomor kontrak harus berupa angka.',
                 'manualContractNumber.digits' => 'Nomor kontrak harus tepat 17 digit.',
-
                 'manualAmount.required' => 'Nominal wajib diisi.',
                 'manualAmount.string' => 'Nominal tidak valid.',
-
                 'manualBranch.required' => 'Cabang wajib diisi.',
                 'manualBranch.string' => 'Nama cabang tidak valid.',
                 'manualBranch.max' => 'Nama cabang maksimal 255 karakter.',
@@ -222,7 +225,6 @@ new class extends Component {
             ]);
 
         $this->closeManualCustomer();
-
         $this->resetPage();
 
         $this->result = [
@@ -230,6 +232,8 @@ new class extends Component {
             'duplicate' => 0,
             'invalid' => 0,
         ];
+
+        $this->dispatch('swal', type: 'success', message: 'Customer berhasil ditambahkan.');
     }
 
     public function closeManualCustomer(): void
@@ -469,12 +473,16 @@ new class extends Component {
             $this->authorize('delete', $customer);
         }
 
+        $count = $customers->count();
+
         foreach ($customers as $customer) {
             $customer->delete();
         }
 
         $this->clearSelection();
         $this->resetPage();
+
+        $this->dispatch('swal', type: 'success', message: "{$count} customer berhasil dihapus.");
     }
 
     /*
@@ -493,9 +501,7 @@ new class extends Component {
         $this->editName = $customer->name;
         $this->editPhone = $customer->phone;
         $this->editContractNumber = $customer->contract_number;
-
         $this->editAmount = $this->formatIdr($customer->amount);
-
         $this->editBranch = $customer->branch;
         $this->editStatus = $customer->status->value;
 
@@ -509,36 +515,26 @@ new class extends Component {
         $this->validate(
             [
                 'editName' => ['required', 'string', 'max:255'],
-
                 'editPhone' => ['required', 'string'],
-
                 'editContractNumber' => ['required', 'string', 'digits:17'],
-
                 'editAmount' => ['required', 'string'],
-
                 'editBranch' => ['required', 'string', 'max:255'],
-
                 'editStatus' => ['required', 'string'],
             ],
             [
                 'editName.required' => 'Nama customer wajib diisi.',
                 'editName.string' => 'Nama customer harus berupa teks.',
                 'editName.max' => 'Nama customer maksimal 255 karakter.',
-
                 'editPhone.required' => 'Nomor WhatsApp wajib diisi.',
                 'editPhone.string' => 'Nomor WhatsApp harus berupa teks.',
-
                 'editContractNumber.required' => 'Nomor kontrak wajib diisi.',
                 'editContractNumber.string' => 'Nomor kontrak harus berupa angka.',
                 'editContractNumber.digits' => 'Nomor kontrak harus tepat 17 digit.',
-
                 'editAmount.required' => 'Nominal wajib diisi.',
                 'editAmount.string' => 'Nominal tidak valid.',
-
                 'editBranch.required' => 'Cabang wajib diisi.',
                 'editBranch.string' => 'Nama cabang tidak valid.',
                 'editBranch.max' => 'Nama cabang maksimal 255 karakter.',
-
                 'editStatus.required' => 'Status wajib dipilih.',
                 'editStatus.string' => 'Status tidak valid.',
             ],
@@ -601,12 +597,13 @@ new class extends Component {
         ]);
 
         $this->closeEditCustomer();
+
+        $this->dispatch('swal', type: 'success', message: 'Data customer berhasil diperbarui.');
     }
 
     public function closeEditCustomer(): void
     {
         $this->editingCustomerId = null;
-
         $this->editName = '';
         $this->editPhone = '';
         $this->editContractNumber = '';
@@ -640,6 +637,8 @@ new class extends Component {
         $customer->update([
             'status' => $newStatus,
         ]);
+
+        $this->dispatch('swal', type: 'success', message: 'Status customer berhasil diperbarui.');
     }
 
     /*
@@ -655,7 +654,6 @@ new class extends Component {
         $this->authorize('view', $customer);
 
         $this->selectedCustomerId = $customer->id;
-
         $this->selectedTemplateId = '';
         $this->message = '';
         $this->greeting = 'Selamat pagi';
@@ -708,9 +706,7 @@ new class extends Component {
 
         $this->message = $customer->replaceTemplateVariables($template->content, [
             '{{sapaan_waktu}}' => $this->greeting,
-
             '{{panggilan}}' => $this->address,
-
             '{{panggilan_singkat}}' => $shortAddress,
         ]);
     }
@@ -744,6 +740,8 @@ new class extends Component {
         $customer->update([
             'last_contacted_at' => now(),
         ]);
+
+        $this->dispatch('swal', type: 'success', message: 'Customer berhasil ditandai sudah dihubungi.');
     }
 
     public function sendWhatsapp(): void
@@ -772,15 +770,35 @@ new class extends Component {
     |--------------------------------------------------------------------------
     */
 
-    public function deleteCustomer(int $id): void
+    public function confirmDeleteCustomer(int $id): void
     {
         $customer = auth()->user()->customers()->findOrFail($id);
 
         $this->authorize('delete', $customer);
 
+        $this->deletingCustomerId = $customer->id;
+
+        $this->dispatch('confirm', title: 'Hapus Customer?', message: "{$customer->name} akan dihapus secara permanen.", confirmText: 'Ya, hapus', cancelText: 'Batal', action: 'delete-customer');
+    }
+
+    #[On('delete-customer')]
+    public function deleteCustomer(): void
+    {
+        if (!$this->deletingCustomerId) {
+            return;
+        }
+
+        $customer = auth()->user()->customers()->findOrFail($this->deletingCustomerId);
+
+        $this->authorize('delete', $customer);
+
         $customer->delete();
 
+        $this->deletingCustomerId = null;
+
         $this->resetPage();
+
+        $this->dispatch('swal', type: 'success', title: 'Berhasil', message: 'Customer berhasil dihapus.');
     }
 
     /*
@@ -818,16 +836,12 @@ new class extends Component {
 
         return $this->view([
             'customers' => $customers,
-
             'selectedCustomer' => $this->selectedCustomerId ? auth()->user()->customers()->find($this->selectedCustomerId) : null,
-
             'templates' => auth()->user()->messageTemplates()->where('is_active', true)->orderBy('name')->get(),
-
             'statuses' => CustomerStatus::cases(),
         ]);
     }
 };
-
 ?>
 
 <div class="space-y-6">
@@ -992,53 +1006,58 @@ new class extends Component {
 
         {{-- SEARCH & FILTER --}}
         <flux:card variant="soft" class="bg-white dark:bg-zinc-800">
-
-            <div class="flex flex-col gap-4 lg:flex-row lg:items-end">
-
-                {{-- Filter Tanggal --}}
-                <div class="relative">
-                    <flux:input type="date" wire:model.live="createdDate" label="Tanggal Dibuat" />
-
-                    @if ($createdDate)
-                        <button type="button" wire:click="$set('createdDate', '')"
-                            class="absolute right-8 top-[2.10rem] z-10 flex size-6 items-center justify-center rounded-full text-zinc-400 transition hover:bg-zinc-100 hover:text-zinc-600 dark:hover:bg-zinc-700 dark:hover:text-zinc-200"
-                            aria-label="Hapus tanggal">
-                            <flux:icon name="x-mark" class="size-5" />
-                        </button>
-                    @endif
-                </div>
-
+            <div class="space-y-3">
                 {{-- Search --}}
-                <div class="relative flex-1">
-                    <flux:input wire:model.live.debounce.300ms="search" label="Cari Customer"
-                        placeholder="Nama, nomor kontrak, cabang..." icon="magnifying-glass" />
+                <div class="flex max-w-2xl items-end gap-2">
+                    <div class="min-w-0 flex-1">
+                        <flux:input wire:model.live.debounce.300ms="search" label="Cari Customer"
+                            placeholder="Nama, nomor kontrak, nomor WhatsApp, atau cabang..." icon="magnifying-glass" />
+                    </div>
 
                     @if ($search)
-                        <button type="button" wire:click="$set('search', '')"
-                            class="absolute right-3 top-[2.15rem] z-10 flex size-6 items-center justify-center rounded-full text-zinc-400 transition hover:bg-zinc-100 hover:text-zinc-600 dark:hover:bg-zinc-700 dark:hover:text-zinc-200"
-                            aria-label="Clear pencarian">
-                            <flux:icon name="x-mark" class="size-5" />
-                        </button>
+                        <flux:button type="button" variant="ghost" icon="arrow-path" wire:click="$set('search', '')">
+                            Reset
+                        </flux:button>
                     @endif
                 </div>
 
-                {{-- Status --}}
-                <div class="w-full lg:w-60">
-                    <flux:select wire:model.live="status" label="Status">
-                        <flux:select.option value="">
-                            Semua Status
-                        </flux:select.option>
+                {{-- Filters --}}
+                <div class="flex flex-wrap items-end gap-2">
+                    {{-- Tanggal --}}
+                    <div class="flex items-end gap-2">
+                        <flux:input type="date" wire:model.live="createdDate" label="Tanggal Dibuat" />
 
-                        @foreach ($statuses as $customerStatus)
-                            <flux:select.option :value="$customerStatus->value">
-                                {{ $customerStatus->label() }}
+                        @if ($createdDate)
+                            <flux:button type="button" variant="ghost" icon="arrow-path"
+                                wire:click="$set('createdDate', '')">
+                                Reset
+                            </flux:button>
+                        @endif
+                    </div>
+
+                    {{-- Status --}}
+                    <div class="flex items-end gap-2">
+                        <flux:select wire:model.live="status" label="Status">
+                            <flux:select.option value="">
+                                Semua Status
                             </flux:select.option>
-                        @endforeach
-                    </flux:select>
+
+                            @foreach ($statuses as $customerStatus)
+                                <flux:select.option :value="$customerStatus->value">
+                                    {{ $customerStatus->label() }}
+                                </flux:select.option>
+                            @endforeach
+                        </flux:select>
+
+                        @if ($status)
+                            <flux:button type="button" variant="ghost" icon="arrow-path"
+                                wire:click="$set('status', '')">
+                                Reset
+                            </flux:button>
+                        @endif
+                    </div>
                 </div>
-
             </div>
-
         </flux:card>
 
         {{-- BULK ACTION --}}
@@ -1260,8 +1279,8 @@ new class extends Component {
 
                                         {{-- DELETE --}}
                                         <flux:button size="sm" variant="ghost" color="red" icon="trash"
-                                            wire:click="deleteCustomer({{ $customer->id }})"
-                                            wire:confirm="Hapus customer ini?">
+                                            wire:click="confirmDeleteCustomer({{ $customer->id }})"
+                                            wire:loading.attr="disabled">
                                         </flux:button>
 
                                     </div>
