@@ -6,10 +6,6 @@
     @include('partials.head')
 </head>
 
-@auth
-    <livewire:activity-heartbeat />
-@endauth
-
 <body
     class="min-h-screen bg-linear-to-br from-indigo-50 via-violet-50 to-fuchsia-50 antialiased dark:from-slate-950 dark:via-indigo-950 dark:to-fuchsia-950">
 

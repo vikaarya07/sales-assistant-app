@@ -7,16 +7,15 @@ use Illuminate\Support\Facades\DB;
 use Livewire\Component;
 
 new class extends Component {
-    public function refreshOnlineStatus(): void
+    public function getOnlineUserIdsProperty(): array
     {
-        // Sengaja kosong.
-        // Polling Livewire akan menjalankan request ulang
-        // sehingga data member dan last_activity_at diperbarui.
-    }
-
-    public function isOnline(User $member): bool
-    {
-        return $member->last_activity_at?->greaterThan(now()->subSeconds(90)) ?? false;
+        return DB::table('sessions')
+            ->whereNotNull('user_id')
+            ->where('last_activity', '>=', now()->subMinutes(config('session.lifetime'))->timestamp)
+            ->pluck('user_id')
+            ->unique()
+            ->map(fn($id) => (int) $id)
+            ->all();
     }
 
     public function getStatsProperty(): array
@@ -25,13 +24,9 @@ new class extends Component {
 
         return [
             'members' => (clone $memberQuery)->count(),
-
             'active_members' => (clone $memberQuery)->where('status', UserStatus::ACTIVE->value)->count(),
-
             'inactive_members' => (clone $memberQuery)->where('status', UserStatus::INACTIVE->value)->count(),
-
             'customers' => DB::table('customers')->count(),
-
             'templates' => DB::table('message_templates')->count(),
         ];
     }
@@ -47,7 +42,7 @@ new class extends Component {
 };
 ?>
 
-<div class="space-y-6" wire:poll.10s="refreshOnlineStatus">
+<div class="space-y-6" wire:poll.10s>
 
     {{-- Header --}}
     <div class="m-5 overflow-hidden rounded-xl bg-white md:my-5 md:ms-2 md:me-5 dark:bg-zinc-800">
@@ -207,9 +202,13 @@ new class extends Component {
                             {{-- Member --}}
                             <td class="px-5 py-4">
                                 <div class="flex items-center gap-3">
-                                    <flux:avatar :name="$member->name" :initials="$member->initials()" color="auto"
-                                        circle badge badge:circle
-                                        :badge:color="$this->isOnline($member) ? 'green' : 'zinc'" />
+                                    @if (in_array($member->id, $this->onlineUserIds, true))
+                                        <flux:avatar :name="$member->name" :initials="$member->initials()"
+                                            color="auto" circle badge badge:circle badge:color="green" />
+                                    @else
+                                        <flux:avatar :name="$member->name" :initials="$member->initials()"
+                                            color="auto" circle badge badge:circle badge:color="zinc" />
+                                    @endif
 
                                     <div class="min-w-0">
                                         <div class="truncate font-medium">

@@ -47,7 +47,6 @@ class User extends Authenticatable implements PasskeyUser
         'email',
         'password',
         'role',
-        'last_activity_at',
     ];
 
     /**
@@ -62,7 +61,6 @@ class User extends Authenticatable implements PasskeyUser
             'password' => 'hashed',
             'role' => UserRole::class,
             'status' => UserStatus::class,
-            'last_activity_at' => 'datetime',
         ];
     }
 
