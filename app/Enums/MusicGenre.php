@@ -14,7 +14,6 @@ enum MusicGenre: string
     case REGGAE = 'reggae';
     case COUNTRY = 'country';
     case CLASSICAL = 'classical';
-    case RELIGI = 'religi';
     case DANGDUT = 'dangdut';
     case INDONESIAN = 'indonesian';
     case BRAZILIAN = 'brazilian';
@@ -33,7 +32,6 @@ enum MusicGenre: string
             self::REGGAE => 'Reggae',
             self::COUNTRY => 'Country',
             self::CLASSICAL => 'Classical',
-            self::RELIGI => 'Religi',
             self::DANGDUT => 'Dangdut',
             self::INDONESIAN => 'Indonesian',
             self::BRAZILIAN => 'Brazilian',
@@ -54,7 +52,6 @@ enum MusicGenre: string
             self::REGGAE => 'green',
             self::COUNTRY => 'orange',
             self::CLASSICAL => 'zinc',
-            self::RELIGI => 'emerald',
             self::DANGDUT => 'lime',
             self::INDONESIAN => 'sky',
             self::BRAZILIAN => 'teal',
