@@ -209,6 +209,21 @@
 
     @fluxScripts
 
+    @if (session('swal'))
+        <script>
+            document.addEventListener('DOMContentLoaded', () => {
+                const swal = @js(session('swal'));
+
+                if (swal.type === 'toast') {
+                    window.sweetAlert.toast(
+                        swal.message,
+                        swal.icon ?? 'success',
+                    );
+                }
+            });
+        </script>
+    @endif
+
 </body>
 
 </html>

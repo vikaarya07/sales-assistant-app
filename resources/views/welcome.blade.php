@@ -39,7 +39,8 @@
         <div class="mx-auto flex h-16 max-w-7xl items-center justify-between px-5 sm:px-6 lg:px-8">
 
             {{-- LOGO --}}
-            <a href="{{ route('home') }}" wire:navigate class="flex items-center gap-3">
+            {{-- <a href="{{ route('home') }}" wire:navigate class="flex items-center gap-3"> --}}
+            <a href="" wire:navigate class="flex items-center gap-3">
 
                 <div class="flex size-9 items-center justify-center rounded-xl">
                     <div class="flex size-full items-center justify-center rounded-[10px] bg-white dark:bg-zinc-950">
@@ -186,8 +187,7 @@
 
                         @auth
 
-                            <flux:button href="{{ route('dashboard') }}" wire:navigate variant="primary"
-                                icon="arrow-right">
+                            <flux:button href="{{ route('dashboard') }}" wire:navigate variant="primary" icon="arrow-right">
                                 Buka Dashboard
                             </flux:button>
                         @else
@@ -1295,6 +1295,21 @@
     </footer>
 
     @fluxScripts
+
+    @if (session('swal'))
+        <script>
+            document.addEventListener('DOMContentLoaded', () => {
+                const swal = @js(session('swal'));
+
+                if (swal.type === 'toast') {
+                    window.sweetAlert.toast(
+                        swal.message,
+                        swal.icon ?? 'success',
+                    );
+                }
+            });
+        </script>
+    @endif
 
 </body>
 
