@@ -15,7 +15,7 @@
                 <flux:label>{{ __('Username') }}</flux:label>
                 <flux:input.group>
                     <flux:input.group.prefix>@</flux:input.group.prefix>
-                    <flux:input wire:model="username" type="text" required autocomplete="username" />
+                    <flux:input wire:model.live="username" type="text" required autocomplete="username" />
                 </flux:input.group>
                 <flux:error name="website" />
             </flux:field>

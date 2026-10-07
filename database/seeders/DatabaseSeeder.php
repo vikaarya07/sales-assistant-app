@@ -42,7 +42,7 @@ class DatabaseSeeder extends Seeder
             ['email' => 'dina@vikaarya07.my.id'],
             [
                 'name' => 'Dina Gendz',
-                'username' => 'dina-gendz',
+                'username' => 'dinagendz',
                 'role' => 'prioritas_dana',
                 'password' => Hash::make('password'),
                 'email_verified_at' => now(),
@@ -64,7 +64,7 @@ class DatabaseSeeder extends Seeder
             ['email' => 'putri@vikaarya07.my.id'],
             [
                 'name' => 'Putri GAJE',
-                'username' => 'putri-gaje',
+                'username' => 'putrigaje',
                 'role' => 'prioritas_dana',
                 'password' => Hash::make('password'),
                 'email_verified_at' => now(),
@@ -75,7 +75,7 @@ class DatabaseSeeder extends Seeder
             ['email' => 'tata@vikaarya07.my.id'],
             [
                 'name' => 'Tata MESUM',
-                'username' => 'tata-mesum',
+                'username' => 'tatamesum',
                 'role' => 'prioritas_dana',
                 'password' => Hash::make('password'),
                 'email_verified_at' => now(),
@@ -86,7 +86,7 @@ class DatabaseSeeder extends Seeder
             ['email' => 'abdul@vikaarya07.my.id'],
             [
                 'name' => 'Kang Abdul',
-                'username' => 'kang-abdul',
+                'username' => 'kangabdul',
                 'role' => 'prioritas_dana',
                 'password' => Hash::make('password'),
                 'email_verified_at' => now(),
@@ -108,7 +108,7 @@ class DatabaseSeeder extends Seeder
             ['email' => 'lp@vikaarya07.my.id'],
             [
                 'name' => 'Landing Page',
-                'username' => 'landing-page',
+                'username' => 'landingpage',
                 'role' => 'landing_page',
                 'password' => Hash::make('password'),
                 'email_verified_at' => now(),

@@ -46,10 +46,9 @@ trait ProfileValidationRules
         return [
             'required',
             'string',
-            'lowercase',
-            'alpha_dash',
-            'min:3',
+            'min:5',
             'max:50',
+            'regex:/^(?=.*[a-z])[a-z0-9]+$/',
             $userId === null
                 ? Rule::unique(User::class, 'username')
                 : Rule::unique(User::class, 'username')->ignore($userId),

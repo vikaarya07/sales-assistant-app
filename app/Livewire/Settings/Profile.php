@@ -33,6 +33,11 @@ class Profile extends Component
         $this->email = $user->email;
     }
 
+    public function updatedUsername(string $value): void
+    {
+        $this->username = preg_replace('/[^a-z0-9]/', '', strtolower($value));
+    }
+
     /**
      * Update the profile information for the currently authenticated user.
      */

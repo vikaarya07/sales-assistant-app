@@ -16,7 +16,7 @@
 
             <!-- Username -->
             <flux:input name="username" :label="__('Username')" :value="old('username')" type="text" required
-                autocomplete="username" placeholder="username" />
+                autocomplete="username" placeholder="username" oninput="this.value = this.value.toLowerCase()" />
 
             <!-- Email Address -->
             <flux:input name="email" :label="__('Email address')" :value="old('email')" type="email" required
