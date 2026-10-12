@@ -12,6 +12,8 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
     Route::livewire('/templates', 'templates')->name('message-templates');
 
+    Route::livewire('interest-calculator', 'interest-calculator')->name('interest-calculator');
+
     Route::livewire('/music', 'music')->name('music');
 
     Route::livewire('/about', 'about')->name('about');

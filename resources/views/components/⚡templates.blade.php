@@ -586,6 +586,68 @@ Info lebih lanjut:
 
                         </div>
 
+                        {{-- HITUNG BUNGA --}}
+                        <div
+                            class="rounded-xl border border-fuchsia-100/70 bg-linear-to-br from-fuchsia-50/60 via-pink-50/30 to-white p-4 dark:border-fuchsia-500/10 dark:from-fuchsia-500/5 dark:via-fuchsia-500/5 dark:to-zinc-900">
+
+                            {{-- TITLE --}}
+                            <div class="mb-3 flex items-center gap-2">
+
+                                <div
+                                    class="flex size-7 items-center justify-center rounded-lg bg-fuchsia-100/80 text-fuchsia-600 dark:bg-fuchsia-500/10 dark:text-fuchsia-400">
+                                    <flux:icon name="currency-dollar" class="size-4" />
+                                </div>
+
+                                <flux:text class="text-xs font-semibold text-fuchsia-700/80 dark:text-fuchsia-300/80">
+                                    Hitung Bunga
+                                </flux:text>
+
+                            </div>
+
+                            {{-- VARIABLES --}}
+                            <div class="flex flex-wrap gap-2">
+
+                                {{-- SAPAAN WAKTU --}}
+                                <flux:button type="button" variant="ghost" size="sm"
+                                    data-message-variable="&#123;&#123;nominal_pinjaman&#125;&#125;"
+                                    class="border border-fuchsia-200/70 bg-white/80 text-xs font-medium transition duration-200 hover:-translate-y-0.5 hover:bg-fuchsia-50 dark:border-zinc-700 dark:bg-zinc-800 dark:hover:bg-zinc-700">
+                                    @{{ nominal_pinjaman }}
+                                </flux:button>
+
+                                <flux:button type="button" variant="ghost" size="sm"
+                                    data-message-variable="&#123;&#123;tenor&#125;&#125;"
+                                    class="border border-fuchsia-200/70 bg-white/80 text-xs font-medium transition duration-200 hover:-translate-y-0.5 hover:bg-fuchsia-50 dark:border-zinc-700 dark:bg-zinc-800 dark:hover:bg-zinc-700">
+                                    @{{ tenor }}
+                                </flux:button>
+
+                                <flux:button type="button" variant="ghost" size="sm"
+                                    data-message-variable="&#123;&#123;angsuran_bulanan&#125;&#125;"
+                                    class="border border-fuchsia-200/70 bg-white/80 text-xs font-medium transition duration-200 hover:-translate-y-0.5 hover:bg-fuchsia-50 dark:border-zinc-700 dark:bg-zinc-800 dark:hover:bg-zinc-700">
+                                    @{{ angsuran_bulanan }}
+                                </flux:button>
+
+                                <flux:button type="button" variant="ghost" size="sm"
+                                    data-message-variable="&#123;&#123;total_pembayaran&#125;&#125;"
+                                    class="border border-fuchsia-200/70 bg-white/80 text-xs font-medium transition duration-200 hover:-translate-y-0.5 hover:bg-fuchsia-50 dark:border-zinc-700 dark:bg-zinc-800 dark:hover:bg-zinc-700">
+                                    @{{ total_pembayaran }}
+                                </flux:button>
+
+                                <flux:button type="button" variant="ghost" size="sm"
+                                    data-message-variable="&#123;&#123;total_bunga&#125;&#125;"
+                                    class="border border-fuchsia-200/70 bg-white/80 text-xs font-medium transition duration-200 hover:-translate-y-0.5 hover:bg-fuchsia-50 dark:border-zinc-700 dark:bg-zinc-800 dark:hover:bg-zinc-700">
+                                    @{{ total_bunga }}
+                                </flux:button>
+
+                                <flux:button type="button" variant="ghost" size="sm"
+                                    data-message-variable="&#123;&#123;bunga_persen_bulanan&#125;&#125;"
+                                    class="border border-fuchsia-200/70 bg-white/80 text-xs font-medium transition duration-200 hover:-translate-y-0.5 hover:bg-fuchsia-50 dark:border-zinc-700 dark:bg-zinc-800 dark:hover:bg-zinc-700">
+                                    @{{ bunga_persen_bulanan }}
+                                </flux:button>
+
+                            </div>
+
+                        </div>
+
                     </div>
 
                 </div>
