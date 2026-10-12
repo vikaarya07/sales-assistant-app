@@ -10,13 +10,15 @@ new class extends Component {
     public string $selectedCustomerId = '';
     public string $selectedTemplateId = '';
 
-    public string $principal = '30000000';
-    public string $tenor = '24';
-    public string $installment = '1590000';
+    public string $principal = '';
+    public string $tenor = '';
+    public string $installment = '';
 
     public string $greeting = 'Selamat pagi';
     public string $address = 'Bapak';
     public string $message = '';
+
+    public bool $showWhatsappModal = false;
 
     public function updatedSearchCustomer(): void
     {
@@ -188,6 +190,17 @@ new class extends Component {
         return $customer->whatsappUrlWithMessage($this->message);
     }
 
+    public function openWhatsappModal(): void
+    {
+        $this->showWhatsappModal = true;
+        $this->generateMessage();
+    }
+
+    public function closeWhatsappModal(): void
+    {
+        $this->showWhatsappModal = false;
+    }
+
     #[Computed]
     public function selectedCustomer(): ?Customer
     {
@@ -195,9 +208,7 @@ new class extends Component {
             return null;
         }
 
-        return auth()->user()
-            ->customers()
-            ->find($this->selectedCustomerId);
+        return auth()->user()->customers()->find($this->selectedCustomerId);
     }
 
     public function render()
@@ -226,24 +237,32 @@ new class extends Component {
 };
 ?>
 
-<div class="m-5 space-y-6 md:ms-2 md:me-5">
-    <flux:card class="bg-white dark:bg-zinc-800">
-        <div class="flex items-center gap-3">
-            <div class="flex size-12 items-center justify-center rounded-xl bg-violet-100 text-violet-600">
-                <flux:icon name="calculator" class="size-6" />
-            </div>
-            <div>
-                <flux:heading size="xl">Hitung Bunga Bulanan</flux:heading>
-                <flux:text class="mt-1">
-                    Hitung simulasi dan siapkan pesan WhatsApp untuk customer.
-                </flux:text>
+<div class="space-y-6">
+
+    {{-- HEADER --}}
+    <div class="m-5 md:my-5 md:ms-2 md:me-5 rounded-xl bg-white dark:bg-zinc-800">
+        <div class="mx-auto p-6">
+            <div class="flex items-center gap-3">
+                <div
+                    class="flex size-12 shrink-0 items-center justify-center rounded-xl bg-linear-to-br from-indigo-400 to-violet-500 text-white">
+                    <flux:icon name="calculator" class="size-6" />
+                </div>
+
+                <div>
+                    <flux:heading size="xl">
+                        Hitung Bunga Bulanan
+                    </flux:heading>
+
+                    <flux:text class="mt-1">
+                        Hitung simulasi dan siapkan pesan WhatsApp untuk customer.
+                    </flux:text>
+                </div>
             </div>
         </div>
-    </flux:card>
+    </div>
 
-    <flux:card class="space-y-5 bg-white dark:bg-zinc-800">
+    <flux:card class="m-5 md:my-5 md:ms-2 md:me-5 rounded-xl bg-white dark:bg-zinc-800 space-y-5" variant="soft">
         <flux:heading size="lg">Simulasi Pinjaman</flux:heading>
-
 
         <div class="grid gap-5 sm:grid-cols-3">
 
@@ -289,216 +308,188 @@ new class extends Component {
                 </div>
             </div>
         @else
-            <flux:text class="text-sm text-amber-600">
+            <flux:text class="text-sm font-medium text-rose-600">
                 Periksa nominal, tenor, dan angsuran. Total pembayaran tidak boleh kurang dari pokok pinjaman.
             </flux:text>
         @endif
     </flux:card>
 
-    <flux:card class="space-y-5 bg-white dark:bg-zinc-800">
-        <flux:heading size="lg">Pesan WhatsApp</flux:heading>
+    <div class="m-5 md:my-5 md:ms-2 md:me-5 flex justify-end">
+        <flux:button type="button" variant="primary" icon="users" wire:click="openWhatsappModal">
+            Buat Pesan WhatsApp
+        </flux:button>
+    </div>
 
-        <div class="grid gap-3 sm:grid-cols-2">
+    {{-- MODAL PESAN WHATSAPP --}}
+    <flux:modal wire:model="showWhatsappModal" class="w-sm md:w-full md:max-w-2xl" :dismissible="false">
+        <div class="space-y-5">
+            <div>
+                <flux:heading size="lg">
+                    Pesan WhatsApp
+                </flux:heading>
 
-            <flux:select wire:model.live="selectedCustomerId" label="Customer" placeholder="Pilih customer"
-                class="w-full">
+                <flux:text class="mt-1">
+                    Siapkan pesan dan lihat preview sebelum mengirim.
+                </flux:text>
+            </div>
 
-                @foreach ($customers as $customer)
-                    <flux:select.option value="{{ $customer->id }}">
-                        {{ $customer->name }} — {{ $customer->phone_normalized }}
+            {{-- PILIH CUSTOMER --}}
+            <div class="grid gap-3 sm:grid-cols-2">
+                <flux:select wire:model.live="selectedCustomerId" label="Customer" placeholder="Pilih customer">
+                    @foreach ($customers as $customer)
+                        <flux:select.option value="{{ $customer->id }}">
+                            {{ $customer->name }} — {{ $customer->phone_normalized }}
+                        </flux:select.option>
+                    @endforeach
+                </flux:select>
+
+                <flux:input wire:model.live.debounce.300ms="searchCustomer" label="Cari Customer"
+                    placeholder="Nama, nomor WhatsApp, atau kontrak" icon="magnifying-glass" />
+            </div>
+
+            {{-- TEMPLATE --}}
+            <flux:select wire:model.live="selectedTemplateId" label="Template Pesan" placeholder="Pilih template">
+                @foreach ($templates as $template)
+                    <flux:select.option :value="(string) $template->id">
+                        {{ $template->name }}
                     </flux:select.option>
                 @endforeach
-
             </flux:select>
 
-            <flux:input wire:model.live.debounce.300ms="searchCustomer" label="Cari Customer" class="w-full"
-                placeholder="Nama, nomor WhatsApp, atau nomor kontrak" icon="magnifying-glass" />
-
-        </div>
-
-        {{-- TEMPLATE --}}
-        <flux:select wire:model.live="selectedTemplateId" label="Template Pesan" placeholder="-- Pilih Template --">
-
-            @foreach ($templates as $template)
-                <flux:select.option :value="(string) $template->id">
-                    {{ $template->name }}
-                </flux:select.option>
-            @endforeach
-
-        </flux:select>
-
-        <div
-            class="grid gap-5 rounded-2xl border border-indigo-100 bg-linear-to-r from-indigo-50/40 via-violet-50/30 to-fuchsia-50/20 p-5 dark:border-violet-900/40 dark:from-indigo-500/5 dark:via-violet-500/5 dark:to-fuchsia-500/5 sm:grid-cols-2">
-
-            {{-- GREETING --}}
-            <div>
-
-                <div class="mb-2 flex items-center gap-2">
-
-                    <flux:icon name="sun" class="size-4 text-violet-400" />
-
-                    <flux:text class="font-medium">
+            {{-- SAPAAN DAN PANGGILAN --}}
+            <div
+                class="grid gap-5 rounded-xl border border-indigo-100 bg-indigo-50/40 p-4 dark:border-violet-900/40 dark:bg-violet-500/5 sm:grid-cols-2">
+                <div>
+                    <flux:text class="mb-2 font-medium">
                         Sapaan Waktu
                     </flux:text>
 
+                    <div class="flex flex-wrap gap-2">
+                        @foreach ([
+        'Selamat pagi' => 'Pagi',
+        'Selamat siang' => 'Siang',
+        'Selamat sore' => 'Sore',
+    ] as $value => $label)
+                            <flux:button type="button" size="sm"
+                                :variant="$greeting === $value ? 'primary' : 'ghost'"
+                                wire:click="$set('greeting', '{{ $value }}')">
+                                {{ $label }}
+                            </flux:button>
+                        @endforeach
+                    </div>
                 </div>
 
-                <div class="flex flex-wrap gap-2">
-
-                    <flux:button type="button" size="sm"
-                        :variant="$greeting === 'Selamat pagi' ? 'primary' : 'ghost'"
-                        wire:click="$set('greeting', 'Selamat pagi')">
-                        Pagi
-                    </flux:button>
-
-                    <flux:button type="button" size="sm"
-                        :variant="$greeting === 'Selamat siang' ? 'primary' : 'ghost'"
-                        wire:click="$set('greeting', 'Selamat siang')">
-                        Siang
-                    </flux:button>
-
-                    <flux:button type="button" size="sm"
-                        :variant="$greeting === 'Selamat sore' ? 'primary' : 'ghost'"
-                        wire:click="$set('greeting', 'Selamat sore')">
-                        Sore
-                    </flux:button>
-
-                </div>
-
-            </div>
-
-            {{-- ADDRESS --}}
-            <div>
-
-                <div class="mb-2 flex items-center gap-2">
-
-                    <flux:icon name="user" class="size-4 text-fuchsia-400" />
-
-                    <flux:text class="font-medium">
+                <div>
+                    <flux:text class="mb-2 font-medium">
                         Panggilan
                     </flux:text>
 
+                    <div class="flex flex-wrap gap-2">
+                        @foreach (['Bapak', 'Ibu'] as $value)
+                            <flux:button type="button" size="sm"
+                                :variant="$address === $value ? 'primary' : 'ghost'"
+                                wire:click="$set('address', '{{ $value }}')">
+                                {{ $value }}
+                            </flux:button>
+                        @endforeach
+                    </div>
                 </div>
-
-                <div class="flex flex-wrap gap-2">
-
-                    <flux:button type="button" size="sm" :variant="$address === 'Bapak' ? 'primary' : 'ghost'"
-                        wire:click="$set('address', 'Bapak')">
-                        Bapak
-                    </flux:button>
-
-                    <flux:button type="button" size="sm" :variant="$address === 'Ibu' ? 'primary' : 'ghost'"
-                        wire:click="$set('address', 'Ibu')">
-                        Ibu
-                    </flux:button>
-
-                </div>
-
             </div>
 
-        </div>
+            {{-- PREVIEW CHAT --}}
+            <div>
+                <div class="mb-2 flex items-center justify-between">
+                    <div class="flex items-center gap-2">
+                        <flux:icon name="eye" class="size-4 text-violet-500" />
 
-        {{-- PREVIEW --}}
-        <div>
-            <div class="mb-2 flex items-center justify-between">
-                <div class="flex items-center gap-2">
-                    <flux:icon name="eye" class="size-4 text-violet-500" />
-                    <flux:text class="font-medium">
-                        Preview Pesan
-                    </flux:text>
+                        <flux:text class="font-medium">
+                            Preview Pesan
+                        </flux:text>
+                    </div>
+
+                    @if ($message)
+                        <flux:badge color="green" icon="check">
+                            Siap dikirim
+                        </flux:badge>
+                    @endif
                 </div>
 
-                @if ($message)
-                    <flux:badge color="green" icon="check">
-                        Siap dikirim
-                    </flux:badge>
-                @endif
-            </div>
+                <div class="overflow-hidden rounded-2xl border border-indigo-100 shadow-sm dark:border-violet-900/40">
+                    {{-- HEADER CHAT --}}
+                    <div
+                        class="flex items-center gap-3 border-b border-emerald-900/20 bg-emerald-600 px-4 py-3 text-white">
+                        <flux:avatar :name="$this->selectedCustomer?->name ?? 'Customer'" circle size="sm"
+                            color="auto" />
 
-            <div
-                class="overflow-hidden rounded-2xl border border-indigo-100 shadow-lg shadow-violet-900/5 dark:border-violet-900/40">
+                        <div class="min-w-0">
+                            <div class="truncate text-sm font-semibold">
+                                {{ $this->selectedCustomer?->name ?? 'Customer' }}
+                            </div>
 
-                {{-- CHAT HEADER --}}
-                <div
-                    class="flex items-center gap-3 border-b border-emerald-900/20 bg-emerald-600 px-4 py-3 text-white dark:border-emerald-800">
+                            @if ($this->selectedCustomer)
+                                <div class="text-xs">
+                                    +{{ $this->selectedCustomer->phone_normalized }}
+                                </div>
+                            @endif
+                        </div>
+                    </div>
 
-                    <flux:avatar :name="$this->selectedCustomer?->name ?? 'Customer'" circle size="sm"
-                        color="auto" />
-
-                    <div class="min-w-0">
-                        <div class="truncate text-sm font-semibold">
-                            {{ $this->selectedCustomer?->name ?? 'Customer' }}
+                    {{-- ISI CHAT --}}
+                    <div class="relative min-h-64 max-h-96 overflow-y-auto bg-[#efeae2] p-4 dark:bg-zinc-800">
+                        <div class="pointer-events-none absolute inset-0 opacity-[0.035]"
+                            style="background-image: radial-gradient(#000 1px, transparent 1px); background-size: 16px 16px;">
                         </div>
 
-                        @if ($this->selectedCustomer)
-                            <div class="text-xs">
-                                +{{ $this->selectedCustomer->phone_normalized }}
+                        @if (filled($message))
+                            <div class="relative flex justify-end">
+                                <div
+                                    class="w-full max-w-[90%] rounded-xl rounded-tr-sm bg-[#d9fdd3] px-3 py-2 shadow-sm dark:bg-emerald-900">
+                                    <flux:textarea wire:model.live="message" rows="8"
+                                        class="border-0! bg-transparent! shadow-none!" />
+
+                                    <div class="mt-1 flex items-center justify-end gap-1 text-[10px] text-zinc-500">
+                                        <span>{{ now()->format('H:i') }}</span>
+                                        <flux:icon name="check" variant="mini" class="text-blue-500" />
+                                    </div>
+                                </div>
+                            </div>
+                        @else
+                            <div class="relative flex min-h-56 items-center justify-center">
+                                <div class="text-center">
+                                    <flux:icon name="chat-bubble-left-right" class="mx-auto size-8 text-violet-400" />
+
+                                    <flux:text class="mt-3">
+                                        Pilih customer dan template untuk melihat preview.
+                                    </flux:text>
+                                </div>
                             </div>
                         @endif
                     </div>
                 </div>
+            </div>
 
-                {{-- CHAT BODY --}}
-                <div class="relative min-h-80 overflow-y-auto bg-[#efeae2] p-4 dark:bg-zinc-800">
+            {{-- ACTIONS --}}
+            <div class="flex flex-wrap justify-end gap-2">
+                <flux:button type="button" variant="ghost" wire:click="closeWhatsappModal">
+                    Tutup
+                </flux:button>
 
-                    {{-- Decorative --}}
-                    <div class="pointer-events-none absolute inset-0 opacity-[0.035]"
-                        style="background-image: radial-gradient(#000 1px, transparent 1px); background-size: 16px 16px;">
-                    </div>
+                <flux:button type="button" variant="ghost" icon="arrow-path" wire:click="generateMessage">
+                    Buat Ulang
+                </flux:button>
 
-                    @if (filled($message))
-                        <div class="relative flex justify-end">
-                            <div
-                                class="max-w-[85%] rounded-xl rounded-tr-sm bg-[#d9fdd3] px-3 py-2 shadow-sm dark:bg-emerald-900">
-
-                                <div
-                                    class="whitespace-pre-line wrap-break-words text-[13px] leading-relaxed text-zinc-800 dark:text-zinc-100">
-                                    {{ $message }}
-                                </div>
-
-                                <div class="mt-1 flex items-center justify-end gap-1 text-[10px] text-zinc-500">
-                                    <span>
-                                        {{ now()->format('H:i') }}
-                                    </span>
-
-                                    <flux:icon name="check" variant="mini" class="text-blue-500" />
-                                </div>
-                            </div>
-                        </div>
-                    @else
-                        <div class="relative flex min-h-72 items-center justify-center">
-                            <div class="text-center">
-                                <div
-                                    class="mx-auto flex size-14 items-center justify-center rounded-2xl bg-linear-to-br from-indigo-50 via-violet-50 to-fuchsia-50 text-violet-400 shadow-sm dark:from-indigo-950/40 dark:via-violet-950/30 dark:to-fuchsia-950/20">
-
-                                    <flux:icon name="chat-bubble-left-right" class="size-7" />
-                                </div>
-
-                                <flux:text class="mt-3">
-                                    Pilih template untuk melihat preview
-                                </flux:text>
-                            </div>
-                        </div>
-                    @endif
-                </div>
+                @if ($this->whatsappUrl)
+                    <flux:button href="{{ $this->whatsappUrl }}" target="_blank" variant="primary" color="emerald"
+                        icon="arrow-top-right-on-square" wire:click="markContacted">
+                        Buka WhatsApp
+                    </flux:button>
+                @else
+                    <flux:button type="button" disabled icon="paper-airplane">
+                        Buka WhatsApp
+                    </flux:button>
+                @endif
             </div>
         </div>
+    </flux:modal>
 
-        <div class="flex flex-wrap justify-end gap-2">
-            <flux:button type="button" variant="ghost" icon="arrow-path" wire:click="generateMessage">
-                Buat Ulang Pesan
-            </flux:button>
-
-            @if ($this->whatsappUrl)
-                <flux:button href="{{ $this->whatsappUrl }}" target="_blank" variant="primary" color="emerald"
-                    icon="arrow-top-right-on-square" wire:click="markContacted">
-                    Buka WhatsApp
-                </flux:button>
-            @else
-                <flux:button type="button" disabled icon="paper-airplane">
-                    Buka WhatsApp
-                </flux:button>
-            @endif
-        </div>
-    </flux:card>
 </div>
