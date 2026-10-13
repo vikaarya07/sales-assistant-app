@@ -1,37 +1,25 @@
 window.musicPlayer = {
     audio: null,
-
     currentId: null,
     currentTitle: "",
-
     initialized: false,
-
     animationFrame: null,
-
     playButtonBound: false,
     waveformClickBound: false,
-
     audioContext: null,
-
     waveformCache: new Map(),
     waveformQueue: [],
     waveformProcessing: false,
+    playlist: [],
 
     init() {
         if (!this.audio) {
             this.audio = new Audio();
-
-            /*
-             * Jangan gunakan "auto".
-             *
-             * metadata cukup untuk mendapatkan duration
-             * tanpa langsung mengunduh seluruh file audio.
-             */
             this.audio.preload = "metadata";
-
             this.bindAudioEvents();
         }
 
+        this.registerPlaylist();
         this.initWaveforms();
         this.bindPlayButtons();
         this.bindWaveformClicks();
@@ -39,11 +27,30 @@ window.musicPlayer = {
         this.initialized = true;
     },
 
-    /*
-    |--------------------------------------------------------------------------
-    | AUDIO EVENTS
-    |--------------------------------------------------------------------------
-    */
+    // PLAYLIST
+
+    registerPlaylist() {
+        const buttons = [...document.querySelectorAll("[data-music-play]")];
+
+        // Jangan menghapus playlist saat halaman tidak memiliki lagu.
+        if (!buttons.length) {
+            return;
+        }
+
+        const tracks = buttons
+            .map((button) => ({
+                id: String(button.dataset.id || ""),
+                url: button.dataset.url || "",
+                title: button.dataset.title || "",
+            }))
+            .filter((track) => track.id && track.url);
+
+        if (tracks.length) {
+            this.playlist = tracks;
+        }
+    },
+
+    // AUDIO EVENTS
 
     bindAudioEvents() {
         if (!this.audio) {
@@ -76,15 +83,6 @@ window.musicPlayer = {
             this.updateWaveformProgress();
         });
 
-        /*
-         * Ketika lagu selesai:
-         *
-         * Lagu 1 selesai
-         *      ↓
-         * Cari tombol lagu berikutnya
-         *      ↓
-         * Play lagu berikutnya
-         */
         this.audio.addEventListener("ended", async () => {
             const finishedId = this.currentId;
 
@@ -127,11 +125,7 @@ window.musicPlayer = {
         });
     },
 
-    /*
-    |--------------------------------------------------------------------------
-    | PLAY BUTTON
-    |--------------------------------------------------------------------------
-    */
+    // PLAY BUTTON
 
     bindPlayButtons() {
         if (this.playButtonBound) {
@@ -149,6 +143,9 @@ window.musicPlayer = {
 
             event.preventDefault();
 
+            // Perbarui playlist berdasarkan halaman Music aktif.
+            this.registerPlaylist();
+
             this.toggle(button);
         });
     },
@@ -162,13 +159,7 @@ window.musicPlayer = {
             return;
         }
 
-        /*
-         * Jika lagu yang sama sedang aktif:
-         *
-         * paused  → play
-         * playing → pause
-         */
-        if (this.currentId === id && this.audio && this.audio.src) {
+        if (this.currentId === String(id) && this.audio && this.audio.src) {
             if (this.audio.paused) {
                 try {
                     await this.audio.play();
@@ -182,17 +173,10 @@ window.musicPlayer = {
             return;
         }
 
-        /*
-         * Lagu berbeda.
-         */
         await this.play(id, url, title);
     },
 
-    /*
-    |--------------------------------------------------------------------------
-    | PLAY
-    |--------------------------------------------------------------------------
-    */
+    // PLAY
 
     async play(id, url, title = "") {
         if (!id || !url) {
@@ -205,10 +189,7 @@ window.musicPlayer = {
 
         this.stopAnimation();
 
-        /*
-         * Reset state lagu sebelumnya.
-         */
-        if (this.currentId && this.currentId !== id) {
+        if (this.currentId && this.currentId !== String(id)) {
             this.setButtonState(this.currentId, false);
             this.setWaveformProgress(this.currentId, 0);
             this.resetTimeDisplay(this.currentId);
@@ -217,38 +198,20 @@ window.musicPlayer = {
         this.currentId = String(id);
         this.currentTitle = title;
 
-        /*
-         * Normalisasi URL supaya perbandingan source
-         * konsisten antara relative URL dan absolute URL.
-         */
         const sourceUrl = new URL(url, window.location.href).href;
 
-        /*
-         * Hanya ganti source kalau memang lagu berbeda.
-         */
         if (this.audio.src !== sourceUrl) {
             this.audio.pause();
-
             this.audio.src = sourceUrl;
             this.audio.load();
         }
 
-        /*
-         * Jangan set button playing di sini.
-         *
-         * Biarkan event "play" yang mengubah state.
-         */
         try {
             await this.audio.play();
         } catch (error) {
             console.error("Music playback failed:", error);
-
             this.setButtonState(id, false);
 
-            /*
-             * Kalau browser membatalkan play karena alasan
-             * tertentu, jangan biarkan player terlihat playing.
-             */
             if (this.currentId === String(id)) {
                 this.stopAnimation();
             }
@@ -256,70 +219,37 @@ window.musicPlayer = {
             return false;
         }
 
-        /*
-         * Waveform dibuat secara lazy setelah playback berhasil.
-         */
         this.queueWaveform(id, url);
 
         return true;
     },
 
-    /*
-    |--------------------------------------------------------------------------
-    | PLAY NEXT
-    |--------------------------------------------------------------------------
-    */
+    // PLAY NEXT
 
     async playNext(finishedId) {
-        const buttons = [...document.querySelectorAll("[data-music-play]")];
-
-        if (!buttons.length) {
+        if (!this.playlist.length) {
             return false;
         }
 
-        /*
-         * Cari posisi lagu yang baru saja selesai.
-         */
-        const currentIndex = buttons.findIndex(
-            (button) => String(button.dataset.id) === String(finishedId),
+        const currentIndex = this.playlist.findIndex(
+            (track) => String(track.id) === String(finishedId),
         );
 
         if (currentIndex === -1) {
             return false;
         }
 
-        /*
-         * Ambil lagu setelah lagu yang selesai.
-         */
-        const nextButton = buttons[currentIndex + 1];
+        const nextTrack = this.playlist[currentIndex + 1];
 
-        /*
-         * Kalau tidak ada:
-         * berarti sudah lagu terakhir.
-         */
-        if (!nextButton) {
+        // Tidak ada lagu berikutnya.
+        if (!nextTrack) {
             return false;
         }
 
-        const nextId = nextButton.dataset.id;
-        const nextUrl = nextButton.dataset.url;
-        const nextTitle = nextButton.dataset.title || "";
-
-        if (!nextId || !nextUrl) {
-            return false;
-        }
-
-        /*
-         * Play lagu berikutnya.
-         */
-        return await this.play(nextId, nextUrl, nextTitle);
+        return await this.play(nextTrack.id, nextTrack.url, nextTrack.title);
     },
 
-    /*
-    |--------------------------------------------------------------------------
-    | BUTTON STATE
-    |--------------------------------------------------------------------------
-    */
+    // BUTTON STATE
 
     setButtonState(id, playing) {
         const buttons = document.querySelectorAll(
@@ -333,7 +263,6 @@ window.musicPlayer = {
 
             if (playing) {
                 playIcon?.classList.add("scale-0", "opacity-0");
-
                 pauseIcon?.classList.remove("scale-0", "opacity-0");
 
                 button.setAttribute(
@@ -342,7 +271,6 @@ window.musicPlayer = {
                 );
             } else {
                 playIcon?.classList.remove("scale-0", "opacity-0");
-
                 pauseIcon?.classList.add("scale-0", "opacity-0");
 
                 button.setAttribute(
@@ -353,11 +281,7 @@ window.musicPlayer = {
         });
     },
 
-    /*
-    |--------------------------------------------------------------------------
-    | WAVEFORM
-    |--------------------------------------------------------------------------
-    */
+    // WAVEFORM INITIALIZATION
 
     initWaveforms() {
         const elements = document.querySelectorAll("[data-waveform]");
@@ -378,12 +302,6 @@ window.musicPlayer = {
             }
 
             element.dataset.initialized = "true";
-
-            /*
-             * Jangan decode audio ketika halaman pertama dibuka.
-             *
-             * Tampilkan placeholder terlebih dahulu.
-             */
             this.renderPlaceholder(element);
         });
     },
@@ -392,40 +310,32 @@ window.musicPlayer = {
         const count = this.getBarCount(element);
 
         element.innerHTML = `
-            <div
-                style="
-                    display:flex;
-                    align-items:center;
-                    width:100%;
-                    height:100%;
-                    gap:1px;
-                    overflow:hidden;
-                "
-            >
+            <div style="
+                display:flex;
+                align-items:center;
+                width:100%;
+                height:100%;
+                gap:1px;
+                overflow:hidden;
+            ">
                 ${Array.from(
                     { length: count },
                     () => `
-                        <span
-                            style="
-                                flex:1 1 0%;
-                                min-width:0;
-                                height:20%;
-                                border-radius:9999px;
-                                background:#d4d4d8;
-                                pointer-events:none;
-                            "
-                        ></span>
+                        <span style="
+                            flex:1 1 0%;
+                            min-width:0;
+                            height:20%;
+                            border-radius:9999px;
+                            background:#d4d4d8;
+                            pointer-events:none;
+                        "></span>
                     `,
                 ).join("")}
             </div>
         `;
     },
 
-    /*
-    |--------------------------------------------------------------------------
-    | LAZY WAVEFORM QUEUE
-    |--------------------------------------------------------------------------
-    */
+    // LAZY WAVEFORM QUEUE
 
     queueWaveform(id, url) {
         if (!id || !url) {
@@ -443,9 +353,6 @@ window.musicPlayer = {
         const count = this.getBarCount(element);
         const cacheKey = `${url}|${count}`;
 
-        /*
-         * Sudah ada cache.
-         */
         if (this.waveformCache.has(cacheKey)) {
             this.renderWaveform(element, this.waveformCache.get(cacheKey));
 
@@ -454,9 +361,6 @@ window.musicPlayer = {
             return;
         }
 
-        /*
-         * Jangan memasukkan request yang sama berkali-kali.
-         */
         const alreadyQueued = this.waveformQueue.some(
             (item) => item.cacheKey === cacheKey,
         );
@@ -477,11 +381,7 @@ window.musicPlayer = {
     },
 
     async processWaveformQueue() {
-        if (this.waveformProcessing) {
-            return;
-        }
-
-        if (!this.waveformQueue.length) {
+        if (this.waveformProcessing || !this.waveformQueue.length) {
             return;
         }
 
@@ -494,9 +394,6 @@ window.musicPlayer = {
 
             this.waveformCache.set(item.cacheKey, amplitudes);
 
-            /*
-             * Element mungkin sudah dihapus oleh Livewire.
-             */
             if (item.element && document.contains(item.element)) {
                 this.renderWaveform(item.element, amplitudes);
 
@@ -513,27 +410,17 @@ window.musicPlayer = {
         } finally {
             this.waveformProcessing = false;
 
-            /*
-             * Lanjutkan item berikutnya setelah browser
-             * punya kesempatan menangani UI.
-             */
             if (this.waveformQueue.length) {
                 const callback =
                     window.requestIdleCallback ||
                     ((callback) => setTimeout(callback, 100));
 
-                callback(() => {
-                    this.processWaveformQueue();
-                });
+                callback(() => this.processWaveformQueue());
             }
         }
     },
 
-    /*
-    |--------------------------------------------------------------------------
-    | DECODE AUDIO → ACTUAL AMPLITUDE
-    |--------------------------------------------------------------------------
-    */
+    // DECODE AUDIO
 
     async decodeWaveform(url, count) {
         const cacheKey = `${url}|${count}`;
@@ -564,10 +451,6 @@ window.musicPlayer = {
             this.audioContext = new AudioContext();
         }
 
-        /*
-         * Beberapa browser dapat membuat AudioContext
-         * suspended. Resume jika diperlukan.
-         */
         if (this.audioContext.state === "suspended") {
             try {
                 await this.audioContext.resume();
@@ -580,7 +463,6 @@ window.musicPlayer = {
             await this.audioContext.decodeAudioData(arrayBuffer);
 
         const channelCount = audioBuffer.numberOfChannels;
-
         const length = audioBuffer.length;
 
         if (!length || !channelCount) {
@@ -588,12 +470,7 @@ window.musicPlayer = {
         }
 
         const samplesPerBar = Math.max(1, Math.floor(length / count));
-
         const amplitudes = [];
-
-        /*
-         * Gunakan channel pertama.
-         */
         const data = audioBuffer.getChannelData(0);
 
         for (let bar = 0; bar < count; bar++) {
@@ -612,12 +489,7 @@ window.musicPlayer = {
             let sumSquares = 0;
             let peak = 0;
 
-            /*
-             * Sampling sebagian kecil saja agar
-             * perhitungan waveform tidak terlalu berat.
-             */
             const sampleCount = Math.min(2000, end - start);
-
             const step = Math.max(1, Math.floor((end - start) / sampleCount));
 
             let samples = 0;
@@ -626,33 +498,19 @@ window.musicPlayer = {
                 const value = Math.abs(data[i]);
 
                 sumSquares += value * value;
-
-                if (value > peak) {
-                    peak = value;
-                }
-
+                peak = Math.max(peak, value);
                 samples++;
             }
 
             const rms = samples > 0 ? Math.sqrt(sumSquares / samples) : 0;
 
-            /*
-             * Gabungkan RMS + peak supaya bentuk
-             * waveform tetap terlihat detail.
-             */
-            const amplitude = rms * 0.65 + peak * 0.35;
-
-            amplitudes.push(amplitude);
+            amplitudes.push(rms * 0.65 + peak * 0.35);
         }
 
         return this.normalizeAmplitudes(amplitudes);
     },
 
-    /*
-    |--------------------------------------------------------------------------
-    | NORMALIZE
-    |--------------------------------------------------------------------------
-    */
+    // NORMALIZE
 
     normalizeAmplitudes(amplitudes) {
         if (!amplitudes.length) {
@@ -667,26 +525,13 @@ window.musicPlayer = {
 
         return amplitudes.map((value) => {
             const normalized = value / max;
-
-            /*
-             * Lebih natural:
-             * bagian pelan tidak terlalu ditinggikan.
-             */
             const enhanced = Math.pow(normalized, 1.2);
 
-            /*
-             * Minimum 8%
-             * Maksimum 65%
-             */
             return 0.08 + enhanced * 0.57;
         });
     },
 
-    /*
-    |--------------------------------------------------------------------------
-    | RENDER WAVEFORM
-    |--------------------------------------------------------------------------
-    */
+    // RENDER WAVEFORM
 
     renderWaveform(element, amplitudes) {
         if (!element) {
@@ -741,14 +586,7 @@ window.musicPlayer = {
         }
 
         const bars = Array.from({ length: count }, (_, index) => {
-            /*
-             * Deterministic pseudo-random waveform.
-             *
-             * Bukan random setiap render sehingga
-             * waveform tidak berubah-ubah.
-             */
             const seed = Math.sin(index * 12.9898) * 43758.5453;
-
             const random = seed - Math.floor(seed);
 
             return 0.15 + random * 0.6;
@@ -757,26 +595,13 @@ window.musicPlayer = {
         this.renderWaveform(element, bars);
     },
 
-    /*
-    |--------------------------------------------------------------------------
-    | WAVEFORM BAR COUNT
-    |--------------------------------------------------------------------------
-    */
-
     getBarCount(element) {
         const width = element?.clientWidth || 600;
 
-        /*
-         * Maksimal 120 bar agar DOM tetap ringan.
-         */
         return Math.max(50, Math.min(120, Math.floor(width / 5)));
     },
 
-    /*
-    |--------------------------------------------------------------------------
-    | WAVEFORM CLICK / SEEK
-    |--------------------------------------------------------------------------
-    */
+    // WAVEFORM CLICK / SEEK
 
     bindWaveformClicks() {
         if (this.waveformClickBound) {
@@ -798,11 +623,8 @@ window.musicPlayer = {
                 return;
             }
 
-            /*
-             * Hanya seek pada lagu yang sedang aktif.
-             */
             if (
-                this.currentId !== id ||
+                this.currentId !== String(id) ||
                 !this.audio ||
                 !Number.isFinite(this.audio.duration)
             ) {
@@ -816,7 +638,6 @@ window.musicPlayer = {
             }
 
             const ratio = (event.clientX - rect.left) / rect.width;
-
             const clamped = Math.max(0, Math.min(1, ratio));
 
             this.audio.currentTime = clamped * this.audio.duration;
@@ -825,18 +646,11 @@ window.musicPlayer = {
         });
     },
 
-    /*
-    |--------------------------------------------------------------------------
-    | WAVEFORM PROGRESS
-    |--------------------------------------------------------------------------
-    */
+    // WAVEFORM PROGRESS
 
     updateWaveformProgress() {
-        if (!this.currentId) {
-            return;
-        }
-
         if (
+            !this.currentId ||
             !this.audio ||
             !Number.isFinite(this.audio.duration) ||
             this.audio.duration <= 0
@@ -865,23 +679,14 @@ window.musicPlayer = {
         }
 
         const safeProgress = Math.max(0, Math.min(1, progress));
-
         const activeCount = Math.floor(bars.length * safeProgress);
 
         bars.forEach((bar, index) => {
-            if (index < activeCount) {
-                bar.style.background = "#6366f1";
-            } else {
-                bar.style.background = "#d4d4d8";
-            }
+            bar.style.background = index < activeCount ? "#6366f1" : "#d4d4d8";
         });
     },
 
-    /*
-    |--------------------------------------------------------------------------
-    | TIME
-    |--------------------------------------------------------------------------
-    */
+    // TIME
 
     updateDuration() {
         if (!this.currentId) {
@@ -951,9 +756,7 @@ window.musicPlayer = {
         }
 
         const totalSeconds = Math.floor(seconds);
-
         const minutes = Math.floor(totalSeconds / 60);
-
         const remaining = totalSeconds % 60;
 
         return `${String(minutes).padStart(2, "0")}:${String(
@@ -961,11 +764,7 @@ window.musicPlayer = {
         ).padStart(2, "0")}`;
     },
 
-    /*
-    |--------------------------------------------------------------------------
-    | ANIMATION
-    |--------------------------------------------------------------------------
-    */
+    // ANIMATION
 
     startAnimation() {
         this.stopAnimation();
@@ -986,33 +785,21 @@ window.musicPlayer = {
     stopAnimation() {
         if (this.animationFrame) {
             cancelAnimationFrame(this.animationFrame);
-
             this.animationFrame = null;
         }
     },
 
-    /*
-    |--------------------------------------------------------------------------
-    | LIVEWIRE
-    |--------------------------------------------------------------------------
-    */
+    // LIVEWIRE
 
     reinitialize() {
-        /*
-         * Jangan membuat Audio baru.
-         */
         if (!this.audio) {
             this.init();
-
             return;
         }
 
+        this.registerPlaylist();
         this.initWaveforms();
 
-        /*
-         * Kalau lagu masih aktif setelah
-         * Livewire update, restore progress.
-         */
         if (this.currentId) {
             this.setButtonState(this.currentId, !this.audio.paused);
 
@@ -1027,31 +814,25 @@ window.musicPlayer = {
     },
 };
 
-/*
-|--------------------------------------------------------------------------
-| INITIAL LOAD
-|--------------------------------------------------------------------------
-*/
+// =============================================================
+// INITIAL LOAD
+// =============================================================
 
 document.addEventListener("DOMContentLoaded", () => {
     window.musicPlayer.init();
 });
 
-/*
-|--------------------------------------------------------------------------
-| LIVEWIRE NAVIGATION
-|--------------------------------------------------------------------------
-*/
+// =============================================================
+// LIVEWIRE NAVIGATION
+// =============================================================
 
 document.addEventListener("livewire:navigated", () => {
     window.musicPlayer.reinitialize();
 });
 
-/*
-|--------------------------------------------------------------------------
-| LIVEWIRE UPDATE
-|--------------------------------------------------------------------------
-*/
+// =============================================================
+// LIVEWIRE UPDATE
+// =============================================================
 
 document.addEventListener("livewire:initialized", () => {
     window.musicPlayer.init();
