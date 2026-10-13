@@ -2,6 +2,7 @@
 
 use App\Enums\CustomerStatus;
 use App\Models\Customer;
+use App\Livewire\Traits\WithSorting;
 use Illuminate\Support\Facades\DB;
 use Livewire\Component;
 use Livewire\WithPagination;
@@ -9,6 +10,7 @@ use Livewire\Attributes\On;
 
 new class extends Component {
     use WithPagination;
+    use WithSorting;
 
     public string $importText = '';
     public string $search = '';
@@ -461,6 +463,16 @@ new class extends Component {
     |--------------------------------------------------------------------------
     */
 
+    public function confirmDeleteSelected(): void
+    {
+        if (empty($this->selectedCustomers)) {
+            return;
+        }
+
+        $this->dispatch('confirm', title: 'Hapus customer terpilih?', message: 'Apakah Anda yakin ingin menghapus ' . count($this->selectedCustomers) . ' customer yang dipilih?', action: 'delete-selected-confirmed');
+    }
+
+    #[On('delete-selected-confirmed')]
     public function deleteSelected(): void
     {
         if (empty($this->selectedCustomers)) {
@@ -832,6 +844,7 @@ new class extends Component {
                 $query->whereDate('created_at', $this->createdDate);
             })
             ->latest()
+            ->orderBy($this->sortField, $this->sortDirection)
             ->paginate(10);
 
         return $this->view([
@@ -904,7 +917,7 @@ new class extends Component {
 
                     </div>
 
-                    <flux:button type="button" size="sm" variant="primary" color="violet" icon="plus"
+                    <flux:button type="button" size="sm" variant="primary" color="cyan" icon="plus"
                         wire:click="openManualCustomer">
                         Input Manual
                     </flux:button>
@@ -1066,16 +1079,13 @@ new class extends Component {
                 class="rounded-2xl border border-red-200 bg-linear-to-r from-red-50 to-orange-50 p-4 shadow-sm dark:border-red-500/20 dark:from-red-500/10 dark:to-orange-500/5">
 
                 <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-
                     <div class="flex items-center gap-3">
-
                         <div
                             class="flex size-9 items-center justify-center rounded-xl bg-red-100 text-red-600 dark:bg-red-500/20 dark:text-red-400">
                             <flux:icon name="check" class="size-4" />
                         </div>
 
                         <div>
-
                             <div class="font-medium">
                                 {{ count($selectedCustomers) }} customer dipilih
                             </div>
@@ -1083,26 +1093,20 @@ new class extends Component {
                             <div class="text-xs text-zinc-500">
                                 Pilih aksi yang ingin dilakukan
                             </div>
-
                         </div>
-
                     </div>
 
                     <div class="flex gap-2">
-
                         <flux:button size="sm" variant="ghost" wire:click="clearSelection">
                             Batal
                         </flux:button>
 
-                        <flux:button size="sm" variant="danger" icon="trash" wire:click="deleteSelected"
-                            wire:confirm="Hapus semua customer yang dipilih?">
+                        <flux:button size="sm" variant="danger" icon="trash"
+                            wire:click="confirmDeleteSelected">
                             Hapus Terpilih
                         </flux:button>
-
                     </div>
-
                 </div>
-
             </div>
         @endif
 
@@ -1143,43 +1147,68 @@ new class extends Component {
                 <table class="w-full text-sm">
 
                     <thead>
-
                         <tr
                             class="bg-linear-to-r from-indigo-100/50 via-violet-100/50 to-fuchsia-100/50 dark:from-indigo-950/30 dark:via-violet-950/20 dark:to-fuchsia-950/10">
 
+                            {{-- CHECKBOX --}}
                             <th class="w-12 px-4 py-3">
-
                                 <input type="checkbox" wire:model.live="selectAll" wire:change="toggleSelectAll"
                                     class="size-4 rounded border-slate-300 text-indigo-500 focus:ring-indigo-400">
-
                             </th>
 
-                            <th class="px-4 py-3 text-left font-medium text-slate-600">
-                                Customer
-                            </th>
+                            {{-- CUSTOMER --}}
+                            <flux:table.column class="cursor-pointer" wire:click="sortBy('name')">
+                                <div class="flex items-center gap-1">
+                                    Customer
 
-                            <th class="px-4 py-3 text-left font-medium text-slate-600">
+                                    @include('components.sort-icon', [
+                                        'field' => 'name',
+                                    ])
+                                </div>
+                            </flux:table.column>
+
+                            {{-- DATE --}}
+                            <flux:table.column class="cursor-pointer" wire:click="sortBy('created_at')">
+                                <div class="flex items-center gap-1">
+                                    Dibuat
+
+                                    @include('components.sort-icon', [
+                                        'field' => 'created_at',
+                                    ])
+                                </div>
+                            </flux:table.column>
+
+                            {{-- CONTRACT --}}
+                            <flux:table.column>
                                 Nomor Kontrak
-                            </th>
+                            </flux:table.column>
 
-                            <th class="px-4 py-3 text-left font-medium text-slate-600">
+                            {{-- AMOUNT --}}
+                            <flux:table.column>
                                 Nominal
-                            </th>
+                            </flux:table.column>
 
-                            <th class="px-4 py-3 text-left font-medium text-slate-600">
-                                Cabang
-                            </th>
+                            {{-- BRANCH --}}
+                            <flux:table.column class="cursor-pointer" wire:click="sortBy('branch')">
+                                <div class="flex items-center gap-1">
+                                    Cabang
 
-                            <th class="px-4 py-3 text-left font-medium text-slate-600">
+                                    @include('components.sort-icon', [
+                                        'field' => 'branch',
+                                    ])
+                                </div>
+                            </flux:table.column>
+
+                            {{-- STATUS --}}
+                            <flux:table.column>
                                 Status
-                            </th>
+                            </flux:table.column>
 
-                            <th class="px-4 py-3 text-center font-medium text-slate-600">
+                            {{-- ACTION --}}
+                            <flux:table.column align="end">
                                 Action
-                            </th>
-
+                            </flux:table.column>
                         </tr>
-
                     </thead>
 
                     <tbody>
@@ -1222,6 +1251,17 @@ new class extends Component {
 
                                     </div>
 
+                                </td>
+
+                                {{-- DATE --}}
+                                <td class="px-4 py-4 whitespace-nowrap">
+                                    <div class="font-medium text-zinc-800 dark:text-zinc-200">
+                                        {{ $customer->created_at->locale('id')->translatedFormat('l, d F Y') }}
+                                    </div>
+
+                                    <div class="mt-1 text-xs text-zinc-500 dark:text-zinc-400">
+                                        {{ $customer->created_at->format('H:i') }}
+                                    </div>
                                 </td>
 
                                 {{-- CONTRACT --}}
@@ -1413,7 +1453,7 @@ new class extends Component {
                     Batal
                 </flux:button>
 
-                <flux:button type="submit" variant="primary" color="violet" icon="check"
+                <flux:button type="submit" variant="primary" color="cyan" icon="check"
                     class="shadow-lg shadow-indigo-500/15">
                     Simpan Customer
                 </flux:button>

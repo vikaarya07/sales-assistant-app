@@ -338,17 +338,20 @@ new class extends Component {
                 {{-- Playlist Selector --}}
                 <div class="w-full sm:w-auto">
                     <flux:button.group>
-                        <flux:button wire:click="setPlaylist('all')"
-                            :variant="$playlist === 'all' ? 'primary' : 'ghost'" icon="musical-note">
+                        <flux:button wire:click="setPlaylist('all')" color="violet"
+                            :variant="$playlist === 'all' ? 'primary' : 'ghost'" icon="musical-note"
+                            class="rounded-none first:rounded-l-lg last:rounded-r-none">
                             Semua Lagu
                         </flux:button>
 
-                        <flux:button wire:click="setPlaylist('favorites')"
-                            :variant="$playlist === 'favorites' ? 'primary' : 'ghost'" icon="heart">
+                        <flux:button wire:click="setPlaylist('favorites')" color="rose"
+                            :variant="$playlist === 'favorites' ? 'primary' : 'ghost'" icon="heart"
+                            class="rounded-none first:rounded-l-none last:rounded-r-lg">
                             Favorit Saya
                         </flux:button>
                     </flux:button.group>
                 </div>
+
             </div>
 
             {{-- Active Playlist --}}

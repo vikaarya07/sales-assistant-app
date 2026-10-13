@@ -218,42 +218,45 @@ new class extends Component {
                         'value' => $totalCustomers,
                         'description' => 'Semua customer',
                         'icon' => 'users',
-                        'color' => 'violet',
+                        'valueClass' => 'text-violet-600 dark:text-violet-400',
+                        'iconClass' =>
+                            'bg-violet-50! text-violet-600 ring-violet-100! dark:bg-violet-500/10 dark:text-violet-400 dark:ring-violet-500/20',
                     ],
                     [
                         'label' => 'Customer Baru',
                         'value' => $newCustomers,
                         'description' => 'Belum dihubungi',
                         'icon' => 'user-plus',
-                        'color' => 'blue',
+                        'valueClass' => 'text-blue-600 dark:text-blue-400',
+                        'iconClass' =>
+                            'bg-blue-50! text-blue-600 ring-blue-100! dark:bg-blue-500/10 dark:text-blue-400 dark:ring-blue-500/20',
                     ],
                     [
                         'label' => 'Total Customer Blast',
                         'value' => $blastedCustomers,
                         'description' => 'Sudah Diblast WA',
                         'icon' => 'chat-bubble-left-right',
-                        'color' => 'indigo',
+                        'valueClass' => 'text-indigo-600 dark:text-indigo-400',
+                        'iconClass' =>
+                            'bg-indigo-50! text-indigo-600 ring-indigo-100! dark:bg-indigo-500/10 dark:text-indigo-400 dark:ring-indigo-500/20',
                     ],
                     [
                         'label' => 'Customer Minat',
                         'value' => $interestedCustomers,
                         'description' => 'Customer tertarik',
                         'icon' => 'sparkles',
-                        'color' => 'teal',
+                        'valueClass' => 'text-teal-600 dark:text-teal-400',
+                        'iconClass' =>
+                            'bg-teal-50! text-teal-600 ring-teal-100! dark:bg-teal-500/10 dark:text-teal-400 dark:ring-teal-500/20',
                     ],
                 ];
             @endphp
 
             @foreach ($mainStats as $stat)
                 <flux:card variant="soft"
-                    class="group relative overflow-hidden transition duration-300 bg-white dark:bg-zinc-800 hover:-translate-y-1">
+                    class="group overflow-hidden transition duration-300 bg-white dark:bg-zinc-800 hover:-translate-y-1">
 
-                    {{-- Glow --}}
-                    <div
-                        class="pointer-events-none absolute -right-10 -top-10 size-32 rounded-full bg-{{ $stat['color'] }}-500/10 blur-3xl transition duration-500 group-hover:bg-{{ $stat['color'] }}-500/20">
-                    </div>
-
-                    <div class="relative flex items-start justify-between gap-4">
+                    <div class="flex items-start justify-between gap-4">
 
                         {{-- Content --}}
                         <div>
@@ -261,8 +264,7 @@ new class extends Component {
                                 {{ $stat['label'] }}
                             </flux:text>
 
-                            <flux:heading size="xl"
-                                class="mt-1 {{ $stat['color'] === 'emerald' ? 'text-emerald-600 dark:text-emerald-400' : '' }}">
+                            <flux:heading size="xl" class="mt-1 {{ $stat['valueClass'] }}">
                                 {{ number_format($stat['value']) }}
                             </flux:heading>
 
@@ -273,7 +275,7 @@ new class extends Component {
 
                         {{-- Icon --}}
                         <div
-                            class="flex size-11 shrink-0 items-center justify-center rounded-xl bg-{{ $stat['color'] }}-50 text-{{ $stat['color'] }}-600 ring-1 ring-{{ $stat['color'] }}-100 transition duration-300 group-hover:scale-110 dark:bg-{{ $stat['color'] }}-500/10 dark:text-{{ $stat['color'] }}-400 dark:ring-{{ $stat['color'] }}-500/20">
+                            class="flex size-11 shrink-0 items-center justify-center rounded-xl ring-1 transition duration-300 group-hover:scale-105 {{ $stat['iconClass'] }}">
                             <flux:icon name="{{ $stat['icon'] }}" class="size-5" />
                         </div>
 
@@ -284,56 +286,56 @@ new class extends Component {
 
         </div>
 
+        @php
+            $activities = [
+                [
+                    'label' => 'Kontak Hari Ini',
+                    'value' => $contactedToday,
+                    'icon' => 'paper-airplane',
+                    'iconClass' => 'bg-indigo-50 text-indigo-600 dark:bg-indigo-500/10 dark:text-indigo-400',
+                ],
+                [
+                    'label' => 'Kontak Minggu Ini',
+                    'value' => $contactedThisWeek,
+                    'icon' => 'calendar-days',
+                    'iconClass' => 'bg-violet-50 text-violet-600 dark:bg-violet-500/10 dark:text-violet-400',
+                ],
+                [
+                    'label' => 'Follow Up',
+                    'value' => $followUpCustomers,
+                    'icon' => 'arrow-path',
+                    'iconClass' => 'bg-amber-50 text-amber-600 dark:bg-amber-500/10 dark:text-amber-400',
+                ],
+                [
+                    'label' => 'Pengajuan',
+                    'value' => $appInCustomers,
+                    'icon' => 'arrow-left-end-on-rectangle',
+                    'iconClass' => 'bg-teal-50 text-teal-600 dark:bg-teal-500/10 dark:text-teal-400',
+                ],
+                [
+                    'label' => 'Valid',
+                    'value' => $validCustomers,
+                    'icon' => 'check-circle',
+                    'iconClass' => 'bg-emerald-50 text-emerald-600 dark:bg-emerald-500/10 dark:text-emerald-400',
+                ],
+            ];
+        @endphp
+
         {{-- ACTIVITY --}}
         <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
-
-            @php
-                $activities = [
-                    [
-                        'label' => 'Kontak Hari Ini',
-                        'value' => $contactedToday,
-                        'icon' => 'paper-airplane',
-                        'color' => 'indigo',
-                    ],
-                    [
-                        'label' => 'Kontak Minggu Ini',
-                        'value' => $contactedThisWeek,
-                        'icon' => 'calendar-days',
-                        'color' => 'violet',
-                    ],
-                    [
-                        'label' => 'Follow Up',
-                        'value' => $followUpCustomers,
-                        'icon' => 'arrow-path',
-                        'color' => 'amber',
-                    ],
-                    [
-                        'label' => 'Pengajuan',
-                        'value' => $appInCustomers,
-                        'icon' => 'arrow-left-end-on-rectangle',
-                        'color' => 'teal',
-                    ],
-                    [
-                        'label' => 'Valid',
-                        'value' => $validCustomers,
-                        'icon' => 'check-circle',
-                        'color' => 'emerald',
-                    ],
-                ];
-            @endphp
-
             @foreach ($activities as $activity)
                 <flux:card variant="soft"
-                    class="group transition duration-300 bg-white dark:bg-zinc-800 hover:-translate-y-0.5 -zinc-800">
+                    class="group bg-white transition duration-300 hover:-translate-y-0.5 dark:bg-zinc-800">
 
                     <div class="flex items-center gap-3">
-
+                        {{-- Icon --}}
                         <div
-                            class="flex size-11 shrink-0 items-center justify-center rounded-xl bg-{{ $activity['color'] }}-50 text-{{ $activity['color'] }}-600 transition duration-300 group-hover:scale-105 dark:bg-{{ $activity['color'] }}-500/10 dark:text-{{ $activity['color'] }}-400">
+                            class="flex size-11 shrink-0 items-center justify-center rounded-xl transition duration-300 group-hover:scale-105 {{ $activity['iconClass'] }}">
                             <flux:icon name="{{ $activity['icon'] }}" class="size-5" />
                         </div>
 
-                        <div>
+                        {{-- Content --}}
+                        <div class="min-w-0">
                             <flux:text class="text-xs">
                                 {{ $activity['label'] }}
                             </flux:text>
@@ -342,9 +344,7 @@ new class extends Component {
                                 {{ number_format($activity['value']) }}
                             </flux:heading>
                         </div>
-
                     </div>
-
                 </flux:card>
             @endforeach
 

@@ -77,7 +77,7 @@
                     {{ __('Template') }}
                 </flux:sidebar.item>
 
-                <flux:sidebar.item icon="chat-bubble-bottom-center-text" :href="route('interest-calculator')"
+                <flux:sidebar.item icon="calculator" :href="route('interest-calculator')"
                     :current="request()->routeIs('interest-calculator')" wire:navigate>
                     {{ __('Hitung Bunga') }}
                 </flux:sidebar.item>

@@ -315,7 +315,7 @@ new class extends Component {
     </flux:card>
 
     <div class="m-5 md:my-5 md:ms-2 md:me-5 flex justify-end">
-        <flux:button type="button" variant="primary" icon="users" wire:click="openWhatsappModal">
+        <flux:button type="button" variant="primary" color="violet" icon="plus-circle" wire:click="openWhatsappModal">
             Buat Pesan WhatsApp
         </flux:button>
     </div>
