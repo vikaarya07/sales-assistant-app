@@ -364,7 +364,7 @@ new class extends Component {
                         @empty
                             <div
                                 class="col-span-full rounded-xl border border-dashed border-zinc-300 p-6 text-center dark:border-zinc-700">
-                                <flux:icon name="calendar-clock" class="mx-auto size-8 text-zinc-400" />
+                                <flux:icon name="clock" class="mx-auto size-8 text-zinc-400" />
 
                                 <flux:text class="mt-2 font-medium">
                                     Planned updates coming soon

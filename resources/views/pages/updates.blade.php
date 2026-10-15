@@ -317,7 +317,7 @@
                             @empty
                                 <div
                                     class="col-span-full rounded-xl border border-dashed border-zinc-300 p-6 text-center dark:border-zinc-700">
-                                    <flux:icon name="calendar-clock" class="mx-auto size-8 text-zinc-400" />
+                                    <flux:icon name="clock" class="mx-auto size-8 text-zinc-400" />
 
                                     <flux:heading size="sm" class="mt-3">
                                         Belum ada rencana pembaruan
