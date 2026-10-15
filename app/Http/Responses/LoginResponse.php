@@ -14,7 +14,7 @@ class LoginResponse implements LoginResponseContract
 
         $redirect = $user->role === UserRole::ADMIN
             ? '/admin/overview'
-            : '/dashboard';
+            : '/user/dashboard';
 
         return redirect($redirect)->with('swal', [
             'type' => 'toast',

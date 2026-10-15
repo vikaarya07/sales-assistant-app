@@ -28,7 +28,7 @@
     ">
         {{-- HEADER --}}
         <flux:sidebar.header>
-            <x-app-logo :sidebar="true" href="{{ route('dashboard') }}" wire:navigate />
+            <x-app-logo :sidebar="true" />
 
             <flux:sidebar.collapse
                 class="in-data-flux-sidebar-on-desktop:not-in-data-flux-sidebar-collapsed-desktop:-mr-2" />
@@ -38,52 +38,54 @@
 
             @if (auth()->user()->isAdmin())
                 {{-- ADMIN --}}
-                <flux:sidebar.item icon="chart-bar-square" :href="route('admin.overview')"
-                    :current="request()->routeIs('admin.overview')" wire:navigate>
+                <flux:sidebar.item icon="chart-bar-square" :href="route('admin.overview')" wire:navigate>
                     {{ __('Overview') }}
                 </flux:sidebar.item>
 
-                <flux:sidebar.item icon="users" :href="route('admin.members')"
-                    :current="request()->routeIs('admin.members')" wire:navigate>
+                <flux:sidebar.item icon="users" :href="route('admin.members')" wire:navigate>
                     {{ __('Member') }}
                 </flux:sidebar.item>
 
-                <flux:sidebar.group expandable heading="Music" class="grid gap-y-2"
-                    :expanded="request()->routeIs('admin.music', 'admin.request-music')">
-                    <flux:sidebar.item icon="musical-note" :href="route('admin.music')"
-                        :current="request()->routeIs('admin.music')" wire:navigate class="mb-2">
+                <flux:sidebar.group expandable heading="Music" class="grid gap-y-2">
+                    <flux:sidebar.item icon="musical-note" :href="route('admin.music')" wire:navigate class="mb-2">
                         {{ __('List Music') }}
                     </flux:sidebar.item>
 
-                    <flux:sidebar.item icon="paper-airplane" :href="route('admin.request-music')"
-                        :current="request()->routeIs('admin.request-music')" wire:navigate>
+                    <flux:sidebar.item icon="paper-airplane" :href="route('admin.request-music')" wire:navigate>
                         {{ __('Request Music') }}
+                    </flux:sidebar.item>
+                </flux:sidebar.group>
+
+                <flux:sidebar.group expandable heading="Manajemen Update" class="grid gap-y-2">
+                    <flux:sidebar.item icon="clipboard-document-list" :href="route('admin.updates')" wire:navigate
+                        class="mb-2">
+                        {{ __('Update') }}
+                    </flux:sidebar.item>
+
+                    <flux:sidebar.item icon="squares-plus" :href="route('admin.planned-updates')" wire:navigate>
+                        {{ __('Rencana Update') }}
                     </flux:sidebar.item>
                 </flux:sidebar.group>
             @else
                 {{-- MEMBER --}}
-                <flux:sidebar.item icon="home" :href="route('dashboard')" :current="request()->routeIs('dashboard')"
-                    wire:navigate>
+                <flux:sidebar.item icon="home" :href="route('user.dashboard')" wire:navigate>
                     {{ __('Dashboard') }}
                 </flux:sidebar.item>
 
-                <flux:sidebar.item icon="user-group" :href="route('customers')"
-                    :current="request()->routeIs('customers')" wire:navigate>
+                <flux:sidebar.item icon="user-group" :href="route('user.customers')" wire:navigate>
                     {{ __('Customer') }}
                 </flux:sidebar.item>
 
-                <flux:sidebar.item icon="chat-bubble-bottom-center-text" :href="route('message-templates')"
-                    :current="request()->routeIs('message-templates')" wire:navigate>
+                <flux:sidebar.item icon="chat-bubble-bottom-center-text" :href="route('user.message-templates')"
+                    wire:navigate>
                     {{ __('Template') }}
                 </flux:sidebar.item>
 
-                <flux:sidebar.item icon="calculator" :href="route('interest-calculator')"
-                    :current="request()->routeIs('interest-calculator')" wire:navigate>
+                <flux:sidebar.item icon="calculator" :href="route('user.interest-calculator')" wire:navigate>
                     {{ __('Hitung Bunga') }}
                 </flux:sidebar.item>
 
-                <flux:sidebar.item icon="musical-note" :href="route('music')" :current="request()->routeIs('music')"
-                    wire:navigate>
+                <flux:sidebar.item icon="musical-note" :href="route('user.music')" wire:navigate>
                     {{ __('Music') }}
                 </flux:sidebar.item>
             @endif
@@ -96,11 +98,11 @@
         {{-- SECONDARY NAVIGATION --}}
         <flux:sidebar.nav class="space-y-2">
 
-            <flux:sidebar.item icon="arrow-path" :href="route('updates')" wire:navigate>
+            <flux:sidebar.item icon="arrow-path" :href="route('user.updates')" wire:navigate>
                 Updates
             </flux:sidebar.item>
 
-            <flux:sidebar.item icon="information-circle" :href="route('about')" wire:navigate>
+            <flux:sidebar.item icon="information-circle" :href="route('user.about')" wire:navigate>
                 About Apps
             </flux:sidebar.item>
 

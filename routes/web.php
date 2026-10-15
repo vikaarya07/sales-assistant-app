@@ -4,21 +4,25 @@ use Illuminate\Support\Facades\Route;
 
 Route::view('/', 'welcome')->name('home');
 
+Route::view('/about', 'pages/about')->name('about');
+
+Route::view('/updates', 'pages/updates')->name('updates');
+
 Route::middleware(['auth', 'verified'])->group(function () {
 
-    Route::livewire('dashboard', 'dashboard')->name('dashboard');
+    Route::livewire('user/dashboard', 'dashboard')->name('user.dashboard');
 
-    Route::livewire('/customers', 'customers')->name('customers');
+    Route::livewire('user/customers', 'customers')->name('user.customers');
 
-    Route::livewire('/templates', 'templates')->name('message-templates');
+    Route::livewire('user/templates', 'templates')->name('user.message-templates');
 
-    Route::livewire('interest-calculator', 'interest-calculator')->name('interest-calculator');
+    Route::livewire('user/interest-calculator', 'interest-calculator')->name('user.interest-calculator');
 
-    Route::livewire('/music', 'music')->name('music');
+    Route::livewire('user/music', 'music')->name('user.music');
 
-    Route::livewire('/about', 'about')->name('about');
+    Route::livewire('user/about', 'about')->name('user.about');
 
-    Route::livewire('/updates', 'updates')->name('updates');
+    Route::livewire('user/updates', 'updates')->name('user.updates');
 
     Route::middleware('admin')->group(function () {
         Route::livewire('admin/overview', 'admin.overview')
@@ -31,6 +35,9 @@ Route::middleware(['auth', 'verified'])->group(function () {
             ->name('admin.music');
         Route::livewire('admin/request-music', 'admin.request-music')
             ->name('admin.request-music');
+
+        Route::livewire('admin/updates', 'admin.updates')->name('admin.updates');
+        Route::livewire('admin/planned-updates', 'admin.planned-updates')->name('admin.planned-updates');
     });
 });
 

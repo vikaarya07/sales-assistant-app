@@ -2,6 +2,7 @@
 
 namespace Tests\Feature\Auth;
 
+use App\Enums\UserRole;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Laravel\Fortify\Features;
@@ -29,7 +30,7 @@ class AuthenticationTest extends TestCase
 
         $response
             ->assertSessionHasNoErrors()
-            ->assertRedirect(route('dashboard', absolute: false));
+            ->assertRedirect(route('user.dashboard', absolute: false));
 
         $this->assertAuthenticatedAs($user);
     }
@@ -47,9 +48,27 @@ class AuthenticationTest extends TestCase
 
         $response
             ->assertSessionHasNoErrors()
-            ->assertRedirect(route('dashboard', absolute: false));
+            ->assertRedirect(route('user.dashboard', absolute: false));
 
         $this->assertAuthenticatedAs($user);
+    }
+
+    public function test_admin_is_redirected_to_admin_overview_after_login(): void
+    {
+        $admin = User::factory()->create([
+            'role' => UserRole::ADMIN,
+        ]);
+
+        $response = $this->post(route('login.store'), [
+            'login' => $admin->email,
+            'password' => 'password',
+        ]);
+
+        $response
+            ->assertSessionHasNoErrors()
+            ->assertRedirect(route('admin.overview', absolute: false));
+
+        $this->assertAuthenticatedAs($admin);
     }
 
     public function test_users_can_not_authenticate_with_invalid_password(): void

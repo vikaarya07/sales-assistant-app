@@ -189,11 +189,11 @@ new class extends Component {
 
                 <div class="flex flex-wrap justify-between gap-2">
 
-                    <flux:button href="{{ route('customers') }}" wire:navigate variant="ghost" icon="users">
+                    <flux:button href="{{ route('user.customers') }}" wire:navigate variant="ghost" icon="users">
                         Customers
                     </flux:button>
 
-                    <flux:button href="{{ route('message-templates') }}" wire:navigate variant="primary"
+                    <flux:button href="{{ route('user.message-templates') }}" wire:navigate variant="primary"
                         icon="document-text">
                         Templates
                     </flux:button>
@@ -494,7 +494,7 @@ new class extends Component {
 
                     </div>
 
-                    <flux:button href="{{ route('customers') }}" wire:navigate variant="ghost" size="sm">
+                    <flux:button href="{{ route('user.customers') }}" wire:navigate variant="ghost" size="sm">
                         Lihat Semua
                     </flux:button>
 
@@ -566,19 +566,19 @@ new class extends Component {
 
                 <div class="mt-6 space-y-3">
 
-                    <flux:button href="{{ route('customers') }}" wire:navigate variant="outline"
+                    <flux:button href="{{ route('user.customers') }}" wire:navigate variant="outline"
                         class="w-full justify-start bg-white/70 hover:bg-indigo-50 dark:bg-zinc-900/50 dark:hover:bg-indigo-500/10"
                         icon="user-plus">
                         Import Customer
                     </flux:button>
 
-                    <flux:button href="{{ route('customers') }}" wire:navigate variant="outline"
+                    <flux:button href="{{ route('user.customers') }}" wire:navigate variant="outline"
                         class="w-full justify-start bg-white/70 hover:bg-emerald-50 dark:bg-zinc-900/50 dark:hover:bg-emerald-500/10"
                         icon="chat-bubble-left-right">
                         Hubungi Customer
                     </flux:button>
 
-                    <flux:button href="{{ route('message-templates') }}" wire:navigate variant="outline"
+                    <flux:button href="{{ route('user.message-templates') }}" wire:navigate variant="outline"
                         class="w-full justify-start bg-white/70 hover:bg-violet-50 dark:bg-zinc-900/50 dark:hover:bg-violet-500/10"
                         icon="document-plus">
                         Buat Template
@@ -615,7 +615,7 @@ new class extends Component {
                         </div>
                     </div>
 
-                    <flux:button href="{{ route('customers') }}" wire:navigate variant="ghost" size="sm"
+                    <flux:button href="{{ route('user.customers') }}" wire:navigate variant="ghost" size="sm"
                         class="shrink-0">
                         Lihat Semua
                     </flux:button>
@@ -696,7 +696,7 @@ new class extends Component {
                         </div>
                     </div>
 
-                    <flux:button href="{{ route('message-templates') }}" wire:navigate variant="ghost"
+                    <flux:button href="{{ route('user.message-templates') }}" wire:navigate variant="ghost"
                         size="sm" class="shrink-0">
                         Kelola
                     </flux:button>
