@@ -533,6 +533,13 @@ Info lebih lanjut:
                                         @{{ cabang }}
                                     </flux:button>
 
+                                    {{-- NOMOR TELEPON --}}
+                                    <flux:button type="button" variant="ghost" size="sm"
+                                        data-message-variable="&#123;&#123;nomor_telepon&#125;&#125;"
+                                        class="border border-indigo-200/70 bg-white/80 text-xs font-medium transition duration-200 hover:-translate-y-0.5 hover:bg-indigo-50 hover:shadow-md dark:border-zinc-700 dark:bg-zinc-800 dark:hover:bg-zinc-700">
+                                        @{{ nomor_telepon }}
+                                    </flux:button>
+
                                 </div>
 
                             </div>

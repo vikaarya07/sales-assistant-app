@@ -124,3 +124,54 @@ select:focus[data-flux-control] {
         avatar-gradient 6s ease infinite,
         avatar-glow 3s ease-in-out infinite;
 }
+
+/* Flux UI - WhatsApp Composer */
+.composer-message,
+.composer-message [data-flux-control],
+.composer-message [data-flux-control]:focus-within {
+    background: transparent !important;
+    border: none !important;
+    outline: none !important;
+    box-shadow: none !important;
+}
+
+/* Textarea - Transparan & Auto Sizing */
+.composer-message textarea,
+.composer-message textarea:focus,
+.composer-message textarea:focus-visible {
+    background: transparent !important;
+    border: none !important;
+    outline: none !important;
+    box-shadow: none !important;
+    resize: none !important;
+    field-sizing: content !important;
+    overflow-y: auto;
+}
+
+/* Hilangkan Scrollbar, tetap bisa scroll */
+.composer-message textarea {
+    scrollbar-width: none !important;
+    -ms-overflow-style: none !important;
+}
+
+.composer-message textarea::-webkit-scrollbar {
+    display: none !important;
+    width: 0 !important;
+    height: 0 !important;
+}
+
+/* Hilangkan Resize Handle */
+.composer-message textarea::-webkit-resizer {
+    display: none !important;
+    appearance: none !important;
+    width: 0 !important;
+    height: 0 !important;
+}
+
+/* Hilangkan Efek Pseudo-element Flux UI */
+.composer-message [data-flux-control]::before,
+.composer-message [data-flux-control]::after {
+    border: none !important;
+    outline: none !important;
+    box-shadow: none !important;
+}

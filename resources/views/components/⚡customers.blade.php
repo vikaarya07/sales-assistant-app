@@ -29,6 +29,7 @@ new class extends Component {
     public ?int $selectedCustomerId = null;
     public string $selectedTemplateId = '';
     public string $message = '';
+    public string $originalMessage = '';
 
     /*
     |--------------------------------------------------------------------------
@@ -670,6 +671,7 @@ new class extends Component {
         $this->message = '';
         $this->greeting = 'Selamat pagi';
         $this->address = 'Bapak';
+        $this->originalMessage = '';
 
         $this->resetValidation();
 
@@ -683,6 +685,7 @@ new class extends Component {
         $this->message = '';
         $this->greeting = 'Selamat pagi';
         $this->address = 'Bapak';
+        $this->originalMessage = '';
 
         $this->resetValidation();
 
@@ -717,10 +720,23 @@ new class extends Component {
         $shortAddress = $this->address === 'Bapak' ? 'pak' : 'bu';
 
         $this->message = $customer->replaceTemplateVariables($template->content, [
+            '{{nama}}' => $customer->name,
+            '{{nomor_kontrak}}' => $customer->contract_number,
+            '{{nomor_telepon}}' => $customer->phone,
+            '{{nominal}}' => $customer->formatted_amount,
+            '{{cabang}}' => $customer->branch,
+
             '{{sapaan_waktu}}' => $this->greeting,
             '{{panggilan}}' => $this->address,
             '{{panggilan_singkat}}' => $shortAddress,
         ]);
+
+        $this->originalMessage = $this->message;
+    }
+
+    public function resetMessage(): void
+    {
+        $this->message = $this->originalMessage;
     }
 
     public function updatedGreeting(): void
@@ -1708,8 +1724,8 @@ new class extends Component {
                     </div>
 
                     @if ($message)
-                        <flux:badge color="green" icon="check">
-                            Siap dikirim
+                        <flux:badge color="green" icon="pencil-square">
+                            Bisa Diedit
                         </flux:badge>
                     @endif
 
@@ -1742,7 +1758,7 @@ new class extends Component {
                     </div>
 
                     {{-- CHAT BODY --}}
-                    <div class="relative min-h-80 overflow-y-auto bg-[#efeae2] p-4 dark:bg-zinc-800">
+                    <div class="relative min-h-80 bg-[#efeae2] p-4 dark:bg-zinc-800">
 
                         {{-- Decorative --}}
                         <div class="pointer-events-none absolute inset-0 opacity-[0.035]"
@@ -1753,20 +1769,27 @@ new class extends Component {
                             <div class="relative flex justify-end">
 
                                 <div
-                                    class="max-w-[85%] rounded-xl rounded-tr-sm bg-[#d9fdd3] px-3 py-2 shadow-sm dark:bg-emerald-900">
+                                    class="w-full max-w-[75%] rounded-xl rounded-tr-sm bg-[#d9fdd3] p-3 shadow-sm dark:bg-emerald-900">
 
+                                    <flux:textarea wire:model.live.debounce.300ms="message" rows="auto"
+                                        placeholder="Tulis pesan WhatsApp..." class="composer-message" />
+
+                                    {{-- FOOTER --}}
                                     <div
-                                        class="whitespace-pre-line wrap-break-words text-[13px] leading-relaxed text-zinc-800 dark:text-zinc-100">
-                                        {{ $message }}
-                                    </div>
+                                        class="mt-2
+                                        flex items-center justify-between border-t border-black/5 pt-2">
 
-                                    <div class="mt-1 flex items-center justify-end gap-1 text-[10px] text-zinc-500">
-
-                                        <span>
-                                            {{ now()->format('H:i') }}
+                                        <span class="text-[10px] text-zinc-500">
+                                            Pesan dapat diedit
                                         </span>
 
-                                        <flux:icon name="check" variant="mini" class="text-blue-500" />
+                                        <div class="flex items-center gap-1 text-[10px] text-zinc-500">
+
+                                            {{ now()->format('H:i') }}
+
+                                            <flux:icon name="check" variant="mini" class="text-blue-500" />
+
+                                        </div>
 
                                     </div>
 
@@ -1805,21 +1828,33 @@ new class extends Component {
 
             <div class="flex items-center justify-end gap-3">
 
-                <flux:button type="button" variant="ghost" wire:click="closeComposer">
-                    Batal
-                </flux:button>
+                @if ($message)
+                    <div class="flex items-center gap-2">
 
-                @if ($this->whatsappUrl)
-                    <flux:button href="{{ $this->whatsappUrl }}" target="_blank" variant="primary"
-                        icon="arrow-top-right-on-square" color="emerald" wire:click="markContacted">
-                        Buka WhatsApp
-                    </flux:button>
-                @else
-                    <flux:button type="button" variant="primary" icon="arrow-top-right-on-square" disabled>
-                        Buka WhatsApp
-                    </flux:button>
+
+                        <flux:button type="button" variant="ghost" wire:click="closeComposer">
+                            Batal
+                        </flux:button>
+
+                        <flux:button type="button" variant="ghost" color="amber" icon="arrow-path"
+                            wire:click="resetMessage" :disabled="$message === $originalMessage">
+                            Reset
+                        </flux:button>
+
+                        @if ($this->whatsappUrl)
+                            <flux:button href="{{ $this->whatsappUrl }}" target="_blank" variant="primary"
+                                icon="arrow-top-right-on-square" color="emerald" wire:click="markContacted">
+                                Buka WhatsApp
+                            </flux:button>
+                        @else
+                            <flux:button type="button" variant="primary" icon="arrow-top-right-on-square" disabled>
+                                Buka WhatsApp
+                            </flux:button>
+                        @endif
+
+                    </div>
+
                 @endif
-
             </div>
 
         </div>
