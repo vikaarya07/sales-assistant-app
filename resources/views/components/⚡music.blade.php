@@ -22,34 +22,19 @@ new class extends Component {
 
     public string $requestNote = '';
 
-    /*
-    |--------------------------------------------------------------------------
-    | Search
-    |--------------------------------------------------------------------------
-    */
-
+    // Search
     public function updatedSearch(): void
     {
         $this->resetPage();
     }
 
-    /*
-    |--------------------------------------------------------------------------
-    | Genre
-    |--------------------------------------------------------------------------
-    */
-
+    // Genre
     public function updatedGenre(): void
     {
         $this->resetPage();
     }
 
-    /*
-    |--------------------------------------------------------------------------
-    | Playlist
-    |--------------------------------------------------------------------------
-    */
-
+    // Playlist
     public function setPlaylist(string $playlist): void
     {
         $this->playlist = in_array($playlist, ['all', 'favorites'], true) ? $playlist : 'all';
@@ -57,12 +42,7 @@ new class extends Component {
         $this->resetPage();
     }
 
-    /*
-    |--------------------------------------------------------------------------
-    | Favorite
-    |--------------------------------------------------------------------------
-    */
-
+    // Favorite
     public function toggleFavorite(int $musicId): void
     {
         $music = Music::findOrFail($musicId);
@@ -96,11 +76,7 @@ new class extends Component {
 
     private function normalizeFavoritePositions(): void
     {
-        $favorites = DB::table('favorite_music')
-            ->where('user_id', auth()->id())
-            ->orderBy('position')
-            ->orderBy('id')
-            ->get();
+        $favorites = DB::table('favorite_music')->where('user_id', auth()->id())->orderBy('position')->orderBy('id')->get();
 
         foreach ($favorites as $index => $favorite) {
             DB::table('favorite_music')
@@ -112,36 +88,23 @@ new class extends Component {
         }
     }
 
-    /*
-    |--------------------------------------------------------------------------
-    | Reorder Favorite
-    |--------------------------------------------------------------------------
-    */
-
+    // Reorder Favorite
     public function reorderFavorites(array $ids): void
     {
         $userId = auth()->id();
 
-        /*
-         * Ambil seluruh lagu favorit milik user.
-         */
+        //Ambil seluruh lagu favorit milik user.
         $favoriteIds = DB::table('favorite_music')->where('user_id', $userId)->pluck('music_id')->map(fn($id) => (int) $id)->all();
 
-        /*
-         * Pastikan semua ID berupa integer.
-         */
+        //Pastikan semua ID berupa integer.
         $ids = array_map('intval', $ids);
 
-        /*
-         * Hanya izinkan ID yang memang merupakan
-         * favorit milik user.
-         */
+        //Hanya izinkan ID yang memang merupakan
+        //favorit milik user.
         $ids = array_values(array_intersect($ids, $favoriteIds));
 
-        /*
-         * Jika ada ID yang tidak dikirim browser,
-         * tambahkan kembali di bagian akhir.
-         */
+        //Jika ada ID yang tidak dikirim browser,
+        //tambahkan kembali di bagian akhir.
         $missingIds = array_values(array_diff($favoriteIds, $ids));
 
         $ids = array_merge($ids, $missingIds);
@@ -161,12 +124,7 @@ new class extends Component {
         $this->dispatch('favorite-updated');
     }
 
-    /*
-    |--------------------------------------------------------------------------
-    | Music Request
-    |--------------------------------------------------------------------------
-    */
-
+    // Music Request
     public function openRequest(): void
     {
         $this->resetRequestForm();
@@ -212,24 +170,12 @@ new class extends Component {
         $this->dispatch('swal', type: 'success', title: 'Request Terkirim', message: 'Request music berhasil dikirim kepada admin.');
     }
 
-    /*
-    |--------------------------------------------------------------------------
-    | Render
-    |--------------------------------------------------------------------------
-    */
-
+    // Render
     public function render()
     {
-        /*
-        |--------------------------------------------------------------------------
-        | Favorite Playlist
-        |--------------------------------------------------------------------------
-        |
-        | Tidak menggunakan pagination agar seluruh lagu favorit
-        | dapat di-drag & drop dalam satu playlist.
-        |
-        */
-
+        // Favorite Playlist
+        // Tidak menggunakan pagination agar seluruh lagu favorit
+        // dapat di-drag & drop dalam satu playlist.
         if ($this->playlist === 'favorites') {
             $music = Music::query()
                 ->when($this->search !== '', function ($query) {
@@ -245,12 +191,7 @@ new class extends Component {
                 ->select('music.*')
                 ->get();
         } else {
-            /*
-            |--------------------------------------------------------------------------
-            | All Music
-            |--------------------------------------------------------------------------
-            */
-
+            // All Music
             $music = Music::query()
                 ->when($this->search !== '', function ($query) {
                     $query->where(function ($query) {
@@ -264,28 +205,11 @@ new class extends Component {
                 ->paginate(10);
         }
 
-        /*
-        |--------------------------------------------------------------------------
-        | Request List
-        |--------------------------------------------------------------------------
-        */
+        // Request List
+        $requests = MusicRequest::query()->where('user_id', auth()->id())->latest()->get();
 
-        $requests = MusicRequest::query()
-            ->where('user_id', auth()->id())
-            ->latest()
-            ->get();
-
-        /*
-        |--------------------------------------------------------------------------
-        | Favorite IDs
-        |--------------------------------------------------------------------------
-        */
-
-        $favoriteIds = DB::table('favorite_music')
-            ->where('user_id', auth()->id())
-            ->pluck('music_id')
-            ->map(fn($id) => (int) $id)
-            ->toArray();
+        // Favorite IDs
+        $favoriteIds = DB::table('favorite_music')->where('user_id', auth()->id())->pluck('music_id')->map(fn($id) => (int) $id)->toArray();
 
         return $this->view([
             'music' => $music,

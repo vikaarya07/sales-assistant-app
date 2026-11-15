@@ -18,6 +18,8 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
     Route::livewire('user/interest-calculator', 'interest-calculator')->name('user.interest-calculator');
 
+    Route::livewire('user/notepad', 'note')->name('user.note');
+
     Route::livewire('user/music', 'music')->name('user.music');
 
     Route::livewire('user/about', 'about')->name('user.about');

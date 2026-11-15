@@ -85,6 +85,10 @@
                     {{ __('Hitung Bunga') }}
                 </flux:sidebar.item>
 
+                <flux:sidebar.item icon="newspaper" :href="route('user.note')" wire:navigate>
+                    {{ __('Notepad') }}
+                </flux:sidebar.item>
+
                 <flux:sidebar.item icon="musical-note" :href="route('user.music')" wire:navigate>
                     {{ __('Music') }}
                 </flux:sidebar.item>
