@@ -180,7 +180,7 @@ new #[Layout('layouts.app')] #[Title('Notepad')] class extends Component {
         class="m-5 grid max-h-screen min-h-0 grid-cols-1 gap-5 overflow-hidden md:my-5 md:ms-2 md:me-5 lg:grid-cols-12">
         {{-- Sidebar --}}
         <section
-            class="flex min-h-0 flex-col overflow-hidden rounded-xl bg-white dark:bg-zinc-900 lg:col-span-4 xl:col-span-3">
+            class="flex max-h-screen min-h-0 flex-col overflow-hidden rounded-xl bg-white dark:bg-zinc-900 lg:col-span-4 xl:col-span-3">
             <div class="border-b border-zinc-200 p-4 dark:border-zinc-700">
                 <div class="mb-3 flex items-center justify-between gap-3">
                     <h2 class="font-semibold text-zinc-900 dark:text-white">
