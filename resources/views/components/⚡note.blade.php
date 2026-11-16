@@ -278,7 +278,7 @@ new #[Layout('layouts.app')] #[Title('Notepad')] class extends Component {
 
                     <div>
                         <textarea id="note-content" wire:model.live.debounce.700ms="content" placeholder="Mulai tulis catatan Anda di sini..."
-                            class="min-h-155 w-full resize-y rounded-lg border border-zinc-200 bg-white p-4 text-sm leading-7 text-zinc-800 outline-none transition focus:border-zinc-400 focus:ring-2 focus:ring-zinc-200 dark:border-zinc-700 dark:bg-zinc-950 dark:text-zinc-100 dark:focus:border-zinc-500 dark:focus:ring-zinc-800"></textarea>
+                            class="max-h-screen min-h-0 w-full resize-y rounded-lg border border-zinc-200 bg-white p-4 text-sm leading-7 text-zinc-800 outline-none transition focus:border-zinc-400 focus:ring-2 focus:ring-zinc-200 dark:border-zinc-700 dark:bg-zinc-950 dark:text-zinc-100 dark:focus:border-zinc-500 dark:focus:ring-zinc-800"></textarea>
                     </div>
 
                     <div class="flex items-center justify-between gap-3 text-xs text-zinc-400 dark:text-zinc-500">
