@@ -251,7 +251,7 @@ new #[Layout('layouts.app')] #[Title('Notepad')] class extends Component {
 
         {{-- Editor --}}
         <section
-            class="flex max-h-screen min-h-0 flex-col overflow-hidden rounded-xl bg-white dark:bg-zinc-900 lg:col-span-8 xl:col-span-9">
+            class="flex max-h-screen flex-col overflow-hidden rounded-xl bg-white dark:bg-zinc-900 lg:col-span-8 xl:col-span-9">
             @if ($activeNoteId !== null)
                 <div
                     class="flex flex-col gap-4 border-b border-zinc-200 p-4 dark:border-zinc-700 sm:flex-row sm:items-center sm:justify-between">
