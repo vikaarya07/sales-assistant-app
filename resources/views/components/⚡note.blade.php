@@ -149,7 +149,7 @@ new #[Layout('layouts.app')] #[Title('Notepad')] class extends Component {
 };
 ?>
 
-<div class="max-h-screen overflow-hidden space-y-6">
+<div class="space-y-6">
     {{-- Header --}}
     <div class="m-5 rounded-xl bg-white md:my-5 md:ms-2 md:me-5 dark:bg-zinc-800">
         <div class="flex flex-col items-center justify-between gap-4 p-6 sm:flex-row">
@@ -177,10 +177,10 @@ new #[Layout('layouts.app')] #[Title('Notepad')] class extends Component {
 
     {{-- Main content --}}
     <div
-        class="m-5 grid max-h-screen min-h-0 grid-cols-1 gap-5 overflow-hidden md:my-5 md:ms-2 md:me-5 lg:grid-cols-12">
+        class="m-5 grid max-h-full min-h-0 grid-cols-1 gap-5 overflow-hidden md:my-5 md:ms-2 md:me-5 lg:grid-cols-12">
         {{-- Sidebar --}}
         <section
-            class="flex max-h-screen min-h-0 flex-col overflow-hidden rounded-xl bg-white dark:bg-zinc-900 lg:col-span-4 xl:col-span-3">
+            class="flex max-h-full min-h-0 flex-col overflow-hidden rounded-xl bg-white dark:bg-zinc-900 lg:col-span-4 xl:col-span-3">
             <div class="border-b border-zinc-200 p-4 dark:border-zinc-700">
                 <div class="mb-3 flex items-center justify-between gap-3">
                     <h2 class="font-semibold text-zinc-900 dark:text-white">
@@ -251,7 +251,7 @@ new #[Layout('layouts.app')] #[Title('Notepad')] class extends Component {
 
         {{-- Editor --}}
         <section
-            class="flex max-h-screen flex-col overflow-hidden rounded-xl bg-white dark:bg-zinc-900 lg:col-span-8 xl:col-span-9">
+            class="flex max-h-full flex-col overflow-hidden rounded-xl bg-white dark:bg-zinc-900 lg:col-span-8 xl:col-span-9">
             @if ($activeNoteId !== null)
                 <div
                     class="flex flex-col gap-4 border-b border-zinc-200 p-4 dark:border-zinc-700 sm:flex-row sm:items-center sm:justify-between">
@@ -278,7 +278,7 @@ new #[Layout('layouts.app')] #[Title('Notepad')] class extends Component {
 
                     <div>
                         <textarea id="note-content" wire:model.live.debounce.700ms="content" placeholder="Mulai tulis catatan Anda di sini..."
-                            class="max-h-screen min-h-0 w-full resize-y rounded-lg border border-zinc-200 bg-white p-4 text-sm leading-7 text-zinc-800 outline-none transition focus:border-zinc-400 focus:ring-2 focus:ring-zinc-200 dark:border-zinc-700 dark:bg-zinc-950 dark:text-zinc-100 dark:focus:border-zinc-500 dark:focus:ring-zinc-800"></textarea>
+                            class="max-h-full min-h-0 w-full rounded-lg border border-zinc-200 bg-white p-4 text-sm leading-7 text-zinc-800 outline-none transition focus:border-zinc-400 focus:ring-2 focus:ring-zinc-200 dark:border-zinc-700 dark:bg-zinc-950 dark:text-zinc-100 dark:focus:border-zinc-500 dark:focus:ring-zinc-800"></textarea>
                     </div>
 
                     <div class="flex items-center justify-between gap-3 text-xs text-zinc-400 dark:text-zinc-500">
