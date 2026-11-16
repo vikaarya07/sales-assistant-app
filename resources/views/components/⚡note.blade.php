@@ -149,7 +149,7 @@ new #[Layout('layouts.app')] #[Title('Notepad')] class extends Component {
 };
 ?>
 
-<div class="space-y-6">
+<div class="max-h-screen overflow-hidden space-y-6">
     {{-- Header --}}
     <div class="m-5 rounded-xl bg-white md:my-5 md:ms-2 md:me-5 dark:bg-zinc-800">
         <div class="flex flex-col items-center justify-between gap-4 p-6 sm:flex-row">
