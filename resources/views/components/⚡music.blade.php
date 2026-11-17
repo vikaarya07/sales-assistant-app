@@ -201,7 +201,7 @@ new class extends Component {
                 ->when($this->genre !== '', function ($query) {
                     $query->where('genre', $this->genre);
                 })
-                ->latest('music.created_at')
+                ->orderBy('title', 'asc')
                 ->paginate(10);
         }
 

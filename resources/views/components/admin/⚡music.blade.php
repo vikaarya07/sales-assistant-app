@@ -90,7 +90,7 @@ new class extends Component {
             [
                 'title' => ['required', 'string', 'max:255'],
                 'genre' => ['required', 'string', 'in:' . implode(',', array_column(MusicGenre::cases(), 'value'))],
-                'audio' => ['required', 'file', 'mimes:ogg', 'max:20480'],
+                'audio' => ['required', 'file', 'mimetypes:audio/ogg,application/ogg,audio/opus', 'max:20480'],
             ],
             [
                 'title.required' => 'Judul music wajib diisi.',
