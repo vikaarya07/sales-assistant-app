@@ -4,6 +4,7 @@ namespace Tests\Feature;
 
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Str;
 use Tests\TestCase;
 
 class DashboardTest extends TestCase
@@ -18,10 +19,21 @@ class DashboardTest extends TestCase
 
     public function test_authenticated_users_can_visit_the_dashboard(): void
     {
-        $user = User::factory()->create();
+        $token = Str::random(64);
+
+        $user = User::factory()->create([
+            'email_verified_at' => now(),
+            'session_login_token' => $token,
+        ]);
+
         $this->actingAs($user);
 
+        $this->withSession([
+            'single_session_token' => $token,
+        ]);
+
         $response = $this->get(route('user.dashboard'));
+
         $response->assertOk();
     }
 }
