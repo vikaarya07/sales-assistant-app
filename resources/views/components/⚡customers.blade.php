@@ -6,6 +6,7 @@ use App\Livewire\Traits\WithSorting;
 use Illuminate\Support\Facades\DB;
 use Livewire\Component;
 use Livewire\WithPagination;
+use Illuminate\Validation\Rule;
 use Livewire\Attributes\On;
 
 new class extends Component {
@@ -52,7 +53,7 @@ new class extends Component {
     public string $editContractNumber = '';
     public string $editAmount = '';
     public string $editBranch = '';
-    public string $editStatus = '';
+    public array $editStatus = [];
 
     /*
     |--------------------------------------------------------------------------
@@ -117,7 +118,9 @@ new class extends Component {
                     continue;
                 }
 
-                auth()->user()->customers()->create($customer);
+                $newCustomer = auth()->user()->customers()->create($customer);
+
+                $newCustomer->syncStatuses([CustomerStatus::NEW]);
 
                 $created++;
             }
@@ -213,7 +216,7 @@ new class extends Component {
             return;
         }
 
-        auth()
+        $newCustomer = auth()
             ->user()
             ->customers()
             ->create([
@@ -226,6 +229,8 @@ new class extends Component {
                 'source' => 'manual',
                 'status' => CustomerStatus::NEW,
             ]);
+
+        $newCustomer->syncStatuses([CustomerStatus::NEW]);
 
         $this->closeManualCustomer();
         $this->resetPage();
@@ -446,7 +451,7 @@ new class extends Component {
                         ->orWhere('branch', 'like', '%' . $this->search . '%');
                 });
             })
-            ->when($selectedStatuses !== [], fn($query) => $query->whereIn('status', $selectedStatuses))
+            ->when($selectedStatuses !== [], fn($query) => $query->whereHas('statusAssignments', fn($statusQuery) => $statusQuery->whereIn('status', $selectedStatuses)))
             ->when($this->createdDate, function ($query) {
                 $query->whereDate('created_at', $this->createdDate);
             })
@@ -508,7 +513,6 @@ new class extends Component {
     | Edit Customer
     |--------------------------------------------------------------------------
     */
-
     public function openEditCustomer(int $customerId): void
     {
         $customer = auth()->user()->customers()->findOrFail($customerId);
@@ -521,7 +525,11 @@ new class extends Component {
         $this->editContractNumber = $customer->contract_number;
         $this->editAmount = $this->formatIdr($customer->amount);
         $this->editBranch = $customer->branch;
-        $this->editStatus = $customer->status->value;
+        $this->editStatus = $customer->statusAssignments()->pluck('status')->all();
+
+        if ($this->editStatus === []) {
+            $this->editStatus = [$customer->status->value];
+        }
 
         $this->resetValidation();
 
@@ -530,35 +538,36 @@ new class extends Component {
 
     public function saveCustomer(): void
     {
-        $this->validate(
+        $validated = $this->validate(
             [
                 'editName' => ['required', 'string', 'max:255'],
-                'editPhone' => ['required', 'string'],
-                'editContractNumber' => ['required', 'string', 'digits:17'],
+                'editPhone' => ['required', 'string', 'max:20'],
+                'editContractNumber' => ['required', 'digits:17'],
                 'editAmount' => ['required', 'string'],
                 'editBranch' => ['required', 'string', 'max:255'],
-                'editStatus' => ['required', 'string'],
+
+                'editStatus' => ['required', 'array', 'min:1'],
+                'editStatus.*' => ['required', 'string', 'distinct:strict', Rule::enum(CustomerStatus::class)],
             ],
             [
-                'editName.required' => 'Nama customer wajib diisi.',
-                'editName.string' => 'Nama customer harus berupa teks.',
-                'editName.max' => 'Nama customer maksimal 255 karakter.',
+                'editName.required' => 'Nama pelanggan wajib diisi.',
                 'editPhone.required' => 'Nomor WhatsApp wajib diisi.',
-                'editPhone.string' => 'Nomor WhatsApp harus berupa teks.',
                 'editContractNumber.required' => 'Nomor kontrak wajib diisi.',
-                'editContractNumber.string' => 'Nomor kontrak harus berupa angka.',
-                'editContractNumber.digits' => 'Nomor kontrak harus tepat 17 digit.',
-                'editAmount.required' => 'Nominal wajib diisi.',
-                'editAmount.string' => 'Nominal tidak valid.',
+                'editContractNumber.digits' => 'Nomor kontrak harus terdiri dari 17 digit.',
+                'editAmount.required' => 'Jumlah pinjaman wajib diisi.',
                 'editBranch.required' => 'Cabang wajib diisi.',
-                'editBranch.string' => 'Nama cabang tidak valid.',
-                'editBranch.max' => 'Nama cabang maksimal 255 karakter.',
-                'editStatus.required' => 'Status wajib dipilih.',
-                'editStatus.string' => 'Status tidak valid.',
+                'editStatus.required' => 'Pilih minimal satu status pelanggan.',
+                'editStatus.array' => 'Status pelanggan tidak valid.',
+                'editStatus.min' => 'Pilih minimal satu status pelanggan.',
+                'editStatus.*.required' => 'Status pelanggan tidak boleh kosong.',
+                'editStatus.*.distinct' => 'Status pelanggan tidak boleh duplikat.',
+                'editStatus.*.enum' => 'Terdapat status pelanggan yang tidak valid.',
             ],
         );
 
         if (!$this->editingCustomerId) {
+            $this->addError('editName', 'Pelanggan yang akan diedit tidak ditemukan.');
+
             return;
         }
 
@@ -566,57 +575,71 @@ new class extends Component {
 
         $this->authorize('update', $customer);
 
-        $phoneNormalized = $this->normalizePhone($this->editPhone);
+        // Normalisasi nomor WhatsApp.
+        $phoneNormalized = $this->normalizePhone($validated['editPhone']);
 
-        if ($phoneNormalized === null) {
-            $this->addError('editPhone', 'Nomor WhatsApp tidak valid. Gunakan nomor Indonesia yang benar.');
+        if (!$phoneNormalized) {
+            $this->addError('editPhone', 'Nomor WhatsApp tidak valid. Gunakan format 08xxxxxxxxxx atau 628xxxxxxxxxx.');
 
             return;
         }
 
-        $amount = $this->unformatIdr($this->editAmount);
+        // Pastikan nomor WhatsApp tidak digunakan pelanggan lain.
+        $phoneExists = auth()->user()->customers()->where('phone_normalized', $phoneNormalized)->where('id', '!=', $customer->id)->exists();
 
-        if ($amount === '') {
-            $this->addError('editAmount', 'Nominal tidak valid.');
+        if ($phoneExists) {
+            $this->addError('editPhone', 'Nomor WhatsApp sudah terdaftar pada pelanggan lain.');
+
+            return;
+        }
+
+        // Konversi nominal Rupiah menjadi angka.
+        $amount = preg_replace('/\D/', '', $validated['editAmount']);
+
+        if ($amount === null || $amount === '' || !is_numeric($amount)) {
+            $this->addError('editAmount', 'Jumlah pinjaman tidak valid.');
 
             return;
         }
 
         if ((int) $amount > 30000000) {
-            $this->addError('editAmount', 'Nominal maksimal Rp30.000.000.');
+            $this->addError('editAmount', 'Jumlah pinjaman maksimal Rp30.000.000.');
 
             return;
         }
 
-        $newStatus = CustomerStatus::tryFrom($this->editStatus);
+        // Validasi dan normalisasi seluruh status yang dipilih.
+        $validStatuses = collect($validated['editStatus'])->map(fn(string $status) => CustomerStatus::tryFrom($status))->filter()->unique(fn(CustomerStatus $status) => $status->value)->values();
 
-        if (!$newStatus) {
-            $this->addError('editStatus', 'Status tidak valid.');
-
-            return;
-        }
-
-        $duplicatePhone = auth()->user()->customers()->where('phone_normalized', $phoneNormalized)->where('id', '!=', $customer->id)->exists();
-
-        if ($duplicatePhone) {
-            $this->addError('editPhone', 'Nomor WhatsApp sudah digunakan customer lain.');
+        if ($validStatuses->isEmpty()) {
+            $this->addError('editStatus', 'Pilih minimal satu status pelanggan yang valid.');
 
             return;
         }
 
-        $customer->update([
-            'name' => $this->editName,
-            'phone' => $this->editPhone,
-            'phone_normalized' => $phoneNormalized,
-            'contract_number' => $this->editContractNumber,
-            'amount' => (int) $amount,
-            'branch' => $this->editBranch,
-            'status' => $newStatus,
-        ]);
+        // Status utama tetap disimpan pada kolom customers.status
+        // untuk menjaga kompatibilitas dengan fitur lama.
+        $primaryStatus = $validStatuses->first();
+
+        DB::transaction(function () use ($customer, $validated, $phoneNormalized, $amount, $primaryStatus, $validStatuses): void {
+            $customer->update([
+                'name' => trim($validated['editName']),
+                'phone' => trim($validated['editPhone']),
+                'phone_normalized' => $phoneNormalized,
+                'contract_number' => trim($validated['editContractNumber']),
+                'amount' => (int) $amount,
+                'branch' => trim($validated['editBranch']),
+                'status' => $primaryStatus,
+            ]);
+
+            // Sinkronkan seluruh status yang dipilih.
+            // Memerlukan method syncStatuses() pada model Customer.
+            $customer->syncStatuses($validStatuses->map(fn(CustomerStatus $status): string => $status->value)->all());
+        });
 
         $this->closeEditCustomer();
 
-        $this->dispatch('swal', type: 'success', message: 'Data customer berhasil diperbarui.');
+        $this->dispatch('swal:success', title: 'Berhasil!', text: 'Data pelanggan berhasil diperbarui.');
     }
 
     public function closeEditCustomer(): void
@@ -627,7 +650,7 @@ new class extends Component {
         $this->editContractNumber = '';
         $this->editAmount = '';
         $this->editBranch = '';
-        $this->editStatus = '';
+        $this->editStatus = [];
 
         $this->resetValidation();
 
@@ -639,7 +662,6 @@ new class extends Component {
     | Quick Status
     |--------------------------------------------------------------------------
     */
-
     public function updateStatus(int $customerId, string $status): void
     {
         $customer = auth()->user()->customers()->findOrFail($customerId);
@@ -652,9 +674,7 @@ new class extends Component {
             return;
         }
 
-        $customer->update([
-            'status' => $newStatus,
-        ]);
+        $customer->syncStatuses([$newStatus]);
 
         $this->dispatch('swal', type: 'success', message: 'Status customer berhasil diperbarui.');
     }
@@ -853,6 +873,7 @@ new class extends Component {
         $customers = auth()
             ->user()
             ->customers()
+            ->with('statusAssignments')
             ->when($this->search, function ($query) {
                 $query->where(function ($query) {
                     $query
@@ -862,13 +883,13 @@ new class extends Component {
                         ->orWhere('branch', 'like', '%' . $this->search . '%');
                 });
             })
-            ->when($this->selectedStatuses, function ($query) {
+            ->when($this->selectedStatuses !== [], function ($query) {
                 $validStatuses = array_map(fn(CustomerStatus $status) => $status->value, CustomerStatus::cases());
 
                 $selectedStatuses = array_values(array_intersect($this->selectedStatuses, $validStatuses));
 
                 if ($selectedStatuses !== []) {
-                    $query->whereIn('status', $selectedStatuses);
+                    $query->whereHas('statusAssignments', fn($statusQuery) => $statusQuery->whereIn('status', $selectedStatuses));
                 }
             })
             ->when($this->createdDate, function ($query) {
@@ -1391,11 +1412,20 @@ new class extends Component {
 
                                 {{-- STATUS --}}
                                 <td class="px-2 py-2">
-
-                                    <flux:badge :color="$customer->status->color()" class="shrink-0">
-                                        {{ $customer->status->label() }}
-                                    </flux:badge>
-
+                                    <div class="flex max-w-64 flex-wrap gap-1.5">
+                                        @forelse ($customer->statusAssignments as $assignment)
+                                            <flux:badge
+                                                wire:key="customer-{{ $customer->id }}-status-{{ $assignment->status->value }}"
+                                                :color="$assignment->status->color()" class="shrink-0">
+                                                {{ $assignment->status->label() }}
+                                            </flux:badge>
+                                        @empty
+                                            {{-- Fallback untuk data lama yang belum memiliki assignment --}}
+                                            <flux:badge :color="$customer->status->color()" class="shrink-0">
+                                                {{ $customer->status->label() }}
+                                            </flux:badge>
+                                        @endforelse
+                                    </div>
                                 </td>
 
                                 {{-- ACTION --}}
@@ -1587,15 +1617,54 @@ new class extends Component {
 
             </div>
 
-            <flux:select wire:model="editStatus" label="Status">
 
-                @foreach ($statuses as $customerStatus)
-                    <flux:select.option :value="$customerStatus->value">
-                        {{ $customerStatus->label() }}
-                    </flux:select.option>
-                @endforeach
+            {{-- STATUS --}}
+            <div class="space-y-2" x-data="{ open: false }">
+                <flux:heading size="sm">Status Customer</flux:heading>
 
-            </flux:select>
+                <div class="relative">
+                    <button type="button" @click="open = !open"
+                        class="flex w-full items-center justify-between gap-3 rounded-lg border border-zinc-200 bg-white px-3 py-2.5 text-left text-sm transition hover:bg-zinc-50 dark:border-zinc-700 dark:bg-zinc-900 dark:hover:bg-zinc-800">
+                        <span class="min-w-0">
+                            <span class="block font-medium text-zinc-800 dark:text-zinc-100">
+                                Pilih status customer
+                            </span>
+
+                            <span class="mt-0.5 block truncate text-xs text-zinc-500">
+                                {{ count($editStatus) }} status dipilih
+                            </span>
+                        </span>
+
+                        <flux:icon name="chevron-down" class="size-4 shrink-0 transition-transform"
+                            x-bind:class="{ 'rotate-180': open }" />
+                    </button>
+
+                    <div x-cloak x-show="open" @click.outside="open = false" x-transition
+                        class="absolute inset-x-0 z-20 mt-2 max-h-64 overflow-y-auto rounded-lg border border-zinc-200 bg-white p-2 shadow-lg dark:border-zinc-700 dark:bg-zinc-900">
+                        @foreach ($statuses as $customerStatus)
+                            <label wire:key="edit-customer-status-{{ $customerStatus->value }}"
+                                class="flex cursor-pointer items-center gap-3 rounded-md px-3 py-2 transition hover:bg-zinc-100 dark:hover:bg-zinc-800">
+                                <input type="checkbox" value="{{ $customerStatus->value }}"
+                                    wire:model.live="editStatus"
+                                    class="size-4 shrink-0 rounded border-zinc-300 text-indigo-600 focus:ring-indigo-500 dark:border-zinc-600 dark:bg-zinc-800">
+
+                                <span class="flex-1 text-sm text-zinc-700 dark:text-zinc-200">
+                                    {{ $customerStatus->label() }}
+                                </span>
+
+                                @if (in_array($customerStatus->value, $editStatus, true))
+                                    <flux:icon name="check" class="size-4 text-indigo-600 dark:text-indigo-400" />
+                                @endif
+                            </label>
+                        @endforeach
+                    </div>
+                </div>
+
+                @error('editStatus')
+                    <p class="text-sm text-red-600">{{ $message }}</p>
+                @enderror
+            </div>
+
 
             <div class="grid gap-5 sm:grid-cols-2">
 

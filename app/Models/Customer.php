@@ -5,6 +5,8 @@ namespace App\Models;
 use App\Enums\CustomerStatus;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Support\Facades\DB;
 
 class Customer extends Model
 {
@@ -37,6 +39,59 @@ class Customer extends Model
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);
+    }
+
+    /**
+     * @return HasMany<CustomerStatusAssignment, $this>
+     */
+    public function statusAssignments(): HasMany
+    {
+        return $this->hasMany(CustomerStatusAssignment::class);
+    }
+
+    /**
+     * @param  array<int, string>  $statuses
+     */
+    public function syncStatuses(array $statuses): void
+    {
+        $values = collect($statuses)
+            ->unique()
+            ->values()
+            ->all();
+
+        if ($values === []) {
+            throw new \InvalidArgumentException(
+                'Customer harus memiliki minimal satu status.'
+            );
+        }
+
+        foreach ($values as $value) {
+            if (CustomerStatus::tryFrom($value) === null) {
+                throw new \InvalidArgumentException(
+                    'Status customer tidak valid.'
+                );
+            }
+        }
+
+        DB::transaction(function () use ($values): void {
+            $currentPrimary = $this->status;
+
+            $primary = in_array($currentPrimary, $values, true)
+                ? $currentPrimary
+                : $values[0];
+
+            $this->statusAssignments()->delete();
+
+            $this->statusAssignments()->createMany(
+                array_map(
+                    fn (string $value): array => ['status' => $value],
+                    $values
+                )
+            );
+
+            $this->status = $primary;
+            $this->save();
+        });
     }
 
     public function getFormattedAmountAttribute(): string
