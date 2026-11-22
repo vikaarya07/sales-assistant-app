@@ -366,10 +366,10 @@ new class extends Component {
 
                     <div class="flex flex-wrap gap-2">
                         @foreach ([
-        'Selamat pagi' => 'Pagi',
-        'Selamat siang' => 'Siang',
-        'Selamat sore' => 'Sore',
-    ] as $value => $label)
+                                'Selamat pagi' => 'Pagi',
+                                'Selamat siang' => 'Siang',
+                                'Selamat sore' => 'Sore',
+                            ] as $value => $label)
                             <flux:button type="button" size="sm"
                                 :variant="$greeting === $value ? 'primary' : 'ghost'"
                                 wire:click="$set('greeting', '{{ $value }}')">

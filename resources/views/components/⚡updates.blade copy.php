@@ -313,9 +313,7 @@ new class extends Component
                     <div class="flex flex-col gap-5 sm:flex-row sm:items-start sm:justify-between">
 
                         <div>
-
                             <div class="flex flex-wrap items-center gap-2">
-
                                 <flux:badge color="violet" icon="rocket-launch">
                                     New
                                 </flux:badge>
@@ -323,7 +321,6 @@ new class extends Component
                                 <flux:badge variant="outline">
                                     v1.0.0
                                 </flux:badge>
-
                             </div>
 
                             <flux:heading size="lg" class="mt-4">
@@ -333,7 +330,6 @@ new class extends Component
                             <flux:text class="mt-1">
                                 20 September 2026
                             </flux:text>
-
                         </div>
 
                         <div
@@ -342,7 +338,6 @@ new class extends Component
                         </div>
 
                     </div>
-
 
                     <div class="mt-7 space-y-3">
 
@@ -399,12 +394,10 @@ new class extends Component
 
         </section>
 
-
-        {{-- CHANGELOG --}}
+        <!-- CHANGELOG -->
         <section class="mt-20">
 
             <div class="mb-8">
-
                 <flux:badge color="violet" icon="clock">
                     Version History
                 </flux:badge>
@@ -416,16 +409,14 @@ new class extends Component
                 <flux:text class="mt-1">
                     Ringkasan perkembangan aplikasi dari waktu ke waktu.
                 </flux:text>
-
             </div>
-
 
             <div class="relative ml-2 space-y-10 border-l-2 border-zinc-200 dark:border-zinc-800">
 
-                {{-- VERSION 1.2 --}}
+                <!-- ERSION 1.2 -->
                 <div class="relative pl-8">
 
-                    {{-- Timeline dot --}}
+                    <!-- Timeline dot -->
                     <div
                         class="absolute -left-2.25 top-1 flex size-4 items-center justify-center rounded-full bg-white ring-4 ring-emerald-100 dark:bg-zinc-950 dark:ring-emerald-500/10">
                         <div class="size-2 rounded-full bg-emerald-500"></div>
@@ -469,8 +460,7 @@ new class extends Component
 
                 </div>
 
-
-                {{-- VERSION 1.1 --}}
+                <!-- VERSION 1.1 -->
                 <div class="relative pl-8">
 
                     <div
@@ -508,8 +498,7 @@ new class extends Component
 
                 </div>
 
-
-                {{-- VERSION 1.0 --}}
+                <!-- VERSION 1.0 -->
                 <div class="relative pl-8">
 
                     <div
@@ -559,14 +548,13 @@ new class extends Component
 
         </section>
 
-
-        {{-- UPCOMING --}}
+        <!-- UPCOMING -->
         <section class="mt-20">
 
             <flux:card
                 class="relative overflow-hidden border-amber-200/70 bg-white p-6 shadow-sm sm:p-8 dark:border-amber-500/20 dark:bg-zinc-900">
 
-                {{-- Background glow --}}
+                <!-- Background glow -->
                 <div class="absolute -right-20 -top-20 size-56 rounded-full bg-amber-500/10 blur-3xl"></div>
 
                 <div class="relative">
@@ -597,7 +585,6 @@ new class extends Component
 
                     </div>
 
-
                     <div class="mt-7 grid gap-3 sm:grid-cols-2">
 
                         <div
@@ -618,7 +605,6 @@ new class extends Component
 
                         </div>
 
-
                         <div
                             class="group rounded-xl border border-zinc-200 bg-zinc-50 p-4 transition duration-300 hover:border-amber-200 hover:bg-amber-50/50 dark:border-zinc-800 dark:bg-zinc-950 dark:hover:border-amber-500/30">
 
@@ -637,7 +623,6 @@ new class extends Component
 
                         </div>
 
-
                         <div
                             class="group rounded-xl border border-zinc-200 bg-zinc-50 p-4 transition duration-300 hover:border-amber-200 hover:bg-amber-50/50 dark:border-zinc-800 dark:bg-zinc-950 dark:hover:border-amber-500/30">
 
@@ -655,7 +640,6 @@ new class extends Component
                             </div>
 
                         </div>
-
 
                         <div
                             class="group rounded-xl border border-zinc-200 bg-zinc-50 p-4 transition duration-300 hover:border-amber-200 hover:bg-amber-50/50 dark:border-zinc-800 dark:bg-zinc-950 dark:hover:border-amber-500/30">
@@ -683,8 +667,7 @@ new class extends Component
 
         </section>
 
-
-        {{-- FOOTER --}}
+        <!-- FOOTER -->
         <footer class="mt-20 border-t border-zinc-200 py-8 text-center dark:border-zinc-800">
 
             <flux:text>

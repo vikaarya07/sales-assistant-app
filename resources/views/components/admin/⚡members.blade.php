@@ -308,7 +308,7 @@ new class extends Component {
                         <tr wire:key="member-{{ $member->id }}">
 
                             {{-- Member --}}
-                            <td class="px-4 py-4">
+                            <td class="px-2 py-2">
                                 <div class="flex items-center gap-3">
                                     <flux:avatar :name="$member->name" :initials="$member->initials()"
                                         color="auto" />
@@ -326,31 +326,31 @@ new class extends Component {
                             </td>
 
                             {{-- Username --}}
-                            <td class="px-4 py-4">
+                            <td class="px-2 py-2">
                                 {{ $member->username }}
                             </td>
 
                             {{-- Email --}}
-                            <td class="px-4 py-4">
+                            <td class="px-2 py-2">
                                 {{ $member->email }}
                             </td>
 
                             {{-- Role --}}
-                            <td class="px-4 py-4">
+                            <td class="px-2 py-2">
                                 <flux:badge :color="$member->role->color()">
                                     {{ $member->role->label() }}
                                 </flux:badge>
                             </td>
 
                             {{-- Status --}}
-                            <td class="px-4 py-4">
+                            <td class="px-2 py-2">
                                 <flux:badge :color="$member->status->color()">
                                     {{ $member->status->label() }}
                                 </flux:badge>
                             </td>
 
                             {{-- Actions --}}
-                            <td class="px-4 py-4">
+                            <td class="px-2 py-2">
                                 <div class="flex justify-end gap-2">
                                     <flux:button size="sm" variant="ghost"
                                         :icon="$member->status === UserStatus::ACTIVE ? 'pause' : 'play'"

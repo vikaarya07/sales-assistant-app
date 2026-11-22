@@ -14,7 +14,7 @@ new class extends Component {
 
     public string $importText = '';
     public string $search = '';
-    public string $status = '';
+    public array $selectedStatuses = [];
     public array $result = [];
     public string $greeting = 'Selamat pagi';
     public string $address = 'Bapak';
@@ -397,7 +397,7 @@ new class extends Component {
         $this->clearSelection();
     }
 
-    public function updatedStatus(): void
+    public function updatedSelectedStatuses(): void
     {
         $this->resetPage();
         $this->clearSelection();
@@ -430,6 +430,10 @@ new class extends Component {
 
     private function getCurrentPageCustomerIds(): array
     {
+        $validStatuses = array_map(fn(CustomerStatus $status) => $status->value, CustomerStatus::cases());
+
+        $selectedStatuses = array_values(array_intersect($this->selectedStatuses, $validStatuses));
+
         return auth()
             ->user()
             ->customers()
@@ -442,8 +446,9 @@ new class extends Component {
                         ->orWhere('branch', 'like', '%' . $this->search . '%');
                 });
             })
-            ->when($this->status, function ($query) {
-                $query->where('status', $this->status);
+            ->when($selectedStatuses !== [], fn($query) => $query->whereIn('status', $selectedStatuses))
+            ->when($this->createdDate, function ($query) {
+                $query->whereDate('created_at', $this->createdDate);
             })
             ->latest()
             ->limit(20)
@@ -739,6 +744,14 @@ new class extends Component {
         $this->message = $this->originalMessage;
     }
 
+    public function clearStatusFilter(): void
+    {
+        $this->selectedStatuses = [];
+
+        $this->resetPage();
+        $this->clearSelection();
+    }
+
     public function updatedGreeting(): void
     {
         $this->generateMessage();
@@ -849,11 +862,13 @@ new class extends Component {
                         ->orWhere('branch', 'like', '%' . $this->search . '%');
                 });
             })
-            ->when($this->status, function ($query) {
-                $customerStatus = CustomerStatus::tryFrom($this->status);
+            ->when($this->selectedStatuses, function ($query) {
+                $validStatuses = array_map(fn(CustomerStatus $status) => $status->value, CustomerStatus::cases());
 
-                if ($customerStatus) {
-                    $query->where('status', $customerStatus->value);
+                $selectedStatuses = array_values(array_intersect($this->selectedStatuses, $validStatuses));
+
+                if ($selectedStatuses !== []) {
+                    $query->whereIn('status', $selectedStatuses);
                 }
             })
             ->when($this->createdDate, function ($query) {
@@ -1064,27 +1079,97 @@ new class extends Component {
                         @endif
                     </div>
 
-                    {{-- Status --}}
-                    <div class="flex items-end gap-2">
-                        <flux:select wire:model.live="status" label="Status">
-                            <flux:select.option value="">
-                                Semua Status
-                            </flux:select.option>
+                    {{-- STATUS MULTI-SELECT --}}
+                    <div wire:key="customer-status-filter" x-data="{ open: false }" x-on:click.outside="open = false"
+                        x-on:keydown.escape.window="open = false" class="flex flex-col gap-2">
+                        <span class="text-sm font-medium">
+                            Status
+                        </span>
 
-                            @foreach ($statuses as $customerStatus)
-                                <flux:select.option :value="$customerStatus->value">
-                                    {{ $customerStatus->label() }}
-                                </flux:select.option>
-                            @endforeach
-                        </flux:select>
+                        <div class="relative w-64">
+                            {{-- TRIGGER --}}
+                            <flux:button type="button" variant="outline" x-on:click="open = !open"
+                                x-bind:aria-expanded="open">
+                                <span class="flex min-w-0 items-center gap-2">
+                                    <flux:icon name="funnel" class="size-4 shrink-0 text-indigo-500" />
 
-                        @if ($status)
-                            <flux:button type="button" variant="ghost" icon="arrow-path"
-                                wire:click="$set('status', '')">
-                                Reset
+                                    <span class="truncate font-medium text-zinc-700 dark:text-zinc-200">
+                                        @if (count($selectedStatuses) === 0)
+                                            Semua Status
+                                        @else
+                                            {{ count($selectedStatuses) }} status dipilih
+                                        @endif
+                                    </span>
+                                </span>
+
+                                <flux:icon name="chevron-down" x-bind:class="{ 'rotate-180': open }"
+                                    class="size-4 shrink-0 text-zinc-400 transition-transform duration-200" />
                             </flux:button>
+
+                            {{-- DROPDOWN --}}
+                            <div x-cloak x-show="open" x-transition
+                                class="absolute left-0 top-full z-50 mt-2 w-full overflow-hidden rounded-lg border border-zinc-200 bg-white shadow-xl shadow-zinc-900/10 dark:border-zinc-700 dark:bg-zinc-900">
+                                {{-- HEADER --}}
+                                <div
+                                    class="border-b border-zinc-100 bg-zinc-50/80 px-3 py-3 dark:border-zinc-800 dark:bg-zinc-800/50">
+                                    <div class="flex flex-col gap-2">
+                                        <span class="text-xs font-semibold uppercase tracking-wide text-zinc-500">
+                                            Filter Status
+                                        </span>
+                                        <div class="flex items-center justify-between gap-2">
+                                            <span
+                                                class="rounded-full bg-indigo-100 px-2 py-0.5 text-xs font-semibold text-indigo-700 dark:bg-indigo-500/15 dark:text-indigo-300">
+                                                {{ count($selectedStatuses) }}/{{ count($statuses) }}
+                                            </span>
+                                            <flux:button type="button" size="xs" variant="outline"
+                                                color="rose" icon="x-mark" wire:click="clearStatusFilter">
+                                                Hapus Semua
+                                            </flux:button>
+                                        </div>
+                                    </div>
+
+                                </div>
+
+                                {{-- CHECKBOX LIST --}}
+                                <div class="max-h-64 space-y-1 overflow-y-auto p-2">
+                                    @foreach ($statuses as $customerStatus)
+                                        <label wire:key="status-filter-{{ $customerStatus->value }}"
+                                            class="flex cursor-pointer items-center gap-3 rounded-lg px-3 py-2.5 transition hover:bg-indigo-50 dark:hover:bg-indigo-500/10">
+                                            <input type="checkbox" value="{{ $customerStatus->value }}"
+                                                wire:model.live="selectedStatuses"
+                                                class="size-4 shrink-0 rounded border-zinc-300 text-indigo-600 focus:ring-2 focus:ring-indigo-500 dark:border-zinc-600 dark:bg-zinc-800">
+
+                                            <span class="min-w-0 flex-1 text-xs text-zinc-700 dark:text-zinc-200">
+                                                {{ $customerStatus->label() }}
+                                            </span>
+
+                                            @if (in_array($customerStatus->value, $selectedStatuses))
+                                                <flux:icon name="check"
+                                                    class="size-4 shrink-0 text-indigo-600 dark:text-indigo-400" />
+                                            @endif
+                                        </label>
+                                    @endforeach
+                                </div>
+
+                                {{-- FOOTER --}}
+                                <div
+                                    class="border-t border-zinc-100 bg-zinc-50/80 p-3 dark:border-zinc-800 dark:bg-zinc-800/50">
+                                    <button type="button" x-on:click="open = false"
+                                        class="flex w-full items-center justify-center gap-2 rounded-lg bg-indigo-600 px-3 py-2.5 text-sm font-medium text-white transition hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 dark:focus:ring-offset-zinc-900">
+                                        <flux:icon name="check-circle" class="size-4" />
+                                        Selesai
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+
+                        @if (count($selectedStatuses) > 0)
+                            <span class="text-xs text-zinc-500">
+                                {{ count($selectedStatuses) }} status aktif
+                            </span>
                         @endif
                     </div>
+
                 </div>
             </div>
         </flux:card>
@@ -1173,9 +1258,12 @@ new class extends Component {
                             </th>
 
                             {{-- CUSTOMER --}}
-                            <flux:table.column class="cursor-pointer" wire:click="sortBy('name')">
+                            <flux:table.column class="max-w-52 cursor-pointer whitespace-normal"
+                                wire:click="sortBy('name')">
                                 <div class="flex items-center gap-1">
-                                    Customer
+                                    <span class="max-w-40 whitespace-normal wrap-break-words">
+                                        Customer
+                                    </span>
 
                                     @include('components.sort-icon', [
                                         'field' => 'name',
@@ -1234,7 +1322,7 @@ new class extends Component {
                                 class="group border-b border-indigo-50 transition duration-200 last:border-0 hover:bg-linear-to-r hover:from-indigo-50/30 hover:via-violet-50/20 hover:to-fuchsia-50/20 dark:border-zinc-800 dark:hover:from-indigo-500/5 dark:hover:via-violet-500/5 dark:hover:to-fuchsia-500/5">
 
                                 {{-- CHECKBOX --}}
-                                <td class="px-4 py-4">
+                                <td class="px-2 py-2">
 
                                     <input type="checkbox" value="{{ $customer->id }}"
                                         wire:model.live="selectedCustomers"
@@ -1243,34 +1331,27 @@ new class extends Component {
                                 </td>
 
                                 {{-- CUSTOMER --}}
-                                <td class="px-4 py-4">
-
+                                <td class="px-2 py-2">
                                     <div class="flex items-center gap-3">
-
-                                        <div class="relative">
-
+                                        <div class="relative shrink-0">
                                             <flux:avatar :name="$customer->name" color="auto" size="sm" />
-
                                         </div>
 
-                                        <div class="min-w-0">
-
-                                            <div class="truncate font-medium text-zinc-900 dark:text-white">
+                                        <div class="min-w-0 max-w-52">
+                                            <div
+                                                class="whitespace-normal wrap-break-words font-medium text-zinc-900 dark:text-white">
                                                 {{ $customer->name }}
                                             </div>
 
-                                            <div class="mt-0.5 font-mono text-xs text-zinc-500">
+                                            <div class="mt-0.5 break-all font-mono text-xs text-zinc-500">
                                                 +{{ $customer->phone_normalized }}
                                             </div>
-
                                         </div>
-
                                     </div>
-
                                 </td>
 
                                 {{-- DATE --}}
-                                <td class="px-4 py-4 whitespace-nowrap">
+                                <td class="px-2 py-2 whitespace-nowrap">
                                     <div class="font-medium text-zinc-800 dark:text-zinc-200">
                                         {{ $customer->created_at->locale('id')->translatedFormat('l, d F Y') }}
                                     </div>
@@ -1281,7 +1362,7 @@ new class extends Component {
                                 </td>
 
                                 {{-- CONTRACT --}}
-                                <td class="px-4 py-4">
+                                <td class="px-2 py-2">
 
                                     <span
                                         class="rounded-lg bg-indigo-50 px-2 py-1 font-mono text-xs text-indigo-700 dark:bg-indigo-500/10 dark:text-indigo-300">
@@ -1291,7 +1372,7 @@ new class extends Component {
                                 </td>
 
                                 {{-- AMOUNT --}}
-                                <td class="px-4 py-4 whitespace-nowrap">
+                                <td class="px-2 py-2 whitespace-nowrap">
 
                                     <span class="font-medium text-zinc-800 dark:text-zinc-200">
                                         {{ $customer->formatted_amount }}
@@ -1300,7 +1381,7 @@ new class extends Component {
                                 </td>
 
                                 {{-- BRANCH --}}
-                                <td class="px-4 py-4">
+                                <td class="px-2 py-2">
 
                                     <flux:badge icon="building-office-2" variant="outline">
                                         {{ $customer->branch }}
@@ -1309,7 +1390,7 @@ new class extends Component {
                                 </td>
 
                                 {{-- STATUS --}}
-                                <td class="px-4 py-4">
+                                <td class="px-2 py-2">
 
                                     <flux:badge :color="$customer->status->color()" class="shrink-0">
                                         {{ $customer->status->label() }}
@@ -1318,7 +1399,7 @@ new class extends Component {
                                 </td>
 
                                 {{-- ACTION --}}
-                                <td class="px-4 py-4">
+                                <td class="px-2 py-2">
 
                                     <div class="flex justify-end gap-2">
 

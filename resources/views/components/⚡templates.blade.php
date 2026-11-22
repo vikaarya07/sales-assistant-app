@@ -254,19 +254,16 @@ new class extends Component {
                                 class="group border-b border-indigo-50 transition duration-200 last:border-0 hover:bg-linear-to-r hover:from-indigo-50/30 hover:via-violet-50/20 hover:to-fuchsia-50/20 dark:border-zinc-800 dark:hover:from-indigo-500/5 dark:hover:via-violet-500/5 dark:hover:to-fuchsia-500/5">
 
                                 {{-- TEMPLATE --}}
-                                <td class="px-4 py-4">
+                                <td class="px-2 py-2">
 
                                     <div class="flex items-start gap-3">
 
                                         <div
                                             class="flex size-10 shrink-0 items-center justify-center rounded-xl bg-linear-to-br from-indigo-100/80 via-violet-100/70 to-fuchsia-100/60 text-indigo-600 ring-1 ring-indigo-200/60 transition duration-300 group-hover:scale-105 group-hover:shadow-md group-hover:shadow-indigo-500/10 dark:from-indigo-500/10 dark:via-violet-500/10 dark:to-fuchsia-500/10 dark:text-indigo-400 dark:ring-indigo-500/15">
-
                                             <flux:icon name="document-text" class="size-5" />
-
                                         </div>
 
                                         <div class="min-w-0">
-
                                             <div class="font-semibold text-zinc-900 dark:text-white">
                                                 {{ $template->name }}
                                             </div>
@@ -275,19 +272,15 @@ new class extends Component {
                                                 Dibuat
                                                 {{ $template->created_at->format('d M Y H:i') }}
                                             </div>
-
                                         </div>
 
                                     </div>
 
                                 </td>
 
-
                                 {{-- PREVIEW --}}
-                                <td class="px-4 py-4">
-
+                                <td class="px-2 py-2">
                                     <div class="max-w-xl">
-
                                         <div
                                             class="rounded-lg border border-indigo-100/60 bg-linear-to-r from-indigo-50/40 via-violet-50/30 to-fuchsia-50/20 px-3 py-2 text-sm leading-relaxed text-zinc-600 transition group-hover:border-violet-200/60 dark:border-indigo-500/10 dark:from-indigo-500/10 dark:via-violet-500/10 dark:to-fuchsia-500/10 dark:text-zinc-400 dark:group-hover:border-violet-500/10">
 
@@ -296,15 +289,11 @@ new class extends Component {
                                             </span>
 
                                         </div>
-
                                     </div>
-
                                 </td>
 
-
                                 {{-- STATUS --}}
-                                <td class="px-4 py-4">
-
+                                <td class="px-2 py-2">
                                     @if ($template->is_active)
                                         <flux:badge color="green" icon="check"
                                             class="shadow-sm shadow-emerald-500/10">
@@ -315,27 +304,15 @@ new class extends Component {
                                             Nonaktif
                                         </flux:badge>
                                     @endif
-
                                 </td>
 
-
                                 {{-- ACTION --}}
-                                <td class="px-4 py-4">
+                                <td class="px-2 py-2">
+                                    <div class="flex items-center justify-end gap-2">
 
-                                    <div class="flex justify-end gap-2">
-
-                                        {{-- TOGGLE --}}
-                                        <flux:button size="sm" variant="ghost"
-                                            :icon="$template->is_active ? 'eye-slash' : 'eye'"
-                                            wire:click="toggleActive({{ $template->id }})"
-                                            class="{{ $template->is_active
-                                                ? 'hover:bg-amber-50 hover:text-amber-600 dark:hover:bg-amber-500/10 dark:hover:text-amber-400'
-                                                : 'hover:bg-emerald-50 hover:text-emerald-600 dark:hover:bg-emerald-500/10 dark:hover:text-emerald-400' }}">
-
-                                            {{ $template->is_active ? 'Nonaktifkan' : 'Aktifkan' }}
-
-                                        </flux:button>
-
+                                        {{-- TOGGLE ACTIVE --}}
+                                        <flux:switch :checked="$template->is_active"
+                                            wire:click="toggleActive({{ $template->id }})" />
 
                                         {{-- EDIT --}}
                                         <flux:button size="sm" variant="ghost" color="indigo" icon="pencil"
@@ -349,7 +326,6 @@ new class extends Component {
                                         </flux:button>
 
                                     </div>
-
                                 </td>
 
                             </tr>
@@ -357,7 +333,6 @@ new class extends Component {
                         @empty
 
                             <tr>
-
                                 <td colspan="4">
 
                                     <div class="flex flex-col items-center justify-center py-20 text-center">
@@ -390,7 +365,6 @@ new class extends Component {
                                     </div>
 
                                 </td>
-
                             </tr>
                         @endforelse
 
@@ -425,11 +399,9 @@ new class extends Component {
                         class="flex size-11 shrink-0 items-center justify-center rounded-xl bg-linear-to-br from-indigo-400 via-violet-500 to-fuchsia-500 text-white shadow-lg shadow-indigo-500/15">
 
                         <flux:icon :name="$editingId ? 'pencil' : 'plus'" class="size-5" />
-
                     </div>
 
                     <div>
-
                         <flux:heading size="lg">
                             {{ $editingId ? 'Edit Template' : 'Add Template' }}
                         </flux:heading>
@@ -438,7 +410,6 @@ new class extends Component {
                             Buat template pesan yang dapat digunakan
                             saat menghubungi customer.
                         </flux:text>
-
                     </div>
 
                 </div>
@@ -664,23 +635,18 @@ Info lebih lanjut:
                     class="rounded-xl border border-violet-200/60 bg-linear-to-r from-indigo-50/50 via-violet-50/50 to-fuchsia-50/30 p-4 dark:border-violet-500/10 dark:from-indigo-500/5 dark:via-violet-500/5 dark:to-fuchsia-500/5">
 
                     <div class="flex gap-3">
-
                         <div
                             class="flex size-8 shrink-0 items-center justify-center rounded-lg bg-violet-100/80 text-violet-600 dark:bg-violet-500/10 dark:text-violet-400">
 
                             <flux:icon name="information-circle" class="size-5" />
-
                         </div>
 
                         <div>
-
                             <flux:text class="text-xs leading-relaxed">
                                 Variable akan otomatis diganti dengan data customer
                                 ketika pesan dibuat di WhatsApp Composer.
                             </flux:text>
-
                         </div>
-
                     </div>
 
                 </div>
