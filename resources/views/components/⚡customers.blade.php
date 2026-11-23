@@ -120,7 +120,7 @@ new class extends Component {
 
                 $newCustomer = auth()->user()->customers()->create($customer);
 
-                $newCustomer->syncStatuses([CustomerStatus::NEW]);
+                $newCustomer->syncStatuses([CustomerStatus::NEW->value]);
 
                 $created++;
             }
@@ -230,7 +230,7 @@ new class extends Component {
                 'status' => CustomerStatus::NEW,
             ]);
 
-        $newCustomer->syncStatuses([CustomerStatus::NEW]);
+        $newCustomer->syncStatuses([CustomerStatus::NEW->value]);
 
         $this->closeManualCustomer();
         $this->resetPage();
@@ -525,10 +525,19 @@ new class extends Component {
         $this->editContractNumber = $customer->contract_number;
         $this->editAmount = $this->formatIdr($customer->amount);
         $this->editBranch = $customer->branch;
-        $this->editStatus = $customer->statusAssignments()->pluck('status')->all();
+
+        $this->editStatus = $customer
+            ->statusAssignments()
+            ->pluck('status')
+            ->map(function ($status): string {
+                return $status instanceof CustomerStatus ? $status->value : (string) $status;
+            })
+            ->unique()
+            ->values()
+            ->all();
 
         if ($this->editStatus === []) {
-            $this->editStatus = [$customer->status->value];
+            $this->editStatus = [$customer->status instanceof CustomerStatus ? $customer->status->value : (string) $customer->status];
         }
 
         $this->resetValidation();
@@ -538,36 +547,7 @@ new class extends Component {
 
     public function saveCustomer(): void
     {
-        $validated = $this->validate(
-            [
-                'editName' => ['required', 'string', 'max:255'],
-                'editPhone' => ['required', 'string', 'max:20'],
-                'editContractNumber' => ['required', 'digits:17'],
-                'editAmount' => ['required', 'string'],
-                'editBranch' => ['required', 'string', 'max:255'],
-
-                'editStatus' => ['required', 'array', 'min:1'],
-                'editStatus.*' => ['required', 'string', 'distinct:strict', Rule::enum(CustomerStatus::class)],
-            ],
-            [
-                'editName.required' => 'Nama pelanggan wajib diisi.',
-                'editPhone.required' => 'Nomor WhatsApp wajib diisi.',
-                'editContractNumber.required' => 'Nomor kontrak wajib diisi.',
-                'editContractNumber.digits' => 'Nomor kontrak harus terdiri dari 17 digit.',
-                'editAmount.required' => 'Jumlah pinjaman wajib diisi.',
-                'editBranch.required' => 'Cabang wajib diisi.',
-                'editStatus.required' => 'Pilih minimal satu status pelanggan.',
-                'editStatus.array' => 'Status pelanggan tidak valid.',
-                'editStatus.min' => 'Pilih minimal satu status pelanggan.',
-                'editStatus.*.required' => 'Status pelanggan tidak boleh kosong.',
-                'editStatus.*.distinct' => 'Status pelanggan tidak boleh duplikat.',
-                'editStatus.*.enum' => 'Terdapat status pelanggan yang tidak valid.',
-            ],
-        );
-
-        if (!$this->editingCustomerId) {
-            $this->addError('editName', 'Pelanggan yang akan diedit tidak ditemukan.');
-
+        if ($this->editingCustomerId === null) {
             return;
         }
 
@@ -575,71 +555,92 @@ new class extends Component {
 
         $this->authorize('update', $customer);
 
-        // Normalisasi nomor WhatsApp.
+        $validated = $this->validate(
+            [
+                'editName' => ['required', 'string', 'max:255'],
+                'editPhone' => ['required', 'string', 'max:20'],
+                'editContractNumber' => ['required', 'string', 'digits:17'],
+                'editAmount' => ['required', 'string'],
+                'editBranch' => ['required', 'string', 'max:255'],
+                'editStatus' => ['required', 'array', 'min:1'],
+                'editStatus.*' => ['required', 'string', 'distinct', Rule::enum(CustomerStatus::class)],
+            ],
+            [
+                'editName.required' => 'Nama customer wajib diisi.',
+                'editPhone.required' => 'Nomor WhatsApp wajib diisi.',
+                'editContractNumber.required' => 'Nomor kontrak wajib diisi.',
+                'editContractNumber.digits' => 'Nomor kontrak harus tepat 17 digit.',
+                'editAmount.required' => 'Nominal wajib diisi.',
+                'editBranch.required' => 'Cabang wajib diisi.',
+                'editStatus.required' => 'Pilih minimal satu status.',
+                'editStatus.min' => 'Pilih minimal satu status.',
+                'editStatus.*.distinct' => 'Status tidak boleh duplikat.',
+                'editStatus.*.enum' => 'Terdapat status customer yang tidak valid.',
+            ],
+        );
+
         $phoneNormalized = $this->normalizePhone($validated['editPhone']);
 
-        if (!$phoneNormalized) {
-            $this->addError('editPhone', 'Nomor WhatsApp tidak valid. Gunakan format 08xxxxxxxxxx atau 628xxxxxxxxxx.');
+        if ($phoneNormalized === null) {
+            $this->addError('editPhone', 'Nomor WhatsApp tidak valid. Gunakan nomor Indonesia yang benar.');
 
             return;
         }
 
-        // Pastikan nomor WhatsApp tidak digunakan pelanggan lain.
-        $phoneExists = auth()->user()->customers()->where('phone_normalized', $phoneNormalized)->where('id', '!=', $customer->id)->exists();
+        $amount = $this->unformatIdr($validated['editAmount']);
 
-        if ($phoneExists) {
-            $this->addError('editPhone', 'Nomor WhatsApp sudah terdaftar pada pelanggan lain.');
-
-            return;
-        }
-
-        // Konversi nominal Rupiah menjadi angka.
-        $amount = preg_replace('/\D/', '', $validated['editAmount']);
-
-        if ($amount === null || $amount === '' || !is_numeric($amount)) {
-            $this->addError('editAmount', 'Jumlah pinjaman tidak valid.');
+        if ($amount === '') {
+            $this->addError('editAmount', 'Nominal tidak valid.');
 
             return;
         }
 
         if ((int) $amount > 30000000) {
-            $this->addError('editAmount', 'Jumlah pinjaman maksimal Rp30.000.000.');
+            $this->addError('editAmount', 'Nominal maksimal Rp30.000.000.');
 
             return;
         }
 
-        // Validasi dan normalisasi seluruh status yang dipilih.
-        $validStatuses = collect($validated['editStatus'])->map(fn(string $status) => CustomerStatus::tryFrom($status))->filter()->unique(fn(CustomerStatus $status) => $status->value)->values();
+        $duplicate = auth()->user()->customers()->where('phone_normalized', $phoneNormalized)->where('id', '!=', $customer->id)->exists();
 
-        if ($validStatuses->isEmpty()) {
-            $this->addError('editStatus', 'Pilih minimal satu status pelanggan yang valid.');
+        if ($duplicate) {
+            $this->addError('editPhone', 'Nomor WhatsApp sudah digunakan customer lain.');
 
             return;
         }
 
-        // Status utama tetap disimpan pada kolom customers.status
-        // untuk menjaga kompatibilitas dengan fitur lama.
-        $primaryStatus = $validStatuses->first();
+        $statusValues = collect($validated['editStatus'])->unique()->values()->all();
 
-        DB::transaction(function () use ($customer, $validated, $phoneNormalized, $amount, $primaryStatus, $validStatuses): void {
+        foreach ($statusValues as $status) {
+            if (CustomerStatus::tryFrom($status) === null) {
+                $this->addError('editStatus', 'Terdapat status customer yang tidak valid.');
+
+                return;
+            }
+        }
+
+        if ($statusValues === []) {
+            $this->addError('editStatus', 'Pilih minimal satu status.');
+
+            return;
+        }
+
+        DB::transaction(function () use ($customer, $validated, $phoneNormalized, $amount, $statusValues): void {
             $customer->update([
-                'name' => trim($validated['editName']),
-                'phone' => trim($validated['editPhone']),
+                'name' => $validated['editName'],
+                'phone' => $validated['editPhone'],
                 'phone_normalized' => $phoneNormalized,
-                'contract_number' => trim($validated['editContractNumber']),
+                'contract_number' => $validated['editContractNumber'],
                 'amount' => (int) $amount,
-                'branch' => trim($validated['editBranch']),
-                'status' => $primaryStatus,
+                'branch' => $validated['editBranch'],
             ]);
 
-            // Sinkronkan seluruh status yang dipilih.
-            // Memerlukan method syncStatuses() pada model Customer.
-            $customer->syncStatuses($validStatuses->map(fn(CustomerStatus $status): string => $status->value)->all());
+            $customer->syncStatuses($statusValues);
         });
 
         $this->closeEditCustomer();
 
-        $this->dispatch('swal:success', title: 'Berhasil!', text: 'Data pelanggan berhasil diperbarui.');
+        $this->dispatch('swal', type: 'success', message: 'Data customer dan status berhasil diperbarui.');
     }
 
     public function closeEditCustomer(): void
@@ -670,11 +671,11 @@ new class extends Component {
 
         $newStatus = CustomerStatus::tryFrom($status);
 
-        if (!$newStatus) {
+        if ($newStatus === null) {
             return;
         }
 
-        $customer->syncStatuses([$newStatus]);
+        $customer->syncStatuses([$newStatus->value]);
 
         $this->dispatch('swal', type: 'success', message: 'Status customer berhasil diperbarui.');
     }
@@ -684,7 +685,6 @@ new class extends Component {
     | WhatsApp Composer
     |--------------------------------------------------------------------------
     */
-
     public function openComposer(int $customerId): void
     {
         $customer = auth()->user()->customers()->findOrFail($customerId);
@@ -792,15 +792,26 @@ new class extends Component {
 
         $this->authorize('update', $customer);
 
-        if ($customer->status === CustomerStatus::NEW) {
-            $customer->update([
-                'status' => CustomerStatus::BLAST,
-            ]);
-        }
+        DB::transaction(function () use ($customer): void {
+            $customer->refresh();
 
-        $customer->update([
-            'last_contacted_at' => now(),
-        ]);
+            $currentStatus = $customer->status instanceof CustomerStatus ? $customer->status->value : $customer->status;
+
+            if ($currentStatus === CustomerStatus::NEW->value) {
+                $customer->syncStatuses([CustomerStatus::BLAST->value]);
+            }
+
+            // Pastikan status assignment yang masih NEW ikut disinkronkan.
+            $hasNewAssignment = $customer->statusAssignments()->where('status', CustomerStatus::NEW->value)->exists();
+
+            if ($hasNewAssignment) {
+                $customer->syncStatuses([CustomerStatus::BLAST->value]);
+            }
+
+            $customer->update([
+                'last_contacted_at' => now(),
+            ]);
+        });
 
         $this->dispatch('swal', type: 'success', message: 'Customer berhasil ditandai sudah dihubungi.');
     }
@@ -1152,10 +1163,10 @@ new class extends Component {
                                 </div>
 
                                 {{-- CHECKBOX LIST --}}
-                                <div class="max-h-64 space-y-1 overflow-y-auto p-2">
+                                <div class="grid max-h-64 grid-cols-2 gap-1 overflow-y-auto p-2">
                                     @foreach ($statuses as $customerStatus)
                                         <label wire:key="status-filter-{{ $customerStatus->value }}"
-                                            class="flex cursor-pointer items-center gap-3 rounded-lg px-3 py-2.5 transition hover:bg-indigo-50 dark:hover:bg-indigo-500/10">
+                                            class="flex min-w-0 cursor-pointer items-center gap-2 rounded-lg px-2 py-2 transition hover:bg-indigo-50 dark:hover:bg-indigo-500/10">
                                             <input type="checkbox" value="{{ $customerStatus->value }}"
                                                 wire:model.live="selectedStatuses"
                                                 class="size-4 shrink-0 rounded border-zinc-300 text-indigo-600 focus:ring-2 focus:ring-indigo-500 dark:border-zinc-600 dark:bg-zinc-800">
@@ -1164,7 +1175,7 @@ new class extends Component {
                                                 {{ $customerStatus->label() }}
                                             </span>
 
-                                            @if (in_array($customerStatus->value, $selectedStatuses))
+                                            @if (in_array($customerStatus->value, $selectedStatuses, true))
                                                 <flux:icon name="check"
                                                     class="size-4 shrink-0 text-indigo-600 dark:text-indigo-400" />
                                             @endif
@@ -1184,11 +1195,6 @@ new class extends Component {
                             </div>
                         </div>
 
-                        @if (count($selectedStatuses) > 0)
-                            <span class="text-xs text-zinc-500">
-                                {{ count($selectedStatuses) }} status aktif
-                            </span>
-                        @endif
                     </div>
 
                 </div>
@@ -1364,7 +1370,7 @@ new class extends Component {
                                                 {{ $customer->name }}
                                             </div>
 
-                                            <div class="mt-0.5 break-all font-mono text-xs text-zinc-500">
+                                            <div class="mt-0.5 break-all font-mono text-xs text-zinc-500 whitespace-nowrap">
                                                 +{{ $customer->phone_normalized }}
                                             </div>
                                         </div>
@@ -1386,7 +1392,7 @@ new class extends Component {
                                 <td class="px-2 py-2">
 
                                     <span
-                                        class="rounded-lg bg-indigo-50 px-2 py-1 font-mono text-xs text-indigo-700 dark:bg-indigo-500/10 dark:text-indigo-300">
+                                        class="rounded-lg bg-indigo-50 px-2 py-1 font-mono text-sm text-indigo-700 dark:bg-indigo-500/10 dark:text-indigo-300">
                                         {{ $customer->contract_number }}
                                     </span>
 
@@ -1412,20 +1418,52 @@ new class extends Component {
 
                                 {{-- STATUS --}}
                                 <td class="px-2 py-2">
-                                    <div class="flex max-w-64 flex-wrap gap-1.5">
-                                        @forelse ($customer->statusAssignments as $assignment)
-                                            <flux:badge
-                                                wire:key="customer-{{ $customer->id }}-status-{{ $assignment->status->value }}"
-                                                :color="$assignment->status->color()" class="shrink-0">
-                                                {{ $assignment->status->label() }}
-                                            </flux:badge>
-                                        @empty
-                                            {{-- Fallback untuk data lama yang belum memiliki assignment --}}
-                                            <flux:badge :color="$customer->status->color()" class="shrink-0">
-                                                {{ $customer->status->label() }}
-                                            </flux:badge>
-                                        @endforelse
-                                    </div>
+                                    @php
+                                        $statusOrder = array_flip(
+                                            array_map(
+                                                fn($status) => $status->value,
+                                                \App\Enums\CustomerStatus::cases(),
+                                            ),
+                                        );
+
+                                        $statusAssignments = $customer->statusAssignments
+                                            ->sortBy(
+                                                fn($assignment) => $statusOrder[$assignment->status->value] ??
+                                                    PHP_INT_MAX,
+                                            )
+                                            ->values();
+
+                                        $statusCount = $statusAssignments->count();
+
+                                        $columns = match (true) {
+                                            $statusCount <= 2 => 1,
+                                            $statusCount <= 4 => 2,
+                                            default => 3,
+                                        };
+                                    @endphp
+
+                                    @if ($statusCount > 0)
+                                        <div @class([
+                                            'grid w-fit gap-1',
+                                            'grid-cols-1' => $columns === 1,
+                                            'grid-cols-2' => $columns === 2,
+                                            'grid-cols-3' => $columns === 3,
+                                        ])>
+                                            @foreach ($statusAssignments as $assignment)
+                                                <flux:badge size="xs"
+                                                    wire:key="customer-{{ $customer->id }}-status-{{ $assignment->status->value }}"
+                                                    :color="$assignment->status->color()"
+                                                    class="w-16 justify-center whitespace-nowrap text-[9px] font-bold! leading-tight">
+                                                    {{ $assignment->status->label() }}
+                                                </flux:badge>
+                                            @endforeach
+                                        </div>
+                                    @else
+                                        <flux:badge size="xs" :color="$customer->status->color()"
+                                            class="w-16 justify-center whitespace-nowrap text-[9px] font-bold! leading-tight">
+                                            {{ $customer->status->label() }}
+                                        </flux:badge>
+                                    @endif
                                 </td>
 
                                 {{-- ACTION --}}
@@ -1617,7 +1655,6 @@ new class extends Component {
 
             </div>
 
-
             {{-- STATUS --}}
             <div class="space-y-2" x-data="{ open: false }">
                 <flux:heading size="sm">Status Customer</flux:heading>
@@ -1639,24 +1676,29 @@ new class extends Component {
                             x-bind:class="{ 'rotate-180': open }" />
                     </button>
 
+                    {{-- Dropdown tetap --}}
                     <div x-cloak x-show="open" @click.outside="open = false" x-transition
                         class="absolute inset-x-0 z-20 mt-2 max-h-64 overflow-y-auto rounded-lg border border-zinc-200 bg-white p-2 shadow-lg dark:border-zinc-700 dark:bg-zinc-900">
-                        @foreach ($statuses as $customerStatus)
-                            <label wire:key="edit-customer-status-{{ $customerStatus->value }}"
-                                class="flex cursor-pointer items-center gap-3 rounded-md px-3 py-2 transition hover:bg-zinc-100 dark:hover:bg-zinc-800">
-                                <input type="checkbox" value="{{ $customerStatus->value }}"
-                                    wire:model.live="editStatus"
-                                    class="size-4 shrink-0 rounded border-zinc-300 text-indigo-600 focus:ring-indigo-500 dark:border-zinc-600 dark:bg-zinc-800">
+                        {{-- Isi dropdown: 2 kolom --}}
+                        <div class="grid grid-cols-2 gap-1">
+                            @foreach ($statuses as $customerStatus)
+                                <label wire:key="edit-customer-status-{{ $customerStatus->value }}"
+                                    class="flex min-w-0 cursor-pointer items-center gap-2 rounded-md px-2 py-2 transition hover:bg-zinc-100 dark:hover:bg-zinc-800">
+                                    <input type="checkbox" value="{{ $customerStatus->value }}"
+                                        wire:model.live="editStatus"
+                                        class="size-4 shrink-0 rounded border-zinc-300 text-indigo-600 focus:ring-indigo-500 dark:border-zinc-600 dark:bg-zinc-800">
 
-                                <span class="flex-1 text-sm text-zinc-700 dark:text-zinc-200">
-                                    {{ $customerStatus->label() }}
-                                </span>
+                                    <span class="min-w-0 flex-1 text-xs text-zinc-700 dark:text-zinc-200">
+                                        {{ $customerStatus->label() }}
+                                    </span>
 
-                                @if (in_array($customerStatus->value, $editStatus, true))
-                                    <flux:icon name="check" class="size-4 text-indigo-600 dark:text-indigo-400" />
-                                @endif
-                            </label>
-                        @endforeach
+                                    @if (in_array($customerStatus->value, $editStatus, true))
+                                        <flux:icon name="check"
+                                            class="size-4 shrink-0 text-indigo-600 dark:text-indigo-400" />
+                                    @endif
+                                </label>
+                            @endforeach
+                        </div>
                     </div>
                 </div>
 
@@ -1665,20 +1707,52 @@ new class extends Component {
                 @enderror
             </div>
 
-
             <div class="grid gap-5 sm:grid-cols-2">
+                <div>
+                    <flux:input wire:model="editName" label="Nama Customer" placeholder="Setya Prioritas Dana" />
+                    @error('editName')
+                        <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
+                    @enderror
+                </div>
 
-                <flux:input wire:model="editName" label="Nama Customer" placeholder="Setya Prioritas Dana" />
+                <div>
+                    <flux:input wire:model="editPhone" label="Nomor WhatsApp" placeholder="85799928828" />
+                    @error('editPhone')
+                        <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
+                    @enderror
+                </div>
 
-                <flux:input wire:model="editPhone" label="Nomor WhatsApp" placeholder="85799928828" />
+                <div>
+                    <flux:input wire:model.live="editContractNumber" label="Nomor Kontrak"
+                        placeholder="17 digit nomor kontrak" inputmode="numeric" maxlength="17" />
+                    @error('editContractNumber')
+                        <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
+                    @enderror
+                </div>
 
-                <flux:input wire:model.live="editContractNumber" label="Nomor Kontrak"
-                    placeholder="17 digit nomor kontrak" inputmode="numeric" maxlength="17" />
-
-                <flux:input wire:model.live="editAmount" label="Nominal" placeholder="30.000.000"
-                    inputmode="numeric" />
-
+                <div>
+                    <flux:input wire:model.live="editAmount" label="Nominal" placeholder="30.000.000"
+                        inputmode="numeric" />
+                    @error('editAmount')
+                        <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
+                    @enderror
+                </div>
             </div>
+
+            <div>
+                <flux:input wire:model="editBranch" label="Cabang" placeholder="YOGYAKARTA" />
+                @error('editBranch')
+                    <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
+                @enderror
+            </div>
+
+            @error('editStatus')
+                <p class="text-sm text-red-600">{{ $message }}</p>
+            @enderror
+
+            @error('editStatus.*')
+                <p class="text-sm text-red-600">{{ $message }}</p>
+            @enderror
 
             <flux:input wire:model="editBranch" label="Cabang" placeholder="YOGYAKARTA" />
 
@@ -1691,8 +1765,14 @@ new class extends Component {
                 </flux:button>
 
                 <flux:button type="submit" variant="primary" color="violet" icon="check"
-                    class="shadow-lg shadow-indigo-500/15">
-                    Simpan Perubahan
+                    class="shadow-lg shadow-indigo-500/15" wire:loading.attr="disabled" wire:target="saveCustomer">
+                    <span wire:loading.remove wire:target="saveCustomer">
+                        Simpan Perubahan
+                    </span>
+
+                    <span wire:loading wire:target="saveCustomer">
+                        Menyimpan...
+                    </span>
                 </flux:button>
 
             </div>
@@ -1980,7 +2060,6 @@ new class extends Component {
 
                 @if ($message)
                     <div class="flex items-center gap-2">
-
 
                         <flux:button type="button" variant="ghost" wire:click="closeComposer">
                             Batal

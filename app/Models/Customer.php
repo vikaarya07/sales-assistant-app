@@ -50,47 +50,51 @@ class Customer extends Model
     }
 
     /**
-     * @param  array<int, string>  $statuses
+     * @param  array<int, string|CustomerStatus>  $statuses
      */
     public function syncStatuses(array $statuses): void
     {
-        $values = collect($statuses)
+        $statusValues = collect($statuses)
+            ->map(function ($status): string {
+                return $status instanceof CustomerStatus
+                    ? $status->value
+                    : (string) $status;
+            })
             ->unique()
-            ->values()
-            ->all();
+            ->values();
 
-        if ($values === []) {
-            throw new \InvalidArgumentException(
-                'Customer harus memiliki minimal satu status.'
-            );
-        }
-
-        foreach ($values as $value) {
-            if (CustomerStatus::tryFrom($value) === null) {
+        foreach ($statusValues as $status) {
+            if (CustomerStatus::tryFrom($status) === null) {
                 throw new \InvalidArgumentException(
-                    'Status customer tidak valid.'
+                    "Status customer tidak valid: {$status}"
                 );
             }
         }
 
-        DB::transaction(function () use ($values): void {
-            $currentPrimary = $this->status;
+        if ($statusValues->isEmpty()) {
+            throw new \InvalidArgumentException(
+                'Minimal satu status customer harus dipilih.'
+            );
+        }
 
-            $primary = in_array($currentPrimary, $values, true)
-                ? $currentPrimary
-                : $values[0];
-
+        DB::transaction(function () use ($statusValues): void {
             $this->statusAssignments()->delete();
 
-            $this->statusAssignments()->createMany(
-                array_map(
-                    fn (string $value): array => ['status' => $value],
-                    $values
-                )
-            );
+            foreach ($statusValues as $status) {
+                $this->statusAssignments()->create([
+                    'status' => $status,
+                ]);
+            }
 
-            $this->status = $primary;
-            $this->save();
+            $currentStatus = (string) $this->status;
+
+            $primaryStatus = $statusValues->contains($currentStatus)
+                ? $currentStatus
+                : $statusValues->first();
+
+            $this->update([
+                'status' => $primaryStatus,
+            ]);
         });
     }
 

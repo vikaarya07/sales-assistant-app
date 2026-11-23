@@ -25,7 +25,7 @@ enum CustomerStatus: string
             self::INTERESTED => 'Minat',
             self::NOT_INTERESTED => 'Tidak Minat',
             self::STNK_SOL => 'STNK SOL',
-            self::APP_IN => 'Pangajuan',
+            self::APP_IN => 'Pengajuan',
             self::VALID => 'Valid',
             self::INVALID => 'Gagal',
         };
@@ -38,12 +38,12 @@ enum CustomerStatus: string
             self::BLAST => 'blue',
             self::NO_RESPON => 'slate',
             self::FOLLOW_UP => 'amber',
-            self::INTERESTED => 'lime',
-            self::NOT_INTERESTED => 'pink',
+            self::INTERESTED => 'emerald',
+            self::NOT_INTERESTED => 'fuchsia',
             self::STNK_SOL => 'violet',
-            self::APP_IN => 'teal',
+            self::APP_IN => 'cyan',
             self::VALID => 'green',
-            self::INVALID => 'red',
+            self::INVALID => 'rose',
         };
     }
 }
