@@ -662,22 +662,29 @@ new class extends Component {
     | Quick Status
     |--------------------------------------------------------------------------
     */
-    public function updateStatus(int $customerId, string $status): void
-    {
-        $customer = auth()->user()->customers()->findOrFail($customerId);
+    
+public function updateStatus(int $customerId, string $status): void
+{
+    $customer = auth()->user()->customers()->findOrFail($customerId);
 
-        $this->authorize('update', $customer);
+    $this->authorize('update', $customer);
 
-        $newStatus = CustomerStatus::tryFrom($status);
+    $newStatus = CustomerStatus::tryFrom($status);
 
-        if (!$newStatus) {
-            return;
-        }
-
-        $customer->syncStatuses([$newStatus]);
-
-        $this->dispatch('swal', type: 'success', message: 'Status customer berhasil diperbarui.');
+    if ($newStatus === null) {
+        return;
     }
+
+    // syncStatuses() menerima string, bukan objek enum.
+    $customer->syncStatuses([$newStatus->value]);
+
+    $this->dispatch(
+        'swal',
+        type: 'success',
+        message: 'Status customer berhasil diperbarui.'
+    );
+}
+
 
     /*
     |--------------------------------------------------------------------------
@@ -782,28 +789,63 @@ new class extends Component {
         $this->generateMessage();
     }
 
-    public function markContacted(): void
-    {
-        if (!$this->selectedCustomerId) {
-            return;
+    
+public function markContacted(): void
+{
+    if (!$this->selectedCustomerId) {
+        return;
+    }
+
+    $customer = auth()->user()
+        ->customers()
+        ->findOrFail($this->selectedCustomerId);
+
+    $this->authorize('update', $customer);
+
+    DB::transaction(function () use ($customer): void {
+        // Ambil semua status yang sudah dimiliki customer.
+        $statuses = $customer->statusAssignments()
+            ->pluck('status')
+            ->all();
+
+        // Kompatibilitas untuk customer lama yang belum
+        // memiliki data pada tabel customer_statuses.
+        if ($statuses === []) {
+            $statuses = [$customer->status->value];
         }
 
-        $customer = auth()->user()->customers()->findOrFail($this->selectedCustomerId);
+        // Jika masih berstatus Baru, ubah menjadi Blast.
+        // Status lain yang sudah dipilih tetap dipertahankan.
+        if (
+            $customer->status === CustomerStatus::NEW
+            || in_array(CustomerStatus::NEW->value, $statuses, true)
+        ) {
+            $statuses = array_values(array_filter(
+                $statuses,
+                fn (string $value): bool =>
+                    $value !== CustomerStatus::NEW->value
+            ));
 
-        $this->authorize('update', $customer);
-
-        if ($customer->status === CustomerStatus::NEW) {
-            $customer->update([
-                'status' => CustomerStatus::BLAST,
-            ]);
+            array_unshift($statuses, CustomerStatus::BLAST->value);
         }
 
+        // Simpan seluruh status sekaligus dan perbarui
+        // kolom status utama melalui model Customer.
+        $customer->syncStatuses(array_values(array_unique($statuses)));
+
+        // Catat waktu customer dihubungi.
         $customer->update([
             'last_contacted_at' => now(),
         ]);
+    });
 
-        $this->dispatch('swal', type: 'success', message: 'Customer berhasil ditandai sudah dihubungi.');
-    }
+    $this->dispatch(
+        'swal',
+        type: 'success',
+        message: 'Customer berhasil ditandai sudah dihubungi.'
+    );
+}
+
 
     public function sendWhatsapp(): void
     {
@@ -1645,7 +1687,7 @@ new class extends Component {
                             <label wire:key="edit-customer-status-{{ $customerStatus->value }}"
                                 class="flex cursor-pointer items-center gap-3 rounded-md px-3 py-2 transition hover:bg-zinc-100 dark:hover:bg-zinc-800">
                                 <input type="checkbox" value="{{ $customerStatus->value }}"
-                                    wire:model.live="editStatus"
+                                    wire:model="editStatus"
                                     class="size-4 shrink-0 rounded border-zinc-300 text-indigo-600 focus:ring-indigo-500 dark:border-zinc-600 dark:bg-zinc-800">
 
                                 <span class="flex-1 text-sm text-zinc-700 dark:text-zinc-200">
