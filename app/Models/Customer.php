@@ -86,7 +86,7 @@ class Customer extends Model
                 ]);
             }
 
-            $currentStatus = (string) $this->status;
+            $currentStatus = (string) $this->getRawOriginal('status');
 
             $primaryStatus = $statusValues->contains($currentStatus)
                 ? $currentStatus
