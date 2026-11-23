@@ -536,141 +536,133 @@ new class extends Component {
         $this->modal('customer-edit')->show();
     }
 
-    public function saveCustomer(): void
-    {
-        $validated = $this->validate(
-            [
-                'editName' => ['required', 'string', 'max:255'],
-                'editPhone' => ['required', 'string', 'max:20'],
-                'editContractNumber' => ['required', 'digits:17'],
-                'editAmount' => ['required', 'string'],
-                'editBranch' => ['required', 'string', 'max:255'],
 
-                'editStatus' => ['required', 'array', 'min:1'],
-                'editStatus.*' => ['required', 'string', 'distinct:strict', Rule::enum(CustomerStatus::class)],
+public function saveCustomer(): void
+{
+    if (!$this->editingCustomerId) {
+        $this->addError('editName', 'Customer yang akan diedit tidak ditemukan.');
+        return;
+    }
+
+    $validated = $this->validate(
+        [
+            'editName' => ['required', 'string', 'max:255'],
+            'editPhone' => ['required', 'string', 'max:20'],
+            'editContractNumber' => ['required', 'digits:17'],
+            'editAmount' => ['required', 'string'],
+            'editBranch' => ['required', 'string', 'max:255'],
+            'editStatus' => ['required', 'array', 'min:1'],
+            'editStatus.*' => [
+                'required',
+                'string',
+                'distinct:strict',
+                Rule::enum(CustomerStatus::class),
             ],
-            [
-                'editName.required' => 'Nama pelanggan wajib diisi.',
-                'editPhone.required' => 'Nomor WhatsApp wajib diisi.',
-                'editContractNumber.required' => 'Nomor kontrak wajib diisi.',
-                'editContractNumber.digits' => 'Nomor kontrak harus terdiri dari 17 digit.',
-                'editAmount.required' => 'Jumlah pinjaman wajib diisi.',
-                'editBranch.required' => 'Cabang wajib diisi.',
-                'editStatus.required' => 'Pilih minimal satu status pelanggan.',
-                'editStatus.array' => 'Status pelanggan tidak valid.',
-                'editStatus.min' => 'Pilih minimal satu status pelanggan.',
-                'editStatus.*.required' => 'Status pelanggan tidak boleh kosong.',
-                'editStatus.*.distinct' => 'Status pelanggan tidak boleh duplikat.',
-                'editStatus.*.enum' => 'Terdapat status pelanggan yang tidak valid.',
-            ],
+        ],
+        [
+            'editName.required' => 'Nama Customer wajib diisi.',
+            'editPhone.required' => 'Nomor WhatsApp wajib diisi.',
+            'editContractNumber.required' => 'Nomor kontrak wajib diisi.',
+            'editContractNumber.digits' => 'Nomor kontrak harus terdiri dari 17 digit.',
+            'editAmount.required' => 'Nominal wajib diisi.',
+            'editBranch.required' => 'Cabang wajib diisi.',
+            'editStatus.required' => 'Pilih minimal satu status.',
+            'editStatus.min' => 'Pilih minimal satu status.',
+            'editStatus.*.enum' => 'Status Customer tidak valid.',
+        ],
+    );
+
+    $phoneNormalized = $this->normalizePhone($validated['editPhone']);
+
+    if ($phoneNormalized === null) {
+        $this->addError(
+            'editPhone',
+            'Nomor WhatsApp tidak valid. Gunakan nomor Indonesia yang benar.'
         );
+        return;
+    }
 
-        if (!$this->editingCustomerId) {
-            $this->addError('editName', 'Pelanggan yang akan diedit tidak ditemukan.');
+    $amount = $this->unformatIdr($validated['editAmount']);
 
-            return;
-        }
+    if ($amount === '' || !is_numeric($amount)) {
+        $this->addError('editAmount', 'Nominal tidak valid.');
+        return;
+    }
 
-        $customer = auth()->user()->customers()->findOrFail($this->editingCustomerId);
+    if ((int) $amount > 30000000) {
+        $this->addError('editAmount', 'Nominal maksimal Rp30.000.000.');
+        return;
+    }
 
-        $this->authorize('update', $customer);
+    $statuses = array_values(array_unique($validated['editStatus']));
 
-        // Normalisasi nomor WhatsApp.
-        $phoneNormalized = $this->normalizePhone($validated['editPhone']);
+    try {
+        DB::transaction(function () use (
+            $validated,
+            $phoneNormalized,
+            $amount,
+            $statuses
+        ): void {
+            $customer = auth()
+                ->user()
+                ->customers()
+                ->whereKey($this->editingCustomerId)
+                ->lockForUpdate()
+                ->firstOrFail();
 
-        if (!$phoneNormalized) {
-            $this->addError('editPhone', 'Nomor WhatsApp tidak valid. Gunakan format 08xxxxxxxxxx atau 628xxxxxxxxxx.');
+            $this->authorize('update', $customer);
 
-            return;
-        }
+            $phoneExists = auth()
+                ->user()
+                ->customers()
+                ->where('phone_normalized', $phoneNormalized)
+                ->where('id', '!=', $customer->id)
+                ->exists();
 
-        // Pastikan nomor WhatsApp tidak digunakan pelanggan lain.
-        $phoneExists = auth()->user()->customers()->where('phone_normalized', $phoneNormalized)->where('id', '!=', $customer->id)->exists();
-
-        if ($phoneExists) {
-            $this->addError('editPhone', 'Nomor WhatsApp sudah terdaftar pada pelanggan lain.');
-
-            return;
-        }
-
-        // Konversi nominal Rupiah menjadi angka.
-        $amount = preg_replace('/\D/', '', $validated['editAmount']);
-
-        if ($amount === null || $amount === '' || !is_numeric($amount)) {
-            $this->addError('editAmount', 'Jumlah pinjaman tidak valid.');
-
-            return;
-        }
-
-        if ((int) $amount > 30000000) {
-            $this->addError('editAmount', 'Jumlah pinjaman maksimal Rp30.000.000.');
-
-            return;
-        }
-
-        
-        // Validasi dan normalisasi seluruh status yang dipilih.
-        $validStatuses = collect($validated['editStatus'])
-            ->map(fn (string $status): ?string => CustomerStatus::tryFrom($status)?->value)
-            ->filter()
-            ->unique()
-            ->values()
-            ->all();
-
-        if ($validStatuses === []) {
-            $this->addError(
-                'editStatus',
-                'Pilih minimal satu status pelanggan yang valid.'
-            );
-
-            return;
-        }
-
-        // Gunakan string status, sesuai kontrak syncStatuses().
-        $primaryStatus = $validStatuses[0];
-
-        try {
-            DB::transaction(function () use (
-                $customer,
-                $validated,
-                $phoneNormalized,
-                $amount,
-                $primaryStatus,
-                $validStatuses
-            ): void {
-                $customer->update([
-                    'name' => trim($validated['editName']),
-                    'phone' => trim($validated['editPhone']),
-                    'phone_normalized' => $phoneNormalized,
-                    'contract_number' => trim($validated['editContractNumber']),
-                    'amount' => (int) $amount,
-                    'branch' => trim($validated['editBranch']),
-                    'status' => $primaryStatus,
+            if ($phoneExists) {
+                throw \Illuminate\Validation\ValidationException::withMessages([
+                    'editPhone' => 'Nomor WhatsApp sudah digunakan Customer lain.',
                 ]);
+            }
 
-                // Sinkronkan seluruh status yang dipilih.
-                $customer->syncStatuses($validStatuses);
-            });
-        } catch (\Throwable $exception) {
-            report($exception);
+            $customer->fill([
+                'name' => trim($validated['editName']),
+                'phone' => trim($validated['editPhone']),
+                'phone_normalized' => $phoneNormalized,
+                'contract_number' => trim($validated['editContractNumber']),
+                'amount' => (int) $amount,
+                'branch' => trim($validated['editBranch']),
+            ]);
 
-            $this->dispatch(
-                'swal',
-                type: 'error',
-                message: 'Gagal menyimpan Customer. Silakan periksa log Laravel.'
-            );
+            $customer->save();
 
-            return;
-        }
+            // syncStatuses() pada model menerima string enum,
+            // misalnya ['new', 'blast'], bukan objek enum.
+            $customer->syncStatuses($statuses);
+        });
 
         $this->closeEditCustomer();
+        $this->resetPage();
 
         $this->dispatch(
             'swal',
             type: 'success',
             message: 'Data Customer berhasil diperbarui.'
         );
+    } catch (\Illuminate\Validation\ValidationException $exception) {
+        throw $exception;
+    } catch (\Throwable $exception) {
+        report($exception);
+
+        $this->dispatch(
+            'swal',
+            type: 'error',
+            message: 'Gagal menyimpan Customer. Silakan coba lagi.'
+        );
     }
+}
+
+    
     public function closeEditCustomer(): void
     {
         $this->editingCustomerId = null;
