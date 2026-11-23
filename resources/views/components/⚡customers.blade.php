@@ -608,40 +608,69 @@ new class extends Component {
             return;
         }
 
+        
         // Validasi dan normalisasi seluruh status yang dipilih.
-        $validStatuses = collect($validated['editStatus'])->map(fn(string $status) => CustomerStatus::tryFrom($status))->filter()->unique(fn(CustomerStatus $status) => $status->value)->values();
+        $validStatuses = collect($validated['editStatus'])
+            ->map(fn (string $status): ?string => CustomerStatus::tryFrom($status)?->value)
+            ->filter()
+            ->unique()
+            ->values()
+            ->all();
 
-        if ($validStatuses->isEmpty()) {
-            $this->addError('editStatus', 'Pilih minimal satu status pelanggan yang valid.');
+        if ($validStatuses === []) {
+            $this->addError(
+                'editStatus',
+                'Pilih minimal satu status pelanggan yang valid.'
+            );
 
             return;
         }
 
-        // Status utama tetap disimpan pada kolom customers.status
-        // untuk menjaga kompatibilitas dengan fitur lama.
-        $primaryStatus = $validStatuses->first();
+        // Gunakan string status, sesuai kontrak syncStatuses().
+        $primaryStatus = $validStatuses[0];
 
-        DB::transaction(function () use ($customer, $validated, $phoneNormalized, $amount, $primaryStatus, $validStatuses): void {
-            $customer->update([
-                'name' => trim($validated['editName']),
-                'phone' => trim($validated['editPhone']),
-                'phone_normalized' => $phoneNormalized,
-                'contract_number' => trim($validated['editContractNumber']),
-                'amount' => (int) $amount,
-                'branch' => trim($validated['editBranch']),
-                'status' => $primaryStatus,
-            ]);
+        try {
+            DB::transaction(function () use (
+                $customer,
+                $validated,
+                $phoneNormalized,
+                $amount,
+                $primaryStatus,
+                $validStatuses
+            ): void {
+                $customer->update([
+                    'name' => trim($validated['editName']),
+                    'phone' => trim($validated['editPhone']),
+                    'phone_normalized' => $phoneNormalized,
+                    'contract_number' => trim($validated['editContractNumber']),
+                    'amount' => (int) $amount,
+                    'branch' => trim($validated['editBranch']),
+                    'status' => $primaryStatus,
+                ]);
 
-            // Sinkronkan seluruh status yang dipilih.
-            // Memerlukan method syncStatuses() pada model Customer.
-            $customer->syncStatuses($validStatuses->map(fn(CustomerStatus $status): string => $status->value)->all());
-        });
+                // Sinkronkan seluruh status yang dipilih.
+                $customer->syncStatuses($validStatuses);
+            });
+        } catch (\Throwable $exception) {
+            report($exception);
+
+            $this->dispatch(
+                'swal',
+                type: 'error',
+                message: 'Gagal menyimpan Customer. Silakan periksa log Laravel.'
+            );
+
+            return;
+        }
 
         $this->closeEditCustomer();
 
-        $this->dispatch('swal:success', title: 'Berhasil!', text: 'Data pelanggan berhasil diperbarui.');
+        $this->dispatch(
+            'swal',
+            type: 'success',
+            message: 'Data Customer berhasil diperbarui.'
+        );
     }
-
     public function closeEditCustomer(): void
     {
         $this->editingCustomerId = null;
